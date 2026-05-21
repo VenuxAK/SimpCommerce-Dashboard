@@ -1,0 +1,75 @@
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useAuthStore } from '../stores/auth'
+import api from '../lib/axios'
+import { Button } from '../components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
+import { Badge } from '../components/ui/badge'
+import Input from '../components/ui/Input.vue'
+import { useNotify } from '../lib/notify'
+
+const { t } = useI18n()
+const auth = useAuthStore()
+const { success, error } = useNotify()
+const form = ref({ name: '', email: '', password: '' })
+const saving = ref(false)
+
+onMounted(() => {
+  if (auth.user) {
+    form.value.name = auth.user.name
+    form.value.email = auth.user.email
+  }
+})
+
+async function save() {
+  saving.value = true
+  try {
+    const payload: Record<string, any> = { name: form.value.name, email: form.value.email }
+    if (form.value.password) payload.password = form.value.password
+    const { data } = await api.put('/profile', payload)
+    auth.setUser(data.data)
+    success(t('common.save') + ' ✅')
+    form.value.password = ''
+  } catch (e: any) {
+    const msg = e?.response?.data?.errors
+      ? Object.values(e.response.data.errors).flat().join(', ')
+      : (e?.response?.data?.message || t('common.error'))
+    error(msg)
+  } finally {
+    saving.value = false
+  }
+}
+</script>
+
+<template>
+  <div class="mx-auto max-w-lg space-y-6">
+    <h1 class="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-100">{{ t('profile.title') }}</h1>
+
+    <Card>
+      <CardHeader class="flex flex-row items-center justify-between">
+        <CardTitle>{{ t('profile.info') }}</CardTitle>
+        <Badge :variant="auth.user?.role === 'admin' ? 'default' : 'secondary'">
+          {{ auth.user?.role }}
+        </Badge>
+      </CardHeader>
+      <CardContent class="space-y-4">
+        <div class="space-y-2">
+          <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ t('users.name') }}</label>
+          <Input v-model="form.name" />
+        </div>
+        <div class="space-y-2">
+          <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ t('auth.email') }}</label>
+          <Input v-model="form.email" type="email" />
+        </div>
+        <div class="space-y-2">
+          <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ t('profile.new_password') }}</label>
+          <Input v-model="form.password" type="password" :placeholder="t('profile.password_leave')" />
+        </div>
+        <Button :disabled="saving" @click="save" class="w-full sm:w-auto">
+          {{ saving ? t('common.loading') : t('common.save') }}
+        </Button>
+      </CardContent>
+    </Card>
+  </div>
+</template>

@@ -43,9 +43,10 @@ async function openReceipt() {
     const response = await api.get(`/invoices/${route.params.id}/receipt`, {
       responseType: 'blob',
     })
-    const blob = new Blob([response.data], { type: 'text/html' })
+    const blob = new Blob([response.data], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
     window.open(url, '_blank')
+    setTimeout(() => URL.revokeObjectURL(url), 10000)
   } catch {}
 }
 

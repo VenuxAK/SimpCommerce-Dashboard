@@ -8,11 +8,13 @@ import './style.css'
 import en from './locales/en.json'
 import my from './locales/my.json'
 
+const supportedLocales = ['en', 'my']
 const savedLocale = localStorage.getItem('locale') || 'en'
+const locale = supportedLocales.includes(savedLocale) ? savedLocale : 'en'
 
 const i18n = createI18n({
   legacy: false,
-  locale: savedLocale,
+  locale,
   fallbackLocale: 'en',
   messages: { en, my },
 })

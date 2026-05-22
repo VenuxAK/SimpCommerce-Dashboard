@@ -1,6 +1,6 @@
-# SimpPOS Frontend
+# SimpCommerce Frontend
 
-Vue 3 + TypeScript + Vite SPA for SimpPOS — a home-use Point of Sale system for clothing stores.
+Vue 3 + TypeScript + Vite SPA for SimpCommerce — a home-use Point of Sale system for clothing stores.
 
 ## Requirements
 

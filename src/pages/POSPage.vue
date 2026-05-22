@@ -8,7 +8,7 @@ import { Card, CardContent } from '../components/ui/card'
 import Input from '../components/ui/Input.vue'
 import { Badge } from '../components/ui/badge'
 import { useNotify } from '../lib/notify'
-import type { Product, ProductVariant, Customer } from '../types'
+import type { Discount, Product, ProductVariant, Customer } from '../types'
 
 const { t } = useI18n()
 const { success, error } = useNotify()
@@ -34,9 +34,9 @@ const dataLoading = ref(true)
 const showCart = ref(false)
 
 // Discount state
-const discounts = ref<any[]>([])
-const selectedDiscount = ref<any | null>(null)
+const discounts = ref<Discount[]>([])
 
+const selectedDiscount = ref<Discount | null>(null)
 // Barcode scan state
 let barcodeBuffer = ''
 let barcodeTimer: ReturnType<typeof setTimeout> | null = null

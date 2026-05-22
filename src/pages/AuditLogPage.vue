@@ -4,9 +4,10 @@ import { useI18n } from 'vue-i18n'
 import api from '../lib/axios'
 import { Card, CardContent } from '../components/ui/card'
 import Pagination from '../components/Pagination.vue'
+import type { AuditLog } from '../types'
 
 const { t } = useI18n()
-const logs = ref<any[]>([])
+const logs = ref<AuditLog[]>([])
 const meta = ref<any>(null)
 const loading = ref(true)
 const actionFilter = ref('')

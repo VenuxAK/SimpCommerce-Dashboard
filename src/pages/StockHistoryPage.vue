@@ -7,10 +7,11 @@ import { Badge } from '../components/ui/badge'
 import Input from '../components/ui/Input.vue'
 import Pagination from '../components/Pagination.vue'
 import { useNotify } from '../lib/notify'
+import type { StockMovement } from '../types'
 
 const { t } = useI18n()
 const { error } = useNotify()
-const movements = ref<any[]>([])
+const movements = ref<StockMovement[]>([])
 const meta = ref<any>(null)
 const loading = ref(true)
 const dateFrom = ref('')

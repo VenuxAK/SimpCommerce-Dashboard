@@ -45,16 +45,15 @@ const imageUrl = computed(() => {
   if (form.value.image_preview) return form.value.image_preview
   const img = form.value.image
   if (!img) return null
-  const base = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-  return img.startsWith('http') ? img : `${base}/storage/${img}`
+  return img.startsWith('http') ? img : `${storageUrl}/storage/${img}`
 })
 
-const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const storageUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8000').replace(/\/api\/?$/, '')
 
 function variantImageUrl(v: VariantForm): string | null {
   if (v.image_preview) return v.image_preview
   if (!v.image) return null
-  return v.image.startsWith('http') ? v.image : `${baseUrl}/storage/${v.image}`
+  return v.image.startsWith('http') ? v.image : `${storageUrl}/storage/${v.image}`
 }
 
 onMounted(async () => {

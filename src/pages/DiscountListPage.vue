@@ -9,15 +9,16 @@ import { Badge } from '../components/ui/badge'
 import Input from '../components/ui/Input.vue'
 import Pagination from '../components/Pagination.vue'
 import { useNotify } from '../lib/notify'
+import type { Discount, Category, Product } from '../types'
 
 const { t } = useI18n()
 const { success, error } = useNotify()
-const discounts = ref<any[]>([])
-const meta = ref<any>(null)
-const categories = ref<any[]>([])
-const products = ref<any[]>([])
+const discounts = ref<Discount[]>([])
+const meta = ref<{ current_page: number; last_page: number; total: number; per_page: number } | null>(null)
+const categories = ref<Category[]>([])
+const products = ref<Product[]>([])
 const showForm = ref(false)
-const editing = ref<any | null>(null)
+const editing = ref<Discount | null>(null)
 const form = ref({
   name: '', type: 'percentage', value: 0,
   applies_to: 'all', category_id: null as number | null,

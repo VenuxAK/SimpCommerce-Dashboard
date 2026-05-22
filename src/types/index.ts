@@ -13,6 +13,8 @@ export interface Category {
   slug: string
   description: string | null
   products_count?: number
+  created_at?: string
+  updated_at?: string
 }
 
 export interface ProductVariant {
@@ -27,6 +29,8 @@ export interface ProductVariant {
   purchase_price: number | null
   stock_quantity: number
   product?: Product
+  created_at?: string
+  updated_at?: string
 }
 
 export interface Product {
@@ -42,6 +46,8 @@ export interface Product {
   image: string | null
   image_url: string | null
   variants: ProductVariant[]
+  created_at?: string
+  updated_at?: string
 }
 
 export interface Customer {
@@ -52,6 +58,8 @@ export interface Customer {
   address: string | null
   loyalty_points: number
   orders_count?: number
+  created_at?: string
+  updated_at?: string
 }
 
 export interface OrderItem {
@@ -69,6 +77,8 @@ export interface Payment {
   method: string
   amount: number
   paid_at: string | null
+  created_at?: string
+  updated_at?: string
 }
 
 export interface Invoice {
@@ -81,6 +91,8 @@ export interface Invoice {
   status: string
   notes: string | null
   terms: string | null
+  created_at?: string
+  updated_at?: string
 }
 
 export interface Order {
@@ -97,11 +109,84 @@ export interface Order {
   payment?: Payment
   invoice?: Invoice
   created_at: string
+  updated_at?: string
+}
+
+export interface Supplier {
+  id: number
+  name: string
+  contact_person: string | null
+  phone: string | null
+  email: string | null
+  address: string | null
+  notes: string | null
+  products_count?: number
+  created_at?: string
+  updated_at?: string
+}
+
+export interface Discount {
+  id: number
+  name: string
+  type: 'percentage' | 'fixed'
+  value: number
+  applies_to: 'all' | 'category' | 'product'
+  category_id: number | null
+  product_id: number | null
+  starts_at: string | null
+  ends_at: string | null
+  is_active: boolean
+  created_at?: string
+  updated_at?: string
+}
+
+export interface StockMovement {
+  id: number
+  product_variant_id: number
+  variant?: ProductVariant
+  quantity_change: number
+  reason: string
+  reference_type: string | null
+  reference_id: number | null
+  user_id: number | null
+  created_at?: string
+  updated_at?: string
+}
+
+export interface AuditLog {
+  id: number
+  user_id: number | null
+  user?: User | null
+  action: string
+  model_type: string
+  model_id: number
+  old_values: Record<string, unknown> | null
+  new_values: Record<string, unknown> | null
+  ip_address: string | null
+  created_at?: string
+  updated_at?: string
+}
+
+export interface CashSession {
+  id: number
+  user_id: number
+  user?: User
+  opened_at: string
+  closed_at: string | null
+  opening_balance: number
+  closing_balance: number | null
+  expected_balance: number | null
+  difference: number | null
+  notes: string | null
+  is_open: boolean
+  created_at?: string
+  updated_at?: string
 }
 
 export interface DashboardSummary {
   today_sales: number
   today_orders_count: number
+  active_session: CashSession | null
   total_products: number
   total_variants: number
   low_stock_count: number
@@ -117,17 +202,6 @@ export interface DashboardSummary {
   recent_orders: Order[]
 }
 
-export interface Supplier {
-  id: number
-  name: string
-  contact_person: string | null
-  phone: string | null
-  email: string | null
-  address: string | null
-  notes: string | null
-  products_count?: number
-}
-
 export interface SalesReport {
   date_from: string
   date_to: string
@@ -140,4 +214,14 @@ export interface SalesReport {
     total: number
     count: number
   }>
+}
+
+export interface PaginatedResponse<T> {
+  data: T[]
+  meta?: {
+    current_page: number
+    last_page: number
+    per_page: number
+    total: number
+  }
 }

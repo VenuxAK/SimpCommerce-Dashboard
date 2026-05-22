@@ -8,11 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
 import Input from '../components/ui/Input.vue'
 import { useNotify } from '../lib/notify'
+import type { CashSession } from '../types'
 
 const { t } = useI18n()
 const { success, error } = useNotify()
-const sessions = ref<any[]>([])
-const activeSession = ref<any | null>(null)
+const sessions = ref<CashSession[]>([])
+const activeSession = ref<CashSession | null>(null)
 const loading = ref(true)
 const openingBalance = ref(0)
 const closingBalance = ref(0)

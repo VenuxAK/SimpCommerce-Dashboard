@@ -105,7 +105,7 @@ async function load() {
 
 async function createBackup() {
   try {
-    const res = await api.post('/backup')
+    const res = await api.post('/backups')
     backups.value.unshift({ filename: res.data.filename, created_at: new Date().toISOString() })
     success('Backup created ✅')
   } catch (e: any) {

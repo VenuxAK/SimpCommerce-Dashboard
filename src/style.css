@@ -49,6 +49,44 @@
   border-color: var(--color-border);
 }
 
+/* Blue Theme */
+[data-theme='blue'] {
+  --color-primary: oklch(0.45 0.15 250);
+  --color-ring: oklch(0.45 0.15 250);
+  --color-background: oklch(0.99 0.005 250);
+  --color-secondary: oklch(0.96 0.01 250);
+  --color-muted: oklch(0.96 0.01 250);
+  --color-accent: oklch(0.96 0.01 250);
+}
+
+[data-theme='blue'].dark, .dark [data-theme='blue'] {
+  --color-primary: oklch(0.7 0.12 250);
+  --color-background: oklch(0.12 0.01 250);
+  --color-secondary: oklch(0.2 0.02 250);
+  --color-muted: oklch(0.2 0.02 250);
+  --color-accent: oklch(0.2 0.02 250);
+  --color-border: oklch(0.27 0.02 250);
+}
+
+/* Violet Theme */
+[data-theme='violet'] {
+  --color-primary: oklch(0.45 0.2 280);
+  --color-ring: oklch(0.45 0.2 280);
+  --color-background: oklch(0.99 0.005 280);
+  --color-secondary: oklch(0.96 0.015 280);
+  --color-muted: oklch(0.96 0.015 280);
+  --color-accent: oklch(0.96 0.015 280);
+}
+
+[data-theme='violet'].dark, .dark [data-theme='violet'] {
+  --color-primary: oklch(0.7 0.15 280);
+  --color-background: oklch(0.12 0.02 280);
+  --color-secondary: oklch(0.2 0.03 280);
+  --color-muted: oklch(0.2 0.03 280);
+  --color-accent: oklch(0.2 0.03 280);
+  --color-border: oklch(0.27 0.03 280);
+}
+
 body {
   margin: 0;
   font-family: 'Geist', 'Inter', system-ui, -apple-system, sans-serif;

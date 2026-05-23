@@ -4,15 +4,23 @@ import { useI18n } from 'vue-i18n'
 import { Languages, User, Moon, Sun, ChevronDown, Settings, LogOut, UserCircle } from 'lucide-vue-next'
 import { useAuthStore } from '../../stores/auth'
 import { useTheme } from '../../lib/theme'
+import { useUIStore, type ThemeColor } from '../../stores/ui'
 import { useRouter } from 'vue-router'
 import api from '../../lib/axios'
 
 const { t, locale } = useI18n()
 const auth = useAuthStore()
+const ui = useUIStore()
 const router = useRouter()
 const { isDark, toggle } = useTheme()
 
 const dropdownOpen = ref(false)
+
+const themes: { name: ThemeColor; color: string }[] = [
+  { name: 'zinc', color: 'bg-zinc-500' },
+  { name: 'blue', color: 'bg-blue-500' },
+  { name: 'violet', color: 'bg-violet-500' },
+]
 
 function toggleLang() {
   locale.value = locale.value === 'en' ? 'my' : 'en'
@@ -77,6 +85,23 @@ onUnmounted(() => window.removeEventListener('click', handleClickOutside))
         <div class="px-3 py-2 border-b border-border/50 mb-1">
           <p class="text-xs font-black text-foreground uppercase tracking-tight">{{ auth.user?.name }}</p>
           <p class="text-[10px] text-muted-foreground font-medium truncate">{{ auth.user?.email }}</p>
+        </div>
+
+        <div class="px-3 py-2 border-b border-border/50 mb-1">
+          <p class="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-2">Theme Color</p>
+          <div class="flex gap-2">
+            <button 
+              v-for="th in themes" 
+              :key="th.name"
+              @click="ui.setTheme(th.name)"
+              :class="[
+                'size-5 rounded-full border-2 transition-all',
+                th.color,
+                ui.theme === th.name ? 'border-primary scale-110' : 'border-transparent hover:scale-105'
+              ]"
+              :title="th.name.toUpperCase()"
+            />
+          </div>
         </div>
         
         <button 

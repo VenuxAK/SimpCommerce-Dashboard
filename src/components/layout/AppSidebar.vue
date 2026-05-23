@@ -20,8 +20,11 @@ import {
   Truck,
   Wallet,
   History,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-vue-next'
 import { useAuthStore } from '../../stores/auth'
+import { useUIStore } from '../../stores/ui'
 import { useRouter } from 'vue-router'
 import api from '../../lib/axios'
 
@@ -29,6 +32,7 @@ const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
+const ui = useUIStore()
 
 const props = defineProps<{ open: boolean }>()
 const emit = defineEmits<{ close: [] }>()
@@ -70,18 +74,22 @@ function navigate(to: string) {
 
   <aside
     :class="[
-      'fixed left-0 top-0 z-50 flex h-screen w-56 flex-col border-r bg-card transition-transform duration-300 ease-in-out',
+      'fixed left-0 top-0 z-50 flex h-screen flex-col border-r bg-card transition-all duration-300 ease-in-out',
       open ? 'translate-x-0' : '-translate-x-full',
+      ui.sidebarCollapsed ? 'w-20' : 'w-56',
       'lg:translate-x-0 lg:z-40',
     ]"
   >
     <div class="flex h-14 items-center justify-between border-b px-6">
-      <div class="flex items-center gap-2">
-        <div class="size-6 rounded bg-primary flex items-center justify-center">
+      <div class="flex items-center gap-2 overflow-hidden">
+        <div class="size-6 rounded bg-primary flex items-center justify-center shrink-0">
           <Package class="size-4 text-primary-foreground" />
         </div>
-        <span class="font-bold text-base tracking-tight text-foreground">{{ t('app') }}</span>
+        <span v-if="!ui.sidebarCollapsed" class="font-bold text-base tracking-tight text-foreground whitespace-nowrap animate-in fade-in duration-500">{{ t('app') }}</span>
       </div>
+      <button @click="ui.toggleSidebar" class="hidden lg:flex text-muted-foreground hover:text-foreground transition-colors ml-auto">
+        <component :is="ui.sidebarCollapsed ? ChevronRight : ChevronLeft" class="size-4" />
+      </button>
       <button @click="emit('close')" class="lg:hidden text-muted-foreground hover:text-foreground transition-colors">
         <X class="size-5" />
       </button>
@@ -92,13 +100,17 @@ function navigate(to: string) {
         v-for="item in navItems"
         :key="item.to"
         @click="navigate(item.to)"
-        class="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all group"
-        :class="isActive(item.to)
-          ? 'bg-primary text-primary-foreground shadow-sm'
-          : 'text-muted-foreground hover:bg-secondary hover:text-foreground'"
+        class="flex items-center rounded-md px-3 py-2 text-sm font-medium transition-all group w-full"
+        :class="[
+          isActive(item.to)
+            ? 'bg-primary text-primary-foreground shadow-sm'
+            : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
+          ui.sidebarCollapsed ? 'justify-center' : 'gap-3'
+        ]"
+        :title="ui.sidebarCollapsed ? t(item.label) : ''"
       >
         <component :is="item.icon" :class="['size-4 shrink-0 transition-transform group-hover:scale-110', isActive(item.to) ? '' : 'opacity-70 group-hover:opacity-100']" />
-        <span class="truncate">{{ t(item.label) }}</span>
+        <span v-if="!ui.sidebarCollapsed" class="truncate animate-in fade-in slide-in-from-left-2 duration-300">{{ t(item.label) }}</span>
       </button>
 
       <div class="h-px bg-border my-3 mx-2" />
@@ -107,35 +119,47 @@ function navigate(to: string) {
         <button
           v-if="auth.isAdmin"
           @click="navigate('/audit-logs')"
-          class="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all group"
-          :class="isActive('/audit-logs')
-            ? 'bg-primary text-primary-foreground shadow-sm'
-            : 'text-muted-foreground hover:bg-secondary hover:text-foreground'"
+          class="flex items-center rounded-md px-3 py-2 text-sm font-medium transition-all group w-full"
+          :class="[
+            isActive('/audit-logs')
+              ? 'bg-primary text-primary-foreground shadow-sm'
+              : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
+            ui.sidebarCollapsed ? 'justify-center' : 'gap-3'
+          ]"
+          :title="ui.sidebarCollapsed ? 'Audit' : ''"
         >
           <History :class="['size-4 shrink-0 transition-transform group-hover:scale-110', isActive('/audit-logs') ? '' : 'opacity-70 group-hover:opacity-100']" />
-          <span class="truncate">Audit</span>
+          <span v-if="!ui.sidebarCollapsed" class="truncate animate-in fade-in slide-in-from-left-2 duration-300">Audit</span>
         </button>
         <button
           v-if="auth.isAdmin"
           @click="navigate('/users')"
-          class="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all group"
-          :class="isActive('/users')
-            ? 'bg-primary text-primary-foreground shadow-sm'
-            : 'text-muted-foreground hover:bg-secondary hover:text-foreground'"
+          class="flex items-center rounded-md px-3 py-2 text-sm font-medium transition-all group w-full"
+          :class="[
+            isActive('/users')
+              ? 'bg-primary text-primary-foreground shadow-sm'
+              : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
+            ui.sidebarCollapsed ? 'justify-center' : 'gap-3'
+          ]"
+          :title="ui.sidebarCollapsed ? t('nav.users') : ''"
         >
           <Shield :class="['size-4 shrink-0 transition-transform group-hover:scale-110', isActive('/users') ? '' : 'opacity-70 group-hover:opacity-100']" />
-          <span class="truncate">{{ t('nav.users') }}</span>
+          <span v-if="!ui.sidebarCollapsed" class="truncate animate-in fade-in slide-in-from-left-2 duration-300">{{ t('nav.users') }}</span>
         </button>
 
         <button
           @click="navigate('/profile')"
-          class="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all group"
-          :class="isActive('/profile')
-            ? 'bg-primary text-primary-foreground shadow-sm'
-            : 'text-muted-foreground hover:bg-secondary hover:text-foreground'"
+          class="flex items-center rounded-md px-3 py-2 text-sm font-medium transition-all group w-full"
+          :class="[
+            isActive('/profile')
+              ? 'bg-primary text-primary-foreground shadow-sm'
+              : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
+            ui.sidebarCollapsed ? 'justify-center' : 'gap-3'
+          ]"
+          :title="ui.sidebarCollapsed ? t('nav.profile') : ''"
         >
           <UserCog :class="['size-4 shrink-0 transition-transform group-hover:scale-110', isActive('/profile') ? '' : 'opacity-70 group-hover:opacity-100']" />
-          <span class="truncate">{{ t('nav.profile') }}</span>
+          <span v-if="!ui.sidebarCollapsed" class="truncate animate-in fade-in slide-in-from-left-2 duration-300">{{ t('nav.profile') }}</span>
         </button>
       </div>
     </nav>
@@ -143,10 +167,12 @@ function navigate(to: string) {
     <div class="border-t p-3">
       <button
         @click="handleLogout"
-        class="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:bg-destructive/10 hover:text-destructive group"
+        class="flex items-center rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:bg-destructive/10 hover:text-destructive group w-full"
+        :class="ui.sidebarCollapsed ? 'justify-center' : 'gap-3'"
+        :title="ui.sidebarCollapsed ? t('auth.logout') : ''"
       >
         <LogOut class="size-4 shrink-0 transition-transform group-hover:-translate-x-1" />
-        <span class="truncate">{{ t('auth.logout') }}</span>
+        <span v-if="!ui.sidebarCollapsed" class="truncate animate-in fade-in slide-in-from-left-2 duration-300">{{ t('auth.logout') }}</span>
       </button>
     </div>
   </aside>

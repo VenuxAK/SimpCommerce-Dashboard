@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, onUnmounted } from 'vue'
+import { ref, onMounted, computed, onUnmounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Search, ShoppingCart, X, Plus, Minus, User, Barcode, Maximize2, Percent } from 'lucide-vue-next'
+import { Search, ShoppingCart, X, Plus, Minus, User, Barcode, Maximize2, Percent, Check } from 'lucide-vue-next'
 import api from '../lib/axios'
 import { Button } from '../components/ui/button'
 import { Card, CardContent } from '../components/ui/card'
 import Input from '../components/ui/Input.vue'
+import Select from '../components/ui/Select.vue'
 import { Badge } from '../components/ui/badge'
 import { useNotify } from '../lib/notify'
 import type { Discount, Product, ProductVariant, Customer } from '../types'
@@ -42,6 +43,30 @@ function toggleFullscreen() {
 const discounts = ref<Discount[]>([])
 
 const selectedDiscount = ref<Discount | null>(null)
+
+const categoryOptions = computed(() => [
+  { label: t('pos.all_categories').toUpperCase(), value: '' },
+  ...categories.value.map(c => ({ label: c.name.toUpperCase(), value: c.id }))
+])
+
+const discountOptions = computed(() => [
+  { label: 'NO DISCOUNT', value: '' },
+  ...discounts.value.map(d => ({ 
+    label: `${d.name} (${d.type === 'percentage' ? d.value + '%' : d.value.toLocaleString() + ' Ks'})`.toUpperCase(), 
+    value: String(d.id) 
+  }))
+])
+
+const selectedDiscountId = ref('')
+watch(selectedDiscountId, (id) => {
+  selectedDiscount.value = discounts.value.find(d => String(d.id) === id) || null
+})
+
+const paymentOptions = [
+  { label: 'CASH', value: 'cash' },
+  { label: 'TRANSFER', value: 'transfer' }
+]
+
 // Barcode scan state
 let barcodeBuffer = ''
 let barcodeTimer: ReturnType<typeof setTimeout> | null = null
@@ -253,6 +278,7 @@ async function completeSale() {
     success(t('pos.sale_completed'))
     cart.value = []
     selectedCustomer.value = null
+    selectedDiscountId.value = ''
     amountReceived.value = ''
   } catch (e: any) {
     const msg = e?.response?.data?.message || t('common.error')
@@ -293,12 +319,7 @@ async function completeSale() {
           <Input ref="searchInput" v-model="search" :placeholder="t('pos.search_product') + ' (Ctrl+K)'" class="pl-10 h-10 rounded-md border-zinc-200/60 dark:border-zinc-800/60 shadow-none focus-visible:ring-primary/20" />
           <Barcode v-if="barcodeActive" class="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-primary animate-pulse" />
         </div>
-        <select v-model="selectedCategory"
-          class="h-10 rounded-md border border-input bg-card px-4 text-xs font-black uppercase tracking-widest text-foreground w-full sm:w-48 focus:ring-2 focus:ring-primary/20 transition-all outline-none"
-        >
-          <option value="">{{ t('pos.all_categories') }}</option>
-          <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
-        </select>
+        <Select v-model="selectedCategory" :options="categoryOptions" class="sm:w-56" />
       </div>
 
       <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
@@ -398,13 +419,7 @@ async function completeSale() {
           <div class="pt-5 border-t border-dashed border-border space-y-4">
             <div class="space-y-1.5">
               <label class="text-[9px] font-black text-muted-foreground uppercase tracking-widest">{{ t('validation.apply_discount') }}</label>
-              <select v-model="selectedDiscount"
-                class="w-full h-9 rounded-md border border-input bg-background px-3 text-[11px] font-black uppercase tracking-tighter text-foreground outline-none focus:ring-2 focus:ring-primary/20 transition-all">
-                <option :value="null">NO DISCOUNT</option>
-                <option v-for="d in discounts" :key="d.id" :value="d">
-                  {{ d.name }} ({{ d.type === 'percentage' ? d.value + '%' : d.value.toLocaleString() + ' Ks' }})
-                </option>
-              </select>
+              <Select v-model="selectedDiscountId" :options="discountOptions" />
             </div>
 
             <div class="space-y-1.5 py-1">
@@ -425,14 +440,11 @@ async function completeSale() {
             <div class="grid grid-cols-2 gap-2.5 pt-1">
               <div class="space-y-1">
                 <label class="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Payment</label>
-                <select v-model="paymentMethod" class="w-full h-8 rounded-md border border-input bg-background px-2 text-[10px] font-black uppercase tracking-tighter text-foreground outline-none">
-                  <option value="cash">CASH</option>
-                  <option value="transfer">TRANSFER</option>
-                </select>
+                <Select v-model="paymentMethod" :options="paymentOptions" />
               </div>
               <div class="space-y-1">
                 <label class="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Received</label>
-                <Input v-model="amountReceived" type="number" min="0" step="0.01" class="h-8 text-right text-[10px] font-black tracking-tighter rounded-md" />
+                <Input v-model="amountReceived" type="number" min="0" step="0.01" class="h-10 text-right text-[10px] font-black tracking-tighter rounded-md" />
               </div>
             </div>
 

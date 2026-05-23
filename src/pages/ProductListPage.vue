@@ -2,12 +2,13 @@
 import { ref, onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
-import { Plus, Pencil, LayoutGrid, List, Download, Upload } from 'lucide-vue-next'
+import { Plus, Pencil, LayoutGrid, List, Download, Upload, Check } from 'lucide-vue-next'
 import api from '../lib/axios'
 import { Button } from '../components/ui/button'
 import { Card, CardContent } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
 import Input from '../components/ui/Input.vue'
+import Select from '../components/ui/Select.vue'
 import { useNotify } from '../lib/notify'
 import Pagination from '../components/Pagination.vue'
 import type { Product, Category } from '../types'
@@ -50,6 +51,11 @@ const search = ref('')
 const categoryFilter = ref<number | ''>('')
 const viewMode = ref<'grid' | 'list'>('list')
 const loading = ref(true)
+
+const categoryOptions = computed(() => [
+  { label: t('common.all').toUpperCase() + ' CATEGORIES', value: '' },
+  ...categories.value.map(c => ({ label: c.name.toUpperCase(), value: c.id }))
+])
 
 async function loadPage(page = 1) {
   loading.value = true
@@ -113,10 +119,7 @@ function stockBadge(stock: number) {
     <div class="flex flex-col sm:flex-row gap-3">
       <Input v-model="search" :placeholder="t('common.search').toUpperCase() + '...'" class="sm:max-w-xs h-9" />
       <div class="flex gap-2">
-        <select v-model="categoryFilter" class="h-9 rounded-md border border-input bg-card px-3 text-[10px] font-black uppercase tracking-widest text-foreground outline-none focus:ring-2 focus:ring-primary/10 transition-all min-w-[140px]">
-          <option value="">{{ t('common.all').toUpperCase() }} CATEGORIES</option>
-          <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name.toUpperCase() }}</option>
-        </select>
+        <Select v-model="categoryFilter" :options="categoryOptions" class="min-w-[180px]" />
         <div class="flex p-0.5 rounded-md border border-input bg-card">
           <button @click="viewMode = 'grid'"
             :class="['p-1.5 rounded-sm transition-all', viewMode === 'grid' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground']">

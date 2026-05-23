@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Search, ShoppingCart, X, Plus, Minus, User, Barcode } from 'lucide-vue-next'
+import { Search, ShoppingCart, X, Plus, Minus, User, Barcode, Maximize2, Percent } from 'lucide-vue-next'
 import api from '../lib/axios'
 import { Button } from '../components/ui/button'
 import { Card, CardContent } from '../components/ui/card'
@@ -32,6 +32,11 @@ const loading = ref(false)
 const completed = ref(false)
 const dataLoading = ref(true)
 const showCart = ref(false)
+const isFullscreen = ref(false)
+
+function toggleFullscreen() {
+  isFullscreen.value = !isFullscreen.value
+}
 
 // Discount state
 const discounts = ref<Discount[]>([])
@@ -132,9 +137,10 @@ function handleBarcodeKey(e: KeyboardEvent) {
   }
 
   if (e.key.length === 1) {
-    if (barcodeTimer) clearTimeout(barcodeTimer)
+    if (barcodeBuffer.length === 0) {
+      barcodeTimer = setTimeout(() => { barcodeBuffer = ''; barcodeActive.value = false }, 100)
+    }
     barcodeBuffer += e.key
-    barcodeTimer = setTimeout(() => { barcodeBuffer = ''; barcodeActive.value = false }, 100)
   }
 }
 
@@ -258,186 +264,234 @@ async function completeSale() {
 </script>
 
 <template>
-  <div v-if="dataLoading" class="text-sm text-zinc-400 dark:text-zinc-500">{{ t('common.loading') }}</div>
+  <div v-if="dataLoading" class="flex h-96 items-center justify-center text-muted-foreground">
+    <div class="size-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+  </div>
 
-  <div v-else class="flex flex-col lg:flex-row gap-4 lg:gap-6">
-    <div class="flex-1 space-y-4 min-w-0">
-      <div class="flex items-center justify-between">
-        <h1 class="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-100">{{ t('pos.title') }}</h1>
-        <button @click="showCart = !showCart" class="lg:hidden relative p-2 rounded-lg border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400">
+  <div v-else :class="['flex flex-col lg:flex-row gap-6 transition-all duration-300 animate-in fade-in slide-in-from-bottom-2 duration-500', isFullscreen ? 'fixed inset-0 z-50 bg-background p-6 overflow-auto' : '']">
+    <div class="flex-1 space-y-6 min-w-0">
+      <div class="flex items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <h1 class="text-3xl font-black tracking-tighter text-foreground uppercase italic">{{ t('pos.title') }}</h1>
+          <button 
+            @click="toggleFullscreen"
+            class="hidden lg:flex size-9 items-center justify-center rounded-md border border-border bg-card hover:bg-secondary text-muted-foreground transition-all"
+            :title="isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'"
+          >
+            <component :is="isFullscreen ? X : Maximize2" class="size-4" />
+          </button>
+        </div>
+        <button @click="showCart = !showCart" class="lg:hidden relative p-2 rounded-md border border-border bg-card text-muted-foreground">
           <ShoppingCart class="size-5" />
-          <span v-if="cart.length" class="absolute -top-1 -right-1 size-5 rounded-full bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs flex items-center justify-center">{{ cart.length }}</span>
+          <span v-if="cart.length" class="absolute -top-1 -right-1 size-5 rounded-full bg-primary text-primary-foreground text-[10px] font-black flex items-center justify-center ring-2 ring-background">{{ cart.length }}</span>
         </button>
       </div>
 
-      <div class="flex flex-col sm:flex-row gap-2">
+      <div class="flex flex-col sm:flex-row gap-3">
         <div class="relative flex-1">
-          <Search class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-zinc-400 dark:text-zinc-500" />
-          <Input ref="searchInput" v-model="search" :placeholder="t('pos.search_product') + ' (Ctrl+K)'" class="pl-9" />
-          <Barcode v-if="barcodeActive" class="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-green-500 animate-pulse" />
+          <Search class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/60" />
+          <Input ref="searchInput" v-model="search" :placeholder="t('pos.search_product') + ' (Ctrl+K)'" class="pl-10 h-10 rounded-md border-zinc-200/60 dark:border-zinc-800/60 shadow-none focus-visible:ring-primary/20" />
+          <Barcode v-if="barcodeActive" class="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-primary animate-pulse" />
         </div>
         <select v-model="selectedCategory"
-          class="h-9 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 text-sm text-zinc-900 dark:text-zinc-100 w-full sm:w-auto"
+          class="h-10 rounded-md border border-input bg-card px-4 text-xs font-black uppercase tracking-widest text-foreground w-full sm:w-48 focus:ring-2 focus:ring-primary/20 transition-all outline-none"
         >
           <option value="">{{ t('pos.all_categories') }}</option>
           <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
         </select>
       </div>
 
-      <div v-if="barcodeActive" class="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
-        <Barcode class="size-3" /> Scanning barcode...
-      </div>
-
-      <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        <Card v-for="product in filteredProducts" :key="product.id"
-          class="cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all duration-150"
+      <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+        <div v-for="product in filteredProducts" :key="product.id"
+          class="group cursor-pointer rounded-xl border border-zinc-200/60 dark:border-zinc-800/60 bg-card p-1.5 hover:shadow-2xl hover:shadow-primary/5 hover:border-primary/50 transition-all duration-300"
           @click="openVariantDialog(product)"
         >
-          <CardContent class="p-3 sm:p-4 text-center">
-            <div class="mb-2 flex h-16 sm:h-20 items-center justify-center rounded-lg bg-zinc-50 dark:bg-zinc-800 overflow-hidden">
-              <img v-if="imgUrl(product)" :src="imgUrl(product)!" :alt="product.name" class="size-full object-cover" />
-              <span v-else class="text-2xl sm:text-3xl">👕</span>
+          <div class="relative aspect-square mb-2 overflow-hidden rounded-lg bg-secondary/30">
+            <img v-if="imgUrl(product)" :src="imgUrl(product)!" :alt="product.name" class="size-full object-cover transition-transform duration-700 group-hover:scale-105" />
+            <div v-else class="flex size-full items-center justify-center text-3xl grayscale opacity-20">👕</div>
+            <div class="absolute top-2 right-2 size-6 rounded-full bg-background/80 backdrop-blur shadow-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <Plus class="size-3 text-foreground" />
             </div>
-            <p class="text-xs sm:text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate">{{ product.name }}</p>
-            <p class="text-sm font-bold text-zinc-900 dark:text-zinc-100">{{ product.base_price.toLocaleString() }} Ks</p>
-          </CardContent>
-        </Card>
+          </div>
+          <div class="px-1.5 pb-1.5">
+            <p class="text-xs font-black text-foreground uppercase tracking-tight truncate">{{ product.name }}</p>
+            <p class="text-sm font-black text-primary mt-0.5 tracking-tighter">{{ product.base_price.toLocaleString() }} Ks</p>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="w-full lg:w-96 shrink-0" :class="{ 'hidden lg:block': !showCart }">
-      <Card>
-        <CardContent class="p-4 space-y-4">
-          <div class="flex items-center justify-between">
-            <h2 class="font-semibold text-zinc-900 dark:text-zinc-100">{{ t('pos.cart') }} ({{ cart.length }})</h2>
-            <div class="flex items-center gap-2">
-              <button @click="showCustomerSearch = !showCustomerSearch" class="text-xs text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 truncate max-w-40">
-                <User class="size-4 inline" /> {{ selectedCustomer?.name || t('pos.select_customer') }}
-              </button>
-              <button @click="showCart = false" class="lg:hidden text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300">
-                <X class="size-4" />
-              </button>
-            </div>
-          </div>
-
-          <div v-if="showCustomerSearch" class="space-y-2">
-            <Input v-model="customerSearch" :placeholder="t('common.search')" @input="debouncedSearch(customerSearch)" />
-            <div v-for="c in customers" :key="c.id"
-              class="cursor-pointer rounded px-2 py-1 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 truncate"
-              @click="selectedCustomer = c; showCustomerSearch = false; customerSearch = ''"
-            >
-              {{ c.name }} — {{ c.phone || '—' }}
-            </div>
-          </div>
-
-          <div v-if="cart.length === 0" class="py-8 text-center text-sm text-zinc-400 dark:text-zinc-500">
-            {{ t('pos.empty_cart') }}
-          </div>
-
-          <div v-for="(item, idx) in cart" :key="item.variant.id"
-            class="flex items-center gap-2 rounded-lg border border-zinc-100 dark:border-zinc-800 p-2"
-          >
-            <div v-if="item.variant.image_url" class="size-9 rounded-md overflow-hidden shrink-0 bg-zinc-50 dark:bg-zinc-800">
-              <img :src="item.variant.image_url" class="size-full object-cover" />
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate">{{ item.product.name }}</p>
-              <p class="text-xs text-zinc-400 dark:text-zinc-500">{{ item.variant.size }} / {{ item.variant.color }} <Badge variant="secondary" class="ml-1">{{ item.variant.stock_quantity }}</Badge></p>
-            </div>
-            <div class="flex items-center gap-1 shrink-0">
-              <button @click="updateQuantity(idx, -1)" class="size-6 rounded border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 text-sm flex items-center justify-center hover:bg-zinc-100 dark:hover:bg-zinc-800"><Minus class="size-3" /></button>
-              <span class="w-6 text-center text-sm text-zinc-900 dark:text-zinc-100">{{ item.quantity }}</span>
-              <button @click="updateQuantity(idx, 1)" class="size-6 rounded border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 text-sm flex items-center justify-center hover:bg-zinc-100 dark:hover:bg-zinc-800"><Plus class="size-3" /></button>
-            </div>
-            <p class="w-16 sm:w-20 text-right text-sm font-semibold text-zinc-900 dark:text-zinc-100 shrink-0">
-              {{ ((item.product.base_price + item.variant.price_adjustment) * item.quantity).toLocaleString() }}
-            </p>
-            <button @click="removeFromCart(idx)" class="text-red-400 hover:text-red-600 dark:text-red-500 dark:hover:text-red-400 shrink-0">
+    <div :class="['w-full lg:w-[380px] shrink-0 lg:sticky lg:top-20 h-fit transition-all duration-300', isFullscreen ? 'lg:top-6' : '', showCart ? 'block' : 'hidden lg:block']">
+      <Card class="border-zinc-200/60 dark:border-zinc-800/60 shadow-2xl shadow-primary/5 rounded-2xl overflow-hidden bg-card">
+        <div class="bg-muted/30 p-5 border-b">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-sm font-black text-foreground uppercase tracking-widest flex items-center gap-2">
+              <ShoppingCart class="size-4" />
+              {{ t('pos.cart') }}
+              <span class="text-[10px] font-bold text-muted-foreground ml-1">({{ cart.length }})</span>
+            </h2>
+            <button @click="showCart = false" class="lg:hidden p-1.5 rounded-md hover:bg-secondary transition-colors">
               <X class="size-4" />
             </button>
           </div>
 
-          <div class="space-y-2">
-            <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ t('validation.apply_discount') }}</label>
-            <select v-model="selectedDiscount" @change="() => {}"
-              class="w-full h-9 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 text-sm text-zinc-900 dark:text-zinc-100">
-              <option :value="null">{{ t('validation.no_discount') }}</option>
-              <option v-for="d in discounts" :key="d.id" :value="d">
-                {{ d.name }} ({{ d.type === 'percentage' ? d.value + '%' : d.value.toLocaleString() + ' Ks' }}) — {{ d.applies_to }}
-              </option>
-            </select>
+          <button 
+            @click="showCustomerSearch = !showCustomerSearch" 
+            class="flex items-center gap-3 w-full p-2.5 rounded-lg bg-background border border-zinc-200/60 dark:border-zinc-800/60 hover:border-primary/50 transition-all text-left group"
+          >
+            <div class="size-8 rounded bg-secondary flex items-center justify-center text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+              <User class="size-4" />
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-[10px] text-muted-foreground font-black uppercase tracking-tighter">{{ t('pos.customer') }}</p>
+              <p class="text-xs font-bold text-foreground truncate">{{ selectedCustomer?.name || t('pos.select_customer') }}</p>
+            </div>
+          </button>
+
+          <div v-if="showCustomerSearch" class="mt-2 space-y-1.5 animate-in fade-in slide-in-from-top-1">
+            <Input v-model="customerSearch" :placeholder="t('common.search')" @input="debouncedSearch(customerSearch)" class="h-9 rounded-md text-xs font-bold" />
+            <div class="max-h-40 overflow-auto rounded-lg border border-zinc-200/60 dark:border-zinc-800/60 bg-background shadow-xl">
+              <div v-for="c in customers" :key="c.id"
+                class="cursor-pointer px-3 py-2 text-[11px] text-foreground hover:bg-secondary transition-colors border-b last:border-0"
+                @click="selectedCustomer = c; showCustomerSearch = false; customerSearch = ''"
+              >
+                <div class="font-black uppercase">{{ c.name }}</div>
+                <div class="text-[9px] text-muted-foreground font-bold tracking-wider">{{ c.phone || 'NO PHONE' }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <CardContent class="p-5 space-y-5">
+          <div class="space-y-3 max-h-[35vh] overflow-auto pr-1 custom-scrollbar">
+            <div v-if="cart.length === 0" class="py-10 text-center">
+              <p class="text-[10px] text-muted-foreground font-black uppercase tracking-widest">{{ t('pos.empty_cart') }}</p>
+            </div>
+
+            <div v-for="(item, idx) in cart" :key="item.variant.id"
+              class="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/30 transition-colors group"
+            >
+              <div class="relative size-10 rounded-md overflow-hidden bg-secondary/50 shrink-0 border border-zinc-100/50 dark:border-zinc-800/50">
+                <img v-if="item.variant.image_url" :src="item.variant.image_url" class="size-full object-cover" />
+                <span v-else class="flex size-full items-center justify-center text-sm grayscale opacity-20">👕</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-[11px] font-black text-foreground uppercase tracking-tight truncate">{{ item.product.name }}</p>
+                <p class="text-[9px] font-bold text-muted-foreground uppercase tracking-tighter">{{ item.variant.size }} / {{ item.variant.color }}</p>
+                <div class="flex items-center gap-2 mt-1">
+                  <button @click="updateQuantity(idx, -1)" class="size-5 rounded border hover:bg-background text-muted-foreground flex items-center justify-center transition-colors"><Minus class="size-2.5" /></button>
+                  <span class="text-[11px] font-black w-3 text-center">{{ item.quantity }}</span>
+                  <button @click="updateQuantity(idx, 1)" class="size-5 rounded border hover:bg-background text-muted-foreground flex items-center justify-center transition-colors"><Plus class="size-2.5" /></button>
+                </div>
+              </div>
+              <div class="text-right">
+                <p class="text-xs font-black text-foreground">
+                  {{ ((item.product.base_price + item.variant.price_adjustment) * item.quantity).toLocaleString() }}
+                </p>
+                <button @click="removeFromCart(idx)" class="text-destructive opacity-0 group-hover:opacity-100 transition-opacity p-0.5 mt-0.5">
+                  <X class="size-3" />
+                </button>
+              </div>
+            </div>
           </div>
 
-          <div class="flex justify-between border-t border-zinc-200 dark:border-zinc-800 pt-2 font-bold text-zinc-900 dark:text-zinc-100">
-            <span>{{ t('pos.subtotal') }}</span>
-            <span>{{ subtotal.toLocaleString() }} Ks</span>
+          <div class="pt-5 border-t border-dashed border-border space-y-4">
+            <div class="space-y-1.5">
+              <label class="text-[9px] font-black text-muted-foreground uppercase tracking-widest">{{ t('validation.apply_discount') }}</label>
+              <select v-model="selectedDiscount"
+                class="w-full h-9 rounded-md border border-input bg-background px-3 text-[11px] font-black uppercase tracking-tighter text-foreground outline-none focus:ring-2 focus:ring-primary/20 transition-all">
+                <option :value="null">NO DISCOUNT</option>
+                <option v-for="d in discounts" :key="d.id" :value="d">
+                  {{ d.name }} ({{ d.type === 'percentage' ? d.value + '%' : d.value.toLocaleString() + ' Ks' }})
+                </option>
+              </select>
+            </div>
+
+            <div class="space-y-1.5 py-1">
+              <div class="flex justify-between text-[11px] font-bold text-muted-foreground">
+                <span>SUBTOTAL</span>
+                <span>{{ subtotal.toLocaleString() }} Ks</span>
+              </div>
+              <div v-if="discountAmount > 0" class="flex justify-between text-[11px] text-primary font-black">
+                <span class="flex items-center gap-1">DISCOUNT ({{ discountLabel }})</span>
+                <span>-{{ discountAmount.toLocaleString() }} Ks</span>
+              </div>
+              <div class="flex justify-between items-end pt-1">
+                <span class="text-xs font-black text-foreground uppercase tracking-widest">Total</span>
+                <span class="text-2xl font-black text-foreground tracking-tighter italic">{{ totalAfterDiscount.toLocaleString() }} Ks</span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2.5 pt-1">
+              <div class="space-y-1">
+                <label class="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Payment</label>
+                <select v-model="paymentMethod" class="w-full h-8 rounded-md border border-input bg-background px-2 text-[10px] font-black uppercase tracking-tighter text-foreground outline-none">
+                  <option value="cash">CASH</option>
+                  <option value="transfer">TRANSFER</option>
+                </select>
+              </div>
+              <div class="space-y-1">
+                <label class="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Received</label>
+                <Input v-model="amountReceived" type="number" min="0" step="0.01" class="h-8 text-right text-[10px] font-black tracking-tighter rounded-md" />
+              </div>
+            </div>
+
+            <div v-if="parsedAmount > 0" class="flex justify-between items-center px-4 py-2.5 rounded-lg bg-secondary/50 border border-border/50">
+              <span class="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Change</span>
+              <span class="text-lg font-black text-foreground italic tracking-tight">{{ change.toLocaleString() }} Ks</span>
+            </div>
+
+            <Button class="w-full h-12 rounded-lg text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/10 hover:translate-y-[-1px] active:translate-y-[0] transition-all" :disabled="cart.length === 0 || loading" @click="completeSale">
+              {{ loading ? 'LOADING...' : t('pos.complete_sale') }}
+            </Button>
           </div>
-
-          <div v-if="discountAmount > 0" class="flex justify-between text-sm text-green-600 dark:text-green-400">
-            <span>{{ t('validation.discount') }} {{ discountLabel }}</span>
-            <span>-{{ discountAmount.toLocaleString() }} Ks</span>
-          </div>
-
-          <div v-if="discountAmount > 0" class="flex justify-between font-bold text-zinc-900 dark:text-zinc-100">
-            <span>{{ t('common.total') }}</span>
-            <span>{{ totalAfterDiscount.toLocaleString() }} Ks</span>
-          </div>
-
-          <div class="space-y-2">
-            <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ t('pos.amount_received') }}</label>
-            <Input v-model="amountReceived" type="number" min="0" step="0.01" />
-          </div>
-
-          <div class="space-y-2">
-            <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ t('pos.payment_method') }}</label>
-            <select v-model="paymentMethod" class="w-full h-9 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 text-sm text-zinc-900 dark:text-zinc-100">
-              <option value="cash">{{ t('pos.cash') }}</option>
-              <option value="transfer">{{ t('pos.transfer') }}</option>
-            </select>
-          </div>
-
-          <div v-if="parsedAmount > 0" class="flex justify-between text-sm">
-            <span class="text-zinc-600 dark:text-zinc-400">{{ t('pos.change') }}</span>
-            <span class="font-semibold text-green-600 dark:text-green-400">{{ change.toLocaleString() }} Ks</span>
-          </div>
-
-          <Button class="w-full" :disabled="cart.length === 0 || loading" @click="completeSale">
-            {{ loading ? t('common.loading') : t('pos.complete_sale') }}
-          </Button>
-
-          <p v-if="completed" class="text-center text-sm text-green-600 dark:text-green-400">{{ t('pos.sale_completed') }}</p>
         </CardContent>
       </Card>
     </div>
 
-    <div v-if="showVariantDialog && selectedProduct" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+    <div v-if="showVariantDialog && selectedProduct" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
       @click.self="showVariantDialog = false">
-      <Card class="w-full max-w-sm">
-        <CardContent class="p-4 sm:p-6 space-y-3">
-          <div class="flex items-center justify-between">
-            <h3 class="font-semibold text-zinc-900 dark:text-zinc-100">{{ t('pos.choose_variant') }}</h3>
-            <button @click="showVariantDialog = false" class="text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300"><X class="size-4" /></button>
-          </div>
+      <Card class="w-full max-w-sm rounded-2xl overflow-hidden border-none shadow-2xl animate-in zoom-in-95 duration-200 bg-card">
+        <div class="p-5 border-b flex items-center justify-between bg-muted/20">
           <div class="flex items-center gap-3">
-            <div v-if="imgUrl(selectedProduct)" class="size-12 rounded-lg overflow-hidden shrink-0">
+            <div v-if="imgUrl(selectedProduct)" class="size-11 rounded-lg overflow-hidden border border-border/50">
               <img :src="imgUrl(selectedProduct)!" class="size-full object-cover" />
             </div>
-            <p class="text-lg font-bold text-zinc-900 dark:text-zinc-100 truncate">{{ selectedProduct.name }}</p>
+            <div>
+              <h3 class="font-black text-xs text-foreground uppercase tracking-tight">{{ selectedProduct.name }}</h3>
+              <p class="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter">{{ t('pos.choose_variant') }}</p>
+            </div>
           </div>
+          <button @click="showVariantDialog = false" class="p-1.5 rounded-md hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"><X class="size-4" /></button>
+        </div>
+        <div class="p-4 space-y-2 max-h-[50vh] overflow-auto custom-scrollbar">
           <button v-for="v in selectedProduct.variants" :key="v.id"
             @click="addToCart(v)"
-            class="flex w-full items-center gap-3 rounded-lg border border-zinc-200 dark:border-zinc-700 px-4 py-3 text-sm text-zinc-900 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+            class="group flex w-full items-center gap-4 rounded-xl border border-zinc-100 dark:border-zinc-800 p-3.5 text-left transition-all hover:border-primary/50 hover:bg-primary/5 disabled:opacity-30 disabled:grayscale"
             :disabled="v.stock_quantity === 0"
           >
-            <div v-if="v.image_url" class="size-10 rounded-md overflow-hidden shrink-0 bg-zinc-50 dark:bg-zinc-800">
-              <img :src="v.image_url" class="size-full object-cover" />
+            <div class="relative size-10 rounded-md overflow-hidden bg-secondary border border-border/50">
+              <img v-if="v.image_url" :src="v.image_url" class="size-full object-cover" />
+              <span v-else class="flex size-full items-center justify-center text-xs grayscale opacity-20">👕</span>
             </div>
-            <span class="flex-1 truncate text-left">{{ v.size }} / {{ v.color }}</span>
-            <span class="font-semibold">{{ (selectedProduct.base_price + v.price_adjustment).toLocaleString() }} Ks</span>
-            <Badge v-if="v.stock_quantity === 0" variant="destructive">{{ t('dashboard.out_of_stock') }}</Badge>
-            <Badge v-else variant="secondary">{{ v.stock_quantity }}</Badge>
+            <div class="flex-1">
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs font-black text-foreground uppercase">{{ v.size }}</span>
+                <span class="text-muted-foreground text-[8px]">•</span>
+                <span class="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">{{ v.color }}</span>
+              </div>
+              <p class="text-[9px] font-bold mt-0.5 tracking-tighter" :class="v.stock_quantity < 5 ? 'text-orange-500' : 'text-muted-foreground'">
+                {{ v.stock_quantity }} IN STOCK
+              </p>
+            </div>
+            <div class="text-right">
+              <p class="text-xs font-black text-foreground group-hover:text-primary transition-colors tracking-tight">
+                {{ (selectedProduct.base_price + v.price_adjustment).toLocaleString() }} Ks
+              </p>
+              <Badge v-if="v.stock_quantity === 0" variant="destructive" class="mt-1 px-1.5 py-0 text-[8px] font-black uppercase">Sold Out</Badge>
+            </div>
           </button>
-        </CardContent>
+        </div>
       </Card>
     </div>
   </div>

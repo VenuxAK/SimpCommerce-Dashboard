@@ -90,73 +90,86 @@ function stockBadge(stock: number) {
 </script>
 
 <template>
-  <div class="space-y-4">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-      <h1 class="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-100">{{ t('products.title') }}</h1>
+  <div class="space-y-6 animate-in fade-in duration-500">
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-black tracking-tight text-foreground uppercase italic">{{ t('products.title') }}</h1>
+        <p class="text-sm text-muted-foreground mt-1">Manage your product catalog and variants</p>
+      </div>
       <div class="flex gap-2">
-        <Button variant="outline" size="sm" @click="importInput?.click()" class="w-full sm:w-auto">
-          <Upload class="size-4" /> Import
+        <Button variant="outline" size="sm" @click="importInput?.click()" class="h-9 px-4">
+          <Upload class="size-3.5" /> <span class="ml-1">IMPORT</span>
         </Button>
-        <button @click="exportCsv" class="inline-flex items-center gap-2 rounded-md border border-zinc-200 dark:border-zinc-700 px-3 py-1.5 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
-          <Download class="size-4" /> Export
-        </button>
-        <Button @click="router.push('/products/new')" class="w-full sm:w-auto">
-          <Plus class="size-4" /> {{ t('products.new_product') }}
+        <Button variant="outline" size="sm" @click="exportCsv" class="h-9 px-4">
+          <Download class="size-3.5" /> <span class="ml-1">EXPORT</span>
+        </Button>
+        <Button size="sm" @click="router.push('/products/new')" class="h-9 px-4">
+          <Plus class="size-3.5" /> <span class="ml-1">{{ t('products.new_product').toUpperCase() }}</span>
         </Button>
         <input ref="importInput" type="file" accept=".csv" class="hidden" @change="onImportCsv" />
       </div>
     </div>
 
-    <div class="flex flex-col sm:flex-row gap-2">
-      <Input v-model="search" :placeholder="t('common.search')" class="sm:max-w-xs" />
+    <div class="flex flex-col sm:flex-row gap-3">
+      <Input v-model="search" :placeholder="t('common.search').toUpperCase() + '...'" class="sm:max-w-xs h-9" />
       <div class="flex gap-2">
-        <select v-model="categoryFilter" class="h-9 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 text-sm text-zinc-900 dark:text-zinc-100 flex-1 sm:flex-initial">
-          <option value="">{{ t('common.all') }}</option>
-          <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+        <select v-model="categoryFilter" class="h-9 rounded-md border border-input bg-card px-3 text-[10px] font-black uppercase tracking-widest text-foreground outline-none focus:ring-2 focus:ring-primary/10 transition-all min-w-[140px]">
+          <option value="">{{ t('common.all').toUpperCase() }} CATEGORIES</option>
+          <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name.toUpperCase() }}</option>
         </select>
-        <div class="flex rounded-md border border-zinc-200 dark:border-zinc-700 overflow-hidden">
+        <div class="flex p-0.5 rounded-md border border-input bg-card">
           <button @click="viewMode = 'grid'"
-            :class="['px-2 py-1.5 transition-colors', viewMode === 'grid' ? 'bg-zinc-100 dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100' : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300']">
-            <LayoutGrid class="size-4" />
+            :class="['p-1.5 rounded-sm transition-all', viewMode === 'grid' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground']">
+            <LayoutGrid class="size-3.5" />
           </button>
           <button @click="viewMode = 'list'"
-            :class="['px-2 py-1.5 transition-colors', viewMode === 'list' ? 'bg-zinc-100 dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100' : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300']">
-            <List class="size-4" />
+            :class="['p-1.5 rounded-sm transition-all', viewMode === 'list' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground']">
+            <List class="size-3.5" />
           </button>
         </div>
       </div>
     </div>
 
-    <div v-if="loading" class="text-sm text-zinc-400 dark:text-zinc-500">{{ t('common.loading') }}</div>
+    <div v-if="loading" class="flex h-64 items-center justify-center text-muted-foreground">
+      <div class="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+    </div>
 
     <!-- List View -->
-    <Card v-if="!loading && viewMode === 'list'">
+    <Card v-if="!loading && viewMode === 'list'" class="overflow-hidden border-zinc-200/60 dark:border-zinc-800/60 shadow-sm">
       <CardContent class="p-0 overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead class="border-b bg-zinc-50 dark:bg-zinc-800/50">
-            <tr>
-              <th class="px-3 sm:px-4 py-3 text-left whitespace-nowrap text-zinc-500 dark:text-zinc-400 font-medium">{{ t('products.product_name') }}</th>
-              <th class="px-3 sm:px-4 py-3 text-left whitespace-nowrap text-zinc-500 dark:text-zinc-400 font-medium hidden sm:table-cell">{{ t('products.category') }}</th>
-              <th class="px-3 sm:px-4 py-3 text-right whitespace-nowrap text-zinc-500 dark:text-zinc-400 font-medium">{{ t('products.base_price') }}</th>
-              <th class="px-3 sm:px-4 py-3 text-right whitespace-nowrap text-zinc-500 dark:text-zinc-400 font-medium hidden sm:table-cell">{{ t('products.variants') }}</th>
-              <th class="px-3 sm:px-4 py-3 text-right whitespace-nowrap text-zinc-500 dark:text-zinc-400 font-medium">{{ t('products.stock') }}</th>
-              <th class="px-3 sm:px-4 py-3"></th>
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b bg-muted/30">
+              <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">{{ t('products.product_name') }}</th>
+              <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground hidden sm:table-cell">{{ t('products.category') }}</th>
+              <th class="px-6 py-4 text-right text-[10px] font-black uppercase tracking-widest text-muted-foreground">{{ t('products.base_price') }}</th>
+              <th class="px-6 py-4 text-right text-[10px] font-black uppercase tracking-widest text-muted-foreground hidden sm:table-cell">{{ t('products.variants') }}</th>
+              <th class="px-6 py-4 text-right text-[10px] font-black uppercase tracking-widest text-muted-foreground">{{ t('products.stock') }}</th>
+              <th class="px-6 py-4"></th>
             </tr>
           </thead>
-          <tbody>
-            <tr v-for="p in filtered" :key="p.id" class="border-b border-zinc-100 dark:border-zinc-800 last:border-0 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
-              <td class="px-3 sm:px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100 truncate max-w-32 sm:max-w-none">{{ p.name }}</td>
-              <td class="px-3 sm:px-4 py-3 text-zinc-500 dark:text-zinc-400 truncate max-w-28 hidden sm:table-cell">{{ p.category?.name }}</td>
-              <td class="px-3 sm:px-4 py-3 text-right whitespace-nowrap text-zinc-700 dark:text-zinc-300">{{ p.base_price.toLocaleString() }} Ks</td>
-              <td class="px-3 sm:px-4 py-3 text-right text-zinc-700 dark:text-zinc-300 hidden sm:table-cell">{{ p.variants.length }}</td>
-              <td class="px-3 sm:px-4 py-3 text-right">
-                <Badge :variant="stockBadge(totalStock(p.variants))">
+          <tbody class="divide-y divide-border/40">
+            <tr v-for="p in filtered" :key="p.id" class="group hover:bg-muted/30 transition-colors">
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                  <div class="size-10 rounded-md overflow-hidden bg-secondary/50 border border-border/50 shrink-0">
+                    <img v-if="imgUrl(p)" :src="imgUrl(p)!" :alt="p.name" class="size-full object-cover grayscale group-hover:grayscale-0 transition-all" />
+                    <span v-else class="flex size-full items-center justify-center text-lg opacity-20">👕</span>
+                  </div>
+                  <span class="text-sm font-bold text-foreground group-hover:text-primary transition-colors">{{ p.name }}</span>
+                </div>
+              </td>
+              <td class="px-6 py-4 text-xs font-medium text-muted-foreground hidden sm:table-cell uppercase tracking-tight">{{ p.category?.name }}</td>
+              <td class="px-6 py-4 text-right text-sm font-black text-foreground tabular-nums">{{ p.base_price.toLocaleString() }} Ks</td>
+              <td class="px-6 py-4 text-right text-xs font-bold text-muted-foreground hidden sm:table-cell uppercase">{{ p.variants.length }} VAR</td>
+              <td class="px-6 py-4 text-right">
+                <Badge :variant="stockBadge(totalStock(p.variants))" class="px-2 py-0">
                   {{ totalStock(p.variants) }}
                 </Badge>
               </td>
-              <td class="px-3 sm:px-4 py-3 text-right">
-                <Button variant="ghost" size="icon" @click="router.push('/products/' + p.id + '/edit')" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
-                  <Pencil class="size-4" />
+              <td class="px-6 py-4 text-right">
+                <Button variant="ghost" size="icon" @click="router.push('/products/' + p.id + '/edit')" class="size-8 text-muted-foreground hover:text-primary">
+                  <Pencil class="size-3.5" />
                 </Button>
               </td>
             </tr>
@@ -167,28 +180,27 @@ function stockBadge(stock: number) {
 
     <!-- Grid View -->
     <div v-if="!loading && viewMode === 'grid'">
-      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-        <Card v-for="p in filtered" :key="p.id"
-          class="cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all duration-150"
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        <div v-for="p in filtered" :key="p.id"
+          class="group cursor-pointer rounded-xl border border-zinc-200/60 dark:border-zinc-800/60 bg-card p-1.5 hover:shadow-2xl hover:shadow-primary/5 hover:border-primary/50 transition-all duration-300"
           @click="router.push('/products/' + p.id + '/edit')"
         >
-          <CardContent class="p-3 sm:p-4 space-y-2">
-            <div class="flex h-16 sm:h-20 items-center justify-center rounded-lg bg-zinc-50 dark:bg-zinc-800 overflow-hidden">
-              <img v-if="imgUrl(p)" :src="imgUrl(p)!" :alt="p.name" class="size-full object-cover" />
-              <span v-else class="text-2xl">👕</span>
+          <div class="relative aspect-square mb-2 overflow-hidden rounded-lg bg-secondary/30">
+            <img v-if="imgUrl(p)" :src="imgUrl(p)!" :alt="p.name" class="size-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" />
+            <div v-else class="flex size-full items-center justify-center text-3xl grayscale opacity-20">👕</div>
+          </div>
+          <div class="px-1.5 pb-1.5">
+            <p class="text-xs font-black text-foreground uppercase tracking-tight truncate">{{ p.name }}</p>
+            <div class="flex items-center justify-between mt-1">
+              <span class="text-sm font-black text-primary tracking-tighter tabular-nums">{{ p.base_price.toLocaleString() }} Ks</span>
+              <Badge :variant="stockBadge(totalStock(p.variants))" class="px-1.5 py-0 text-[8px]">{{ totalStock(p.variants) }}</Badge>
             </div>
-            <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate">{{ p.name }}</p>
-            <p class="text-xs text-zinc-400 dark:text-zinc-500 truncate">{{ p.category?.name }}</p>
-            <div class="flex items-center justify-between">
-              <span class="text-sm font-bold text-zinc-900 dark:text-zinc-100">{{ p.base_price.toLocaleString() }} Ks</span>
-              <Badge :variant="stockBadge(totalStock(p.variants))">{{ totalStock(p.variants) }}</Badge>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
 
-    <p v-if="!loading && filtered.length === 0" class="text-sm text-zinc-400 dark:text-zinc-500 py-8 text-center">{{ t('common.no_data') }}</p>
+    <p v-if="!loading && filtered.length === 0" class="text-xs font-bold text-muted-foreground py-12 text-center uppercase tracking-widest">{{ t('common.no_data') }}</p>
     <Pagination :meta="meta" @page="loadPage" />
   </div>
 </template>

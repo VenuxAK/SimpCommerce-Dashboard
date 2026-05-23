@@ -36,13 +36,12 @@ defineExpose({ focus, el: inputEl })
     :placeholder="props.placeholder"
     @input="onInput"
     :class="cn(
-      'flex h-9 w-full rounded-md border bg-white dark:bg-zinc-900 px-3 py-1 text-sm shadow-sm transition-colors',
-      'file:border-0 file:bg-transparent file:text-sm file:font-medium',
-      'placeholder:text-zinc-400 dark:placeholder:text-zinc-500',
-      'border-zinc-200 dark:border-zinc-700',
-      'text-zinc-900 dark:text-zinc-100',
-      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-500 focus-visible:border-zinc-400 dark:focus-visible:border-zinc-500',
-      'disabled:cursor-not-allowed disabled:opacity-50',
+      'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-xs font-bold uppercase tracking-tight shadow-none transition-all',
+      'file:border-0 file:bg-transparent file:text-sm file:font-black',
+      'placeholder:text-muted-foreground/50 placeholder:font-medium',
+      'text-foreground',
+      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/10 focus-visible:border-primary/40',
+      'disabled:cursor-not-allowed disabled:opacity-30',
       props.class,
     )"
   />

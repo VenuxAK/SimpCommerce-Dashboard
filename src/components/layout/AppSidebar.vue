@@ -70,76 +70,92 @@ function navigate(to: string) {
 
   <aside
     :class="[
-      'fixed left-0 top-0 z-50 flex h-screen w-56 flex-col border-r bg-white dark:bg-zinc-950 dark:border-zinc-800 transition-transform duration-200',
+      'fixed left-0 top-0 z-50 flex h-screen w-56 flex-col border-r bg-card transition-transform duration-300 ease-in-out',
       open ? 'translate-x-0' : '-translate-x-full',
       'lg:translate-x-0 lg:z-40',
     ]"
   >
-    <div class="flex h-14 items-center justify-between border-b border-zinc-200 dark:border-zinc-800 px-6">
-      <span class="font-bold text-lg text-zinc-900 dark:text-zinc-100">{{ t('app') }}</span>
-      <button @click="emit('close')" class="lg:hidden text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
+    <div class="flex h-14 items-center justify-between border-b px-6">
+      <div class="flex items-center gap-2">
+        <div class="size-6 rounded bg-primary flex items-center justify-center">
+          <Package class="size-4 text-primary-foreground" />
+        </div>
+        <span class="font-bold text-base tracking-tight text-foreground">{{ t('app') }}</span>
+      </div>
+      <button @click="emit('close')" class="lg:hidden text-muted-foreground hover:text-foreground transition-colors">
         <X class="size-5" />
       </button>
     </div>
 
-    <nav class="flex-1 space-y-1 p-3 overflow-y-auto">
+    <nav class="flex-1 space-y-0.5 p-3 overflow-y-auto custom-scrollbar">
       <button
         v-for="item in navItems"
         :key="item.to"
         @click="navigate(item.to)"
-        class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-left"
+        class="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all group"
         :class="isActive(item.to)
-          ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100'
-          : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-zinc-100'"
+          ? 'bg-primary text-primary-foreground shadow-sm'
+          : 'text-muted-foreground hover:bg-secondary hover:text-foreground'"
       >
-        <component :is="item.icon" class="size-4 shrink-0" />
+        <component :is="item.icon" :class="['size-4 shrink-0 transition-transform group-hover:scale-110', isActive(item.to) ? '' : 'opacity-70 group-hover:opacity-100']" />
         <span class="truncate">{{ t(item.label) }}</span>
       </button>
 
-      <div class="border-t border-zinc-200 dark:border-zinc-800 my-2" />
+      <div class="h-px bg-border my-3 mx-2" />
 
-      <button
-        v-if="auth.isAdmin"
-        @click="navigate('/audit-logs')"
-        class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-left"
-        :class="isActive('/audit-logs')
-          ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100'
-          : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-zinc-100'"
-      >
-        <History class="size-4 shrink-0" />
-        <span class="truncate">Audit</span>
-      </button>
-      <button
-        v-if="auth.isAdmin"
-        @click="navigate('/users')"
-        class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-left"
-        :class="isActive('/users')
-          ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100'
-          : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-zinc-100'"
-      >
-        <Shield class="size-4 shrink-0" />
-        <span class="truncate">{{ t('nav.users') }}</span>
-      </button>
+      <div class="space-y-0.5">
+        <button
+          v-if="auth.isAdmin"
+          @click="navigate('/audit-logs')"
+          class="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all group"
+          :class="isActive('/audit-logs')
+            ? 'bg-primary text-primary-foreground shadow-sm'
+            : 'text-muted-foreground hover:bg-secondary hover:text-foreground'"
+        >
+          <History :class="['size-4 shrink-0 transition-transform group-hover:scale-110', isActive('/audit-logs') ? '' : 'opacity-70 group-hover:opacity-100']" />
+          <span class="truncate">Audit</span>
+        </button>
+        <button
+          v-if="auth.isAdmin"
+          @click="navigate('/users')"
+          class="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all group"
+          :class="isActive('/users')
+            ? 'bg-primary text-primary-foreground shadow-sm'
+            : 'text-muted-foreground hover:bg-secondary hover:text-foreground'"
+        >
+          <Shield :class="['size-4 shrink-0 transition-transform group-hover:scale-110', isActive('/users') ? '' : 'opacity-70 group-hover:opacity-100']" />
+          <span class="truncate">{{ t('nav.users') }}</span>
+        </button>
 
-      <button
-        @click="navigate('/profile')"
-        class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-left"
-        :class="isActive('/profile')
-          ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100'
-          : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-zinc-100'"
-      >
-        <UserCog class="size-4 shrink-0" />
-        <span class="truncate">{{ t('nav.profile') }}</span>
-      </button>
+        <button
+          @click="navigate('/profile')"
+          class="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all group"
+          :class="isActive('/profile')
+            ? 'bg-primary text-primary-foreground shadow-sm'
+            : 'text-muted-foreground hover:bg-secondary hover:text-foreground'"
+        >
+          <UserCog :class="['size-4 shrink-0 transition-transform group-hover:scale-110', isActive('/profile') ? '' : 'opacity-70 group-hover:opacity-100']" />
+          <span class="truncate">{{ t('nav.profile') }}</span>
+        </button>
+      </div>
     </nav>
 
-    <div class="border-t border-zinc-200 dark:border-zinc-800 p-3">
+    <div class="border-t p-3 space-y-1">
+      <div class="flex items-center gap-3 px-3 py-2 mb-2">
+        <div class="size-8 rounded-full bg-secondary flex items-center justify-center text-xs font-bold text-foreground">
+          {{ auth.user?.name?.charAt(0) }}
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-xs font-bold text-foreground truncate">{{ auth.user?.name }}</p>
+          <p class="text-[10px] text-muted-foreground uppercase tracking-wider truncate">{{ auth.user?.role }}</p>
+        </div>
+      </div>
       <button
         @click="handleLogout"
-        class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-zinc-500 dark:text-zinc-400 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-zinc-100"
+        class="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:bg-destructive/10 hover:text-destructive group"
       >
-        <LogOut class="size-4 shrink-0" />
-        {{ t('auth.logout') }}
+        <LogOut class="size-4 shrink-0 transition-transform group-hover:-translate-x-1" />
+        <span class="truncate">{{ t('auth.logout') }}</span>
       </button>
     </div>
   </aside>

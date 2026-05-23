@@ -140,16 +140,7 @@ function navigate(to: string) {
       </div>
     </nav>
 
-    <div class="border-t p-3 space-y-1">
-      <div class="flex items-center gap-3 px-3 py-2 mb-2">
-        <div class="size-8 rounded-full bg-secondary flex items-center justify-center text-xs font-bold text-foreground">
-          {{ auth.user?.name?.charAt(0) }}
-        </div>
-        <div class="flex-1 min-w-0">
-          <p class="text-xs font-bold text-foreground truncate">{{ auth.user?.name }}</p>
-          <p class="text-[10px] text-muted-foreground uppercase tracking-wider truncate">{{ auth.user?.role }}</p>
-        </div>
-      </div>
+    <div class="border-t p-3">
       <button
         @click="handleLogout"
         class="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:bg-destructive/10 hover:text-destructive group"

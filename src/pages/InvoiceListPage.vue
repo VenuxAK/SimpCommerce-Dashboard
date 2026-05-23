@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import api from '../lib/axios'
 import { Card, CardContent } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
 import Input from '../components/ui/Input.vue'
+import Select from '../components/ui/Select.vue'
 import { useNotify } from '../lib/notify'
 import Pagination from '../components/Pagination.vue'
 import type { Invoice } from '../types'
@@ -19,6 +20,15 @@ const dateFrom = ref('')
 const dateTo = ref('')
 const statusFilter = ref('')
 const loading = ref(true)
+
+const statusOptions = [
+  { label: t('common.all').toUpperCase() + ' STATUS', value: '' },
+  { label: t('invoices.status_issued').toUpperCase(), value: 'issued' },
+  { label: t('invoices.status_paid').toUpperCase(), value: 'paid' },
+  { label: t('invoices.status_cancelled').toUpperCase(), value: 'cancelled' },
+  { label: t('invoices.status_refunded').toUpperCase(), value: 'refunded' },
+  { label: t('invoices.status_draft').toUpperCase(), value: 'draft' },
+]
 
 async function loadPage(page = 1) {
   loading.value = true
@@ -39,9 +49,8 @@ async function loadPage(page = 1) {
 
 onMounted(() => loadPage())
 
-async function filter() {
-  await loadPage(1)
-}
+watch(statusFilter, () => loadPage(1))
+watch([dateFrom, dateTo], () => loadPage(1))
 
 const statusLabel = (s: string) => {
   const map: Record<string, string> = {
@@ -61,50 +70,52 @@ const statusBadgeVariant = (s: string) => {
 </script>
 
 <template>
-  <div class="space-y-4">
-    <h1 class="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-100">{{ t('invoices.title') }}</h1>
-
-    <div class="flex flex-wrap gap-2">
-      <Input v-model="dateFrom" type="date" class="w-36 sm:w-40" />
-      <Input v-model="dateTo" type="date" class="w-36 sm:w-40" />
-      <select v-model="statusFilter" @change="filter"
-        class="h-9 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 text-sm text-zinc-900 dark:text-zinc-100 flex-1 sm:flex-initial">
-        <option value="">{{ t('common.all') }}</option>
-        <option value="issued">{{ t('invoices.status_issued') }}</option>
-        <option value="paid">{{ t('invoices.status_paid') }}</option>
-        <option value="cancelled">{{ t('invoices.status_cancelled') }}</option>
-        <option value="refunded">{{ t('invoices.status_refunded') }}</option>
-      </select>
+  <div class="space-y-6 animate-in fade-in duration-500">
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-black tracking-tight text-foreground uppercase italic">{{ t('invoices.title') }}</h1>
+        <p class="text-sm text-muted-foreground mt-1">Manage and track your customer invoices</p>
+      </div>
     </div>
 
-    <div v-if="loading" class="text-sm text-zinc-400 dark:text-zinc-500">{{ t('common.loading') }}</div>
+    <div class="flex flex-wrap gap-3">
+      <Input v-model="dateFrom" type="date" class="w-40 h-10" />
+      <Input v-model="dateTo" type="date" class="w-40 h-10" />
+      <Select v-model="statusFilter" :options="statusOptions" class="min-w-[180px]" />
+    </div>
 
-    <p v-else-if="!loading && invoices.length === 0" class="text-sm text-zinc-400 dark:text-zinc-500 py-8 text-center">{{ t('common.no_data') }}</p>
+    <div v-if="loading" class="flex h-64 items-center justify-center text-muted-foreground">
+      <div class="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+    </div>
 
-    <Card v-else-if="invoices.length">
+    <p v-else-if="!loading && invoices.length === 0" class="text-xs font-bold text-muted-foreground py-12 text-center uppercase tracking-widest">{{ t('common.no_data') }}</p>
+
+    <Card v-else-if="invoices.length" class="overflow-hidden border-zinc-200/60 dark:border-zinc-800/60 shadow-sm">
       <CardContent class="p-0 overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead class="border-b bg-zinc-50 dark:bg-zinc-800/50">
-            <tr>
-              <th class="px-3 sm:px-4 py-3 text-left whitespace-nowrap text-zinc-500 dark:text-zinc-400 font-medium">{{ t('invoices.invoice_number') }}</th>
-              <th class="px-3 sm:px-4 py-3 text-left whitespace-nowrap text-zinc-500 dark:text-zinc-400 font-medium hidden sm:table-cell">{{ t('sales.order_number') }}</th>
-              <th class="px-3 sm:px-4 py-3 text-left whitespace-nowrap text-zinc-500 dark:text-zinc-400 font-medium">{{ t('invoices.issued_date') }}</th>
-              <th class="px-3 sm:px-4 py-3 text-left whitespace-nowrap text-zinc-500 dark:text-zinc-400 font-medium">{{ t('common.status') }}</th>
-              <th class="px-3 sm:px-4 py-3 text-right whitespace-nowrap text-zinc-500 dark:text-zinc-400 font-medium">{{ t('common.total') }}</th>
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b bg-muted/30">
+              <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">{{ t('invoices.invoice_number') }}</th>
+              <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground hidden sm:table-cell">{{ t('sales.order_number') }}</th>
+              <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">{{ t('invoices.issued_date') }}</th>
+              <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">{{ t('common.status') }}</th>
+              <th class="px-6 py-4 text-right text-[10px] font-black uppercase tracking-widest text-muted-foreground">{{ t('common.total') }}</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody class="divide-y divide-border/40">
             <tr v-for="inv in invoices" :key="inv.id"
-              class="border-b border-zinc-100 dark:border-zinc-800 last:border-0 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 cursor-pointer transition-colors"
+              class="group hover:bg-muted/30 cursor-pointer transition-colors"
               @click="router.push('/invoices/' + inv.id)"
             >
-              <td class="px-3 sm:px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100 whitespace-nowrap">{{ inv.invoice_number }}</td>
-              <td class="px-3 sm:px-4 py-3 text-zinc-500 dark:text-zinc-400 whitespace-nowrap hidden sm:table-cell">{{ inv.order?.order_number }}</td>
-              <td class="px-3 sm:px-4 py-3 text-zinc-600 dark:text-zinc-400 whitespace-nowrap">{{ inv.issued_date }}</td>
-              <td class="px-3 sm:px-4 py-3">
-                <Badge :variant="statusBadgeVariant(inv.status) as any">{{ statusLabel(inv.status) }}</Badge>
+              <td class="px-6 py-4">
+                <span class="text-sm font-bold text-foreground group-hover:text-primary transition-colors whitespace-nowrap">{{ inv.invoice_number }}</span>
               </td>
-              <td class="px-3 sm:px-4 py-3 text-right font-semibold text-zinc-900 dark:text-zinc-100 whitespace-nowrap">{{ inv.order?.total_amount.toLocaleString() }} Ks</td>
+              <td class="px-6 py-4 text-xs font-medium text-muted-foreground hidden sm:table-cell uppercase tracking-tight">{{ inv.order?.order_number }}</td>
+              <td class="px-6 py-4 text-xs font-bold text-muted-foreground whitespace-nowrap">{{ inv.issued_date }}</td>
+              <td class="px-6 py-4">
+                <Badge :variant="statusBadgeVariant(inv.status) as any" class="px-2 py-0 text-[10px] font-black uppercase">{{ statusLabel(inv.status) }}</Badge>
+              </td>
+              <td class="px-6 py-4 text-right text-sm font-black text-foreground tabular-nums whitespace-nowrap">{{ inv.order?.total_amount.toLocaleString() }} Ks</td>
             </tr>
           </tbody>
         </table>

@@ -28,6 +28,7 @@ const themes: { name: ThemeColor; color: string }[] = [
 function toggleLang() {
   locale.value = locale.value === 'en' ? 'my' : 'en'
   localStorage.setItem('locale', locale.value)
+  document.documentElement.setAttribute('lang', locale.value)
 }
 
 async function handleLogout() {
@@ -42,7 +43,10 @@ function handleClickOutside(e: MouseEvent) {
   }
 }
 
-onMounted(() => window.addEventListener('click', handleClickOutside))
+onMounted(() => {
+  document.documentElement.setAttribute('lang', locale.value)
+  window.addEventListener('click', handleClickOutside)
+})
 onUnmounted(() => window.removeEventListener('click', handleClickOutside))
 </script>
 
@@ -70,16 +74,16 @@ onUnmounted(() => window.removeEventListener('click', handleClickOutside))
     <div class="relative profile-dropdown">
       <button 
         @click="dropdownOpen = !dropdownOpen"
-        class="flex items-center gap-2 pl-1 p-1 rounded-md hover:bg-secondary transition-all active:scale-95 group"
+        class="flex items-center gap-2 pl-1 p-1 rounded-md hover:bg-transparent transition-all active:scale-95 group"
       >
         <div class="size-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-xs shadow-sm">
           {{ auth.user?.name?.charAt(0) }}
         </div>
-        <div class="hidden md:flex flex-col text-left">
+        <!-- <div class="hidden md:flex flex-col text-left">
           <span class="text-xs font-bold text-foreground leading-none group-hover:text-primary transition-colors">{{ auth.user?.name }}</span>
           <span class="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter mt-1">{{ auth.user?.role }}</span>
         </div>
-        <ChevronDown :class="['size-3 text-muted-foreground transition-transform duration-200', dropdownOpen ? 'rotate-180' : '']" />
+        <ChevronDown :class="['size-3 text-muted-foreground transition-transform duration-200', dropdownOpen ? 'rotate-180' : '']" /> -->
       </button>
 
       <div v-if="dropdownOpen" 

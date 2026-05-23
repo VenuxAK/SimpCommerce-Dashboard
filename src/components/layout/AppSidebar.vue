@@ -80,16 +80,26 @@ function navigate(to: string) {
       'lg:translate-x-0 lg:z-40',
     ]"
   >
-    <div class="flex h-14 items-center justify-between border-b px-6">
+    <div :class="['relative flex h-14 items-center border-b transition-all duration-300', ui.sidebarCollapsed ? 'px-0 justify-center' : 'px-6 justify-between']">
       <div class="flex items-center gap-2 overflow-hidden">
         <div class="size-6 rounded bg-primary flex items-center justify-center shrink-0">
           <Package class="size-4 text-primary-foreground" />
         </div>
         <span v-if="!ui.sidebarCollapsed" class="font-bold text-base tracking-tight text-foreground whitespace-nowrap animate-in fade-in duration-500">{{ t('app') }}</span>
       </div>
-      <button @click="ui.toggleSidebar" class="hidden lg:flex text-muted-foreground hover:text-foreground transition-colors ml-auto">
+      
+      <button 
+        @click="ui.toggleSidebar" 
+        :class="[
+          'hidden lg:flex items-center justify-center transition-all duration-300',
+          ui.sidebarCollapsed 
+            ? 'absolute -right-3 top-1/2 -translate-y-1/2 size-6 rounded-full border bg-card shadow-sm z-50 hover:bg-secondary text-muted-foreground' 
+            : 'text-muted-foreground hover:text-foreground'
+        ]"
+      >
         <component :is="ui.sidebarCollapsed ? ChevronRight : ChevronLeft" class="size-4" />
       </button>
+
       <button @click="emit('close')" class="lg:hidden text-muted-foreground hover:text-foreground transition-colors">
         <X class="size-5" />
       </button>

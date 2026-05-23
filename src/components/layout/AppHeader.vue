@@ -20,6 +20,9 @@ const themes: { name: ThemeColor; color: string }[] = [
   { name: 'zinc', color: 'bg-zinc-500' },
   { name: 'blue', color: 'bg-blue-500' },
   { name: 'violet', color: 'bg-violet-500' },
+  { name: 'rose', color: 'bg-rose-500' },
+  { name: 'orange', color: 'bg-orange-500' },
+  { name: 'emerald', color: 'bg-emerald-500' },
 ]
 
 function toggleLang() {

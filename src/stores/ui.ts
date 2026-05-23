@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
 
-export type ThemeColor = 'zinc' | 'blue' | 'violet'
+export type ThemeColor = 'zinc' | 'blue' | 'violet' | 'rose' | 'orange' | 'emerald'
 
 export const useUIStore = defineStore('ui', () => {
   const theme = ref<ThemeColor>((localStorage.getItem('theme-color') as ThemeColor) || 'zinc')

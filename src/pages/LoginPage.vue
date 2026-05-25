@@ -45,32 +45,51 @@ function toggleLang() {
 </script>
 
 <template>
-  <div class="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-950 transition-colors">
-    <Card class="w-full max-w-sm">
-      <CardHeader>
-        <div class="flex items-center justify-between">
-          <CardTitle>{{ t('auth.login') }}</CardTitle>
-          <button @click="toggleLang" class="text-xs text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300">
-            {{ locale === 'en' ? 'မြန်မာ' : 'English' }}
-          </button>
+  <div class="flex min-h-screen items-center justify-center bg-background p-4 sm:p-6">
+    <div class="w-full max-w-[380px]">
+      <div class="mb-8 text-center">
+        <div class="mx-auto mb-4 flex size-12 items-center justify-center rounded-xl bg-foreground shadow-lg">
+          <span class="text-lg font-bold text-background">S</span>
         </div>
-      </CardHeader>
-      <CardContent>
-        <form @submit.prevent="handleLogin" class="space-y-4">
-          <div class="space-y-2">
-            <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ t('auth.email') }}</label>
-            <Input v-model="email" type="email" required />
+        <h1 class="text-xl font-semibold tracking-tight text-foreground">{{ t('app') }}</h1>
+        <p class="text-sm text-muted-foreground mt-1">{{ t('auth.sign_in') }}</p>
+      </div>
+
+      <Card>
+        <CardHeader class="py-3 px-5 border-b">
+          <div class="flex items-center justify-between">
+            <CardTitle class="text-sm font-medium">{{ t('auth.login') }}</CardTitle>
+            <button @click="toggleLang" class="text-xs text-muted-foreground hover:text-foreground transition-colors">
+              {{ locale === 'en' ? 'မြန်မာ' : 'English' }}
+            </button>
           </div>
-          <div class="space-y-2">
-            <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ t('auth.password') }}</label>
-            <Input v-model="password" type="password" required minlength="6" />
-          </div>
-          <p v-if="error" class="text-sm text-red-600 dark:text-red-400">{{ error }}</p>
-          <Button type="submit" class="w-full" :disabled="loading">
-            {{ loading ? t('common.loading') : t('auth.sign_in') }}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+        </CardHeader>
+        <CardContent class="p-5">
+          <form @submit.prevent="handleLogin" class="space-y-4">
+            <div class="space-y-1.5">
+              <label class="text-xs text-muted-foreground ml-1">{{ t('auth.email') }}</label>
+              <Input v-model="email" type="email" required placeholder="admin@simppos.test" />
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-xs text-muted-foreground ml-1">{{ t('auth.password') }}</label>
+              <Input v-model="password" type="password" required minlength="6" placeholder="••••••••" />
+            </div>
+
+            <div v-if="error" class="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm animate-in slide-in-from-top-1">
+              {{ error }}
+            </div>
+
+            <Button type="submit" class="w-full h-10" :disabled="loading">
+              <span v-if="loading" class="size-4 animate-spin rounded-full border-2 border-background border-t-transparent mr-2" />
+              {{ loading ? t('common.loading') : t('auth.sign_in') }}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <p class="mt-8 text-center text-xs text-muted-foreground/50">
+        &copy; 2026 SimpCommerce
+      </p>
+    </div>
   </div>
 </template>

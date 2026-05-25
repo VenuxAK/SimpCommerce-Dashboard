@@ -2,43 +2,50 @@
 import { ref, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
+import { Search, Eye, FileText, Download, Calendar } from 'lucide-vue-next'
 import api from '../lib/axios'
+import { Button } from '../components/ui/button'
 import { Card, CardContent } from '../components/ui/card'
-import { Badge } from '../components/ui/badge'
 import Input from '../components/ui/Input.vue'
 import Select from '../components/ui/Select.vue'
-import { useNotify } from '../lib/notify'
+import { Badge } from '../components/ui/badge'
 import Pagination from '../components/Pagination.vue'
-import type { Order } from '../types'
+import { useNotify } from '../lib/notify'
 
 const { t } = useI18n()
 const router = useRouter()
 const { error } = useNotify()
-const orders = ref<Order[]>([])
-const meta = ref<any>(null)
-const dateFrom = ref('')
-const dateTo = ref('')
-const statusFilter = ref('')
+
+const orders = ref<any[]>([])
 const loading = ref(true)
+const meta = ref<any>({})
+const page = ref(1)
+
+// Filters
+const search = ref('')
+const status = ref('')
 
 const statusOptions = [
-  { label: t('common.all').toUpperCase() + ' STATUS', value: '' },
-  { label: t('sales.status_completed').toUpperCase(), value: 'completed' },
-  { label: t('sales.status_cancelled').toUpperCase(), value: 'cancelled' },
-  { label: t('sales.status_refunded').toUpperCase(), value: 'refunded' },
-  { label: t('sales.status_pending').toUpperCase(), value: 'pending' },
+  { label: 'ALL STATUS', value: '' },
+  { label: 'COMPLETED', value: 'completed' },
+  { label: 'PENDING', value: 'pending' },
+  { label: 'CANCELLED', value: 'cancelled' },
+  { label: 'REFUNDED', value: 'refunded' },
 ]
 
-async function loadPage(page = 1) {
+async function load(p = 1) {
   loading.value = true
+  page.value = p
   try {
-    const params: Record<string, string> = { page: String(page) }
-    if (dateFrom.value) params.date_from = dateFrom.value
-    if (dateTo.value) params.date_to = dateTo.value
-    if (statusFilter.value) params.status = statusFilter.value
-    const { data } = await api.get('/orders', { params })
+    const { data } = await api.get('/orders', {
+      params: {
+        page: p,
+        search: search.value,
+        status: status.value || undefined,
+      },
+    })
     orders.value = data.data
-    meta.value = { current_page: data.meta.current_page, last_page: data.meta.last_page, total: data.meta.total, per_page: data.meta.per_page }
+    meta.value = data.meta
   } catch (e: any) {
     error(e?.response?.data?.message || t('dashboard.load_failed'))
   } finally {
@@ -46,79 +53,102 @@ async function loadPage(page = 1) {
   }
 }
 
-onMounted(() => loadPage())
+let timer: any
+watch([search, status], () => {
+  clearTimeout(timer)
+  timer = setTimeout(() => load(1), 300)
+})
 
-watch(statusFilter, () => loadPage(1))
-watch([dateFrom, dateTo], () => loadPage(1))
+onMounted(() => load(1))
 
-function statusBadge(status: string) {
-  const map: Record<string, string> = { completed: 'success', pending: 'warning', cancelled: 'destructive', refunded: 'secondary' }
-  return map[status] || 'default'
-}
-
-const statusLabel = (s: string) => {
-  const map: Record<string, string> = {
-    completed: t('sales.status_completed'),
-    cancelled: t('sales.status_cancelled'),
-    refunded: t('sales.status_refunded'),
-    pending: t('sales.status_pending'),
-  }
-  return map[s] || s
+function statusBadge(s: string) {
+  const map: any = { completed: 'success', pending: 'warning', cancelled: 'destructive', refunded: 'secondary' }
+  return map[s] || 'default'
 }
 </script>
 
 <template>
-  <div class="space-y-6 animate-in fade-in duration-500">
+  <div class="space-y-8 animate-in fade-in duration-700">
     <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
       <div>
-        <h1 class="text-3xl font-black tracking-tight text-foreground uppercase italic">{{ t('sales.title') }}</h1>
-        <p class="text-sm text-muted-foreground mt-1">Review and manage your store transactions</p>
+        <h1 class="text-2xl font-semibold tracking-tight text-foreground">{{ t('sales.title') }}</h1>
+        <p class="text-xs text-muted-foreground mt-1">Review and manage your store transactions</p>
       </div>
     </div>
 
-    <div class="flex flex-wrap gap-3">
-      <Input v-model="dateFrom" type="date" class="w-40 h-10" />
-      <Input v-model="dateTo" type="date" class="w-40 h-10" />
-      <Select v-model="statusFilter" :options="statusOptions" class="min-w-[180px]" />
-    </div>
+    <Card class="shadow-none border-border/60 bg-muted/5">
+      <CardContent class="p-4">
+        <div class="flex flex-col md:flex-row gap-4">
+          <div class="relative flex-1">
+            <Search class="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+            <Input v-model="search" :placeholder="t('common.search') + ' (Order #, Customer...)'" class="pl-9 h-9 text-xs border-border/40 shadow-none bg-background" />
+          </div>
+          <div class="flex gap-3">
+            <Select v-model="status" :options="statusOptions" class="w-48 h-9 text-xs border-border/40 bg-background" />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
 
     <div v-if="loading" class="flex h-64 items-center justify-center text-muted-foreground">
       <div class="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
     </div>
 
-    <p v-else-if="!loading && orders.length === 0" class="text-xs font-bold text-muted-foreground py-12 text-center uppercase tracking-widest">{{ t('common.no_data') }}</p>
+    <div v-else-if="orders.length === 0" class="py-20 text-center border rounded-xl border-dashed">
+      <FileText class="size-10 mx-auto text-muted-foreground/20 mb-4" />
+      <p class="text-sm font-medium text-muted-foreground">{{ t('common.no_data') }}</p>
+    </div>
 
-    <Card v-else-if="orders.length" class="overflow-hidden border-zinc-200/60 dark:border-zinc-800/60 shadow-sm">
-      <CardContent class="p-0 overflow-x-auto">
-        <table class="w-full text-left border-collapse">
+    <div v-else class="border rounded-lg overflow-hidden bg-card">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs border-collapse">
           <thead>
-            <tr class="border-b bg-muted/30">
-              <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">{{ t('sales.order_number') }}</th>
-              <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground hidden sm:table-cell">{{ t('sales.customer') }}</th>
-              <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">{{ t('common.date') }}</th>
-              <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">{{ t('common.status') }}</th>
-              <th class="px-6 py-4 text-right text-[10px] font-black uppercase tracking-widest text-muted-foreground">{{ t('sales.total') }}</th>
+            <tr class="border-b bg-muted/20">
+              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider">{{ t('sales.order_number') }}</th>
+              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider">{{ t('sales.customer') }}</th>
+              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider">{{ t('common.date') }}</th>
+              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-center">{{ t('common.status') }}</th>
+              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-right">{{ t('sales.total') }}</th>
+              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-right w-20">Actions</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-border/40">
-            <tr v-for="order in orders" :key="order.id"
-              class="group hover:bg-muted/30 cursor-pointer transition-colors"
-              @click="router.push('/sales/' + order.id)"
-            >
-              <td class="px-6 py-4">
-                <span class="text-sm font-bold text-foreground group-hover:text-primary transition-colors whitespace-nowrap">{{ order.order_number }}</span>
+          <tbody class="divide-y">
+            <tr v-for="order in orders" :key="order.id" class="hover:bg-muted/30 transition-colors group">
+              <td class="px-6 py-4 font-semibold text-foreground">
+                {{ order.order_number }}
               </td>
-              <td class="px-6 py-4 text-xs font-medium text-muted-foreground hidden sm:table-cell uppercase tracking-tight">{{ order.customer?.name || '—' }}</td>
-              <td class="px-6 py-4 text-xs font-bold text-muted-foreground whitespace-nowrap">{{ order.created_at?.split('T')[0] }}</td>
               <td class="px-6 py-4">
-                <Badge :variant="statusBadge(order.status) as any" class="px-2 py-0 text-[10px] font-black uppercase">{{ statusLabel(order.status) }}</Badge>
+                <div class="flex items-center gap-2">
+                  <div class="size-6 rounded-full bg-secondary flex items-center justify-center text-[10px] font-bold border">
+                    {{ order.customer?.name?.charAt(0) || '?' }}
+                  </div>
+                  <span>{{ order.customer?.name || 'Walk-in Customer' }}</span>
+                </div>
               </td>
-              <td class="px-6 py-4 text-right text-sm font-black text-foreground tabular-nums whitespace-nowrap">{{ order.total_amount.toLocaleString() }} Ks</td>
+              <td class="px-6 py-4 text-muted-foreground tabular-nums">
+                {{ order.created_at }}
+              </td>
+              <td class="px-6 py-4 text-center">
+                <Badge :variant="statusBadge(order.status) as any" class="font-medium h-5 px-2 text-[10px]">
+                  {{ order.status.toUpperCase() }}
+                </Badge>
+              </td>
+              <td class="px-6 py-4 text-right font-bold tabular-nums italic">
+                {{ order.total_amount.toLocaleString() }} Ks
+              </td>
+              <td class="px-6 py-4 text-right">
+                <Button variant="ghost" size="icon" class="size-7" @click="router.push(`/sales/${order.id}`)">
+                  <Eye class="size-3.5 text-muted-foreground hover:text-foreground" />
+                </Button>
+              </td>
             </tr>
           </tbody>
         </table>
-      </CardContent>
-    </Card>
-    <Pagination :meta="meta" @page="loadPage" />
+      </div>
+    </div>
+    
+    <div class="pt-8">
+      <Pagination :meta="meta" @page="load" />
+    </div>
   </div>
 </template>

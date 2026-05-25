@@ -60,7 +60,7 @@ onUnmounted(() => {
       type="button"
       @click="toggle"
       :class="cn(
-        'flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-xs font-bold uppercase tracking-tight shadow-none transition-all',
+        'flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-xs font-bold uppercase tracking-tight shadow-none transition-all cursor-pointer',
         'focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary/40',
         isOpen ? 'ring-2 ring-primary/10 border-primary/40' : ''
       )"
@@ -73,7 +73,7 @@ onUnmounted(() => {
 
     <div
       v-if="isOpen"
-      class="absolute z-50 mt-1.5 max-h-60 w-full overflow-auto rounded-md border border-zinc-200/60 dark:border-zinc-800/60 bg-card p-1 shadow-xl shadow-zinc-950/10 animate-in fade-in zoom-in-95 duration-200"
+      class="absolute z-50 mt-1.5 max-h-60 w-full overflow-auto rounded-md border border-border/60 bg-card p-1 shadow-xl shadow-foreground/10 animate-in fade-in zoom-in-95 duration-200"
     >
       <div
         v-for="option in props.options"

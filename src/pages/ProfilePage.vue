@@ -44,7 +44,7 @@ async function save() {
 
 <template>
   <div class="mx-auto max-w-lg space-y-6">
-    <h1 class="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-100">{{ t('profile.title') }}</h1>
+    <h1 class="text-xl sm:text-2xl font-semibold text-foreground">{{ t('profile.title') }}</h1>
 
     <Card>
       <CardHeader class="flex flex-row items-center justify-between">
@@ -55,15 +55,15 @@ async function save() {
       </CardHeader>
       <CardContent class="space-y-4">
         <div class="space-y-2">
-          <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ t('users.name') }}</label>
+          <label class="text-sm font-medium text-foreground/80">{{ t('users.name') }}</label>
           <Input v-model="form.name" />
         </div>
         <div class="space-y-2">
-          <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ t('auth.email') }}</label>
+          <label class="text-sm font-medium text-foreground/80">{{ t('auth.email') }}</label>
           <Input v-model="form.email" type="email" />
         </div>
         <div class="space-y-2">
-          <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ t('profile.new_password') }}</label>
+          <label class="text-sm font-medium text-foreground/80">{{ t('profile.new_password') }}</label>
           <Input v-model="form.password" type="password" :placeholder="t('profile.password_leave')" />
         </div>
         <Button :disabled="saving" @click="save" class="w-full sm:w-auto">

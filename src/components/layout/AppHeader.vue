@@ -1,20 +1,23 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { Languages, User, Moon, Sun, ChevronDown, Settings, LogOut, UserCircle } from 'lucide-vue-next'
+import { Languages, Moon, Sun, LogOut, UserCircle, Palette, ChevronRight } from 'lucide-vue-next'
 import { useAuthStore } from '../../stores/auth'
 import { useTheme } from '../../lib/theme'
 import { useUIStore, type ThemeColor } from '../../stores/ui'
 import { useRouter } from 'vue-router'
 import api from '../../lib/axios'
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
 const auth = useAuthStore()
 const ui = useUIStore()
+const themeState = useTheme()
 const router = useRouter()
-const { isDark, toggle } = useTheme()
+const route = useRoute()
 
 const dropdownOpen = ref(false)
+const themePickerOpen = ref(false)
 
 const themes: { name: ThemeColor; color: string }[] = [
   { name: 'zinc', color: 'bg-zinc-500' },
@@ -25,11 +28,46 @@ const themes: { name: ThemeColor; color: string }[] = [
   { name: 'emerald', color: 'bg-emerald-500' },
 ]
 
-function toggleLang() {
-  locale.value = locale.value === 'en' ? 'my' : 'en'
-  localStorage.setItem('locale', locale.value)
-  document.documentElement.setAttribute('lang', locale.value)
+const breadcrumbLabels: Record<string, string> = {
+  dashboard: 'nav.dashboard',
+  pos: 'nav.pos',
+  products: 'nav.products',
+  'product-create': 'products.new_product',
+  'product-edit': 'products.edit_product',
+  categories: 'nav.categories',
+  customers: 'nav.customers',
+  'customer-detail': 'customers.title',
+  sales: 'nav.sales',
+  'sale-detail': 'sales.title',
+  invoices: 'nav.invoices',
+  'invoice-detail': 'invoices.title',
+  reports: 'nav.reports',
+  discounts: 'nav.discounts',
+  suppliers: 'nav.suppliers',
+  stock: 'nav.stock',
+  'cash-sessions': 'nav.cash',
+  'audit-logs': 'nav.audit',
+  users: 'nav.users',
+  profile: 'nav.profile',
 }
+
+const breadcrumbs = computed(() => {
+  const matched = route.matched.filter(r => r.name)
+  if (matched.length <= 1) return []
+  return matched.slice(1).map(r => ({
+    name: r.name as string,
+    label: t(breadcrumbLabels[r.name as string] || r.name as string),
+  }))
+})
+
+function toggleLang() {
+  const next = locale.value === 'en' ? 'my' : 'en'
+  locale.value = next
+  localStorage.setItem('locale', next)
+  document.documentElement.setAttribute('lang', next)
+}
+
+const { locale } = useI18n()
 
 async function handleLogout() {
   try { await api.post('/auth/logout') } catch {}
@@ -38,8 +76,10 @@ async function handleLogout() {
 }
 
 function handleClickOutside(e: MouseEvent) {
-  if (dropdownOpen.value && !(e.target as HTMLElement).closest('.profile-dropdown')) {
+  const target = e.target as HTMLElement
+  if (dropdownOpen.value && !target.closest('.profile-dropdown')) {
     dropdownOpen.value = false
+    themePickerOpen.value = false
   }
 }
 
@@ -51,81 +91,101 @@ onUnmounted(() => window.removeEventListener('click', handleClickOutside))
 </script>
 
 <template>
-  <div class="flex items-center gap-1.5 sm:gap-2">
-    <button
-      @click="toggle"
-      class="flex size-9 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground transition-all active:scale-95"
-      :title="isDark ? 'Light mode' : 'Dark mode'"
-    >
-      <Sun v-if="isDark" class="size-4.5" />
-      <Moon v-else class="size-4.5" />
-    </button>
+  <div class="flex items-center justify-between w-full">
+    <!-- Breadcrumbs -->
+    <nav v-if="breadcrumbs.length" class="flex items-center gap-1.5 text-xs text-muted-foreground">
+      <router-link to="/" class="hover:text-foreground transition-colors">{{ t('nav.dashboard') }}</router-link>
+      <template v-for="(crumb, i) in breadcrumbs" :key="crumb.name">
+        <ChevronRight class="size-3 text-muted-foreground/50" />
+        <span v-if="i === breadcrumbs.length - 1" class="font-medium text-foreground">{{ crumb.label }}</span>
+        <router-link v-else :to="{ name: crumb.name }" class="hover:text-foreground transition-colors">
+          {{ crumb.label }}
+        </router-link>
+      </template>
+    </nav>
+    <div v-else />
 
-    <button
-      @click="toggleLang"
-      class="flex h-9 items-center gap-2 rounded-md px-3 text-xs font-bold uppercase tracking-wider text-muted-foreground hover:bg-secondary hover:text-foreground transition-all active:scale-95"
-    >
-      <Languages class="size-4" />
-      <span>{{ locale === 'en' ? 'MY' : 'EN' }}</span>
-    </button>
-
-    <div class="h-4 w-px bg-border mx-1" />
-
-    <div class="relative profile-dropdown">
-      <button 
-        @click="dropdownOpen = !dropdownOpen"
-        class="flex items-center gap-2 pl-1 p-1 rounded-md hover:bg-transparent transition-all active:scale-95 group"
+    <!-- Actions -->
+    <div class="flex items-center gap-1">
+      <button
+        @click="themeState.toggle()"
+        class="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-all"
+        :title="themeState.isDark.value ? 'Light mode' : 'Dark mode'"
       >
-        <div class="size-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-xs shadow-sm">
-          {{ auth.user?.name?.charAt(0) }}
-        </div>
-        <!-- <div class="hidden md:flex flex-col text-left">
-          <span class="text-xs font-bold text-foreground leading-none group-hover:text-primary transition-colors">{{ auth.user?.name }}</span>
-          <span class="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter mt-1">{{ auth.user?.role }}</span>
-        </div>
-        <ChevronDown :class="['size-3 text-muted-foreground transition-transform duration-200', dropdownOpen ? 'rotate-180' : '']" /> -->
+        <Sun v-if="themeState.isDark.value" class="size-4" />
+        <Moon v-else class="size-4" />
       </button>
 
-      <div v-if="dropdownOpen" 
-        class="absolute right-0 mt-2 w-56 rounded-md border border-zinc-200/60 dark:border-zinc-800/60 bg-card p-1 shadow-xl shadow-zinc-950/10 animate-in fade-in zoom-in-95 duration-200 z-50"
+      <button
+        @click="toggleLang"
+        class="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-all"
+        :title="locale === 'en' ? 'မြန်မာ' : 'English'"
       >
-        <div class="px-3 py-2 border-b border-border/50 mb-1">
-          <p class="text-xs font-black text-foreground uppercase tracking-tight">{{ auth.user?.name }}</p>
-          <p class="text-[10px] text-muted-foreground font-medium truncate">{{ auth.user?.email }}</p>
-        </div>
+        <Languages class="size-4" />
+      </button>
 
-        <div class="px-3 py-2 border-b border-border/50 mb-1">
-          <p class="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-2">Theme Color</p>
-          <div class="flex gap-2">
-            <button 
-              v-for="th in themes" 
-              :key="th.name"
-              @click="ui.setTheme(th.name)"
-              :class="[
-                'size-5 rounded-full border-2 transition-all',
-                th.color,
-                ui.theme === th.name ? 'border-primary scale-110' : 'border-transparent hover:scale-105'
-              ]"
-              :title="th.name.toUpperCase()"
-            />
+      <div class="h-5 w-px bg-border mx-0.5" />
+
+      <div class="relative profile-dropdown">
+        <button
+          @click="dropdownOpen = !dropdownOpen; themePickerOpen = false"
+          class="flex items-center gap-2 rounded-md p-1.5 hover:bg-accent transition-all group"
+        >
+          <div class="size-7 rounded-full bg-secondary flex items-center justify-center text-secondary-foreground font-medium text-xs border shadow-sm shrink-0">
+            {{ auth.user?.name?.charAt(0) }}
           </div>
+          <div class="hidden md:flex flex-col text-left leading-tight">
+            <span class="text-xs font-medium text-foreground">{{ auth.user?.name }}</span>
+            <span class="text-[10px] text-muted-foreground capitalize">{{ auth.user?.role }}</span>
+          </div>
+        </button>
+
+        <div v-if="dropdownOpen"
+          class="absolute right-0 mt-2 w-56 rounded-lg border bg-popover p-1.5 shadow-lg animate-in fade-in zoom-in-95 duration-150 z-50 text-popover-foreground"
+        >
+          <div class="px-2.5 py-2 border-b mb-1">
+            <p class="text-sm font-medium">{{ auth.user?.name }}</p>
+            <p class="text-xs text-muted-foreground truncate mt-0.5">{{ auth.user?.email }}</p>
+          </div>
+
+          <div class="px-2.5 py-2 border-b mb-1">
+            <div class="flex items-center justify-between">
+              <p class="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{{ t('common.theme_color') }}</p>
+              <button @click="themePickerOpen = !themePickerOpen" class="text-muted-foreground hover:text-foreground transition-colors">
+                <Palette class="size-3.5" />
+              </button>
+            </div>
+            <div v-if="themePickerOpen" class="flex gap-1.5 mt-2">
+              <button
+                v-for="th in themes"
+                :key="th.name"
+                @click="ui.setTheme(th.name)"
+                :class="[
+                  'size-5 rounded-full border-2 transition-all',
+                  th.color,
+                  ui.theme === th.name ? 'border-foreground scale-110' : 'border-transparent hover:scale-105'
+                ]"
+                :title="th.name"
+              />
+            </div>
+          </div>
+
+          <button
+            @click="router.push('/profile'); dropdownOpen = false"
+            class="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-xs hover:bg-accent transition-all"
+          >
+            <UserCircle class="size-4 text-muted-foreground" />
+            <span>{{ t('nav.profile') }}</span>
+          </button>
+
+          <button
+            @click="handleLogout"
+            class="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-xs text-destructive hover:bg-destructive/10 transition-all mt-0.5"
+          >
+            <LogOut class="size-4" />
+            <span>{{ t('auth.logout') }}</span>
+          </button>
         </div>
-        
-        <button 
-          @click="router.push('/profile'); dropdownOpen = false"
-          class="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-xs font-bold text-muted-foreground hover:bg-secondary hover:text-foreground transition-all"
-        >
-          <UserCircle class="size-3.5" />
-          {{ t('nav.profile').toUpperCase() }}
-        </button>
-        
-        <button 
-          @click="handleLogout"
-          class="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-xs font-bold text-destructive hover:bg-destructive/10 transition-all mt-1"
-        >
-          <LogOut class="size-3.5" />
-          {{ t('auth.logout').toUpperCase() }}
-        </button>
       </div>
     </div>
   </div>

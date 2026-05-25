@@ -1,15 +1,18 @@
 import { useI18n } from 'vue-i18n'
 
-const knownPatterns: Array<{ pattern: RegExp; key: string; map?: (m: RegExpMatchArray, extra?: string) => Record<string, any> }> = [
-  { pattern: /The (.+) has already been taken\./, key: 'validation.already_taken', map: (m) => ({ attribute: fieldLabel(m[1]) }) },
-  { pattern: /The (.+) field is required\./, key: 'validation.required', map: (m) => ({ attribute: fieldLabel(m[1]) }) },
-  { pattern: /The selected (.+) is invalid\./, key: 'validation.invalid', map: (m) => ({ attribute: fieldLabel(m[1]) }) },
-  { pattern: /(.+) must be at least (\d+) characters?\./, key: 'validation.min_string', map: (m) => ({ attribute: fieldLabel(m[1]), min: m[2] }) },
-  { pattern: /(.+) must not be greater than (.+)\./, key: 'validation.max_numeric', map: (m) => ({ attribute: fieldLabel(m[1]), max: m[2] }) },
+const knownPatterns: Array<{ pattern: RegExp; key: string; map?: (m: RegExpMatchArray) => Record<string, any> }> = [
+  { pattern: /The (.+) has already been taken\./i, key: 'validation.already_taken', map: (m) => ({ attribute: fieldLabel(m[1]) }) },
+  { pattern: /The (.+) field is required\./i, key: 'validation.required', map: (m) => ({ attribute: fieldLabel(m[1]) }) },
+  { pattern: /(.+) is required\./i, key: 'validation.required', map: (m) => ({ attribute: fieldLabel(m[1]) }) },
+  { pattern: /The selected (.+) is invalid\./i, key: 'validation.invalid', map: (m) => ({ attribute: fieldLabel(m[1]) }) },
+  { pattern: /(.+) is invalid\./i, key: 'validation.invalid', map: (m) => ({ attribute: fieldLabel(m[1]) }) },
+  { pattern: /(.+) must be at least (\d+) characters?\./i, key: 'validation.min_string', map: (m) => ({ attribute: fieldLabel(m[1]), min: m[2] }) },
+  { pattern: /(.+) must not be greater than (.+)\./i, key: 'validation.max_numeric', map: (m) => ({ attribute: fieldLabel(m[1]), max: m[2] }) },
 ]
 
 const fieldLabels: Record<string, string> = {
   name: 'products.product_name',
+  product_name: 'products.product_name',
   category_id: 'products.category',
   base_price: 'products.base_price',
   description: 'common.description',
@@ -27,8 +30,9 @@ const fieldLabels: Record<string, string> = {
 }
 
 function fieldLabel(raw: string): string {
-  const clean = raw.replace(/^the /i, '').trim()
-  if (fieldLabels[clean]) return fieldLabels[clean]
+  const { t } = useI18n()
+  const clean = raw.replace(/^the /i, '').replace(/field$/i, '').replace(/^product\./i, '').trim()
+  if (fieldLabels[clean]) return t(fieldLabels[clean])
   return clean.replace(/_/g, ' ')
 }
 
@@ -52,7 +56,8 @@ export function translateError(message: string): string {
     }
   }
 
-  return t('common.error')
+  // Fallback: try to identify the field even in unknown message formats
+  return message
 }
 
 export function firstError(errors: Record<string, string[]> | null | undefined, field: string): string | null {

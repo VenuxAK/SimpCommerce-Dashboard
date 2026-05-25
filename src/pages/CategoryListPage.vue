@@ -1,77 +1,79 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Plus, Pencil, Trash2 } from 'lucide-vue-next'
+import { Plus, Pencil, Trash2, Package } from 'lucide-vue-next'
 import api from '../lib/axios'
 import { Button } from '../components/ui/button'
-import { Card, CardContent } from '../components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import Input from '../components/ui/Input.vue'
+import Pagination from '../components/Pagination.vue'
 import { useNotify } from '../lib/notify'
 import { firstError, formatFieldErrors } from '../lib/i18n-errors'
-import Pagination from '../components/Pagination.vue'
-import type { Category } from '../types'
 
 const { t } = useI18n()
-const { success, error: toastError } = useNotify()
-const categories = ref<Category[]>([])
-const meta = ref<any>(null)
+const { success, error } = useNotify()
+
+const categories = ref<any[]>([])
+const loading = ref(true)
+const saving = ref(false)
+const meta = ref<any>({})
+const page = ref(1)
+
+// Form
 const showForm = ref(false)
-const editing = ref<Category | null>(null)
+const editing = ref<number | null>(null)
 const name = ref('')
 const description = ref('')
-const loading = ref(true)
-const fieldErrors = ref<Record<string, string[]> | null>(null)
-const saving = ref(false)
+const fieldErrors = ref<any>(null)
 
-async function loadPage(page = 1) {
+async function load(p = 1) {
   loading.value = true
+  page.value = p
   try {
-    const { data } = await api.get('/categories', { params: { page } })
+    const { data } = await api.get('/categories', { params: { page: p } })
     categories.value = data.data
-    meta.value = { current_page: data.meta.current_page, last_page: data.meta.last_page, total: data.meta.total, per_page: data.meta.per_page }
-  } catch (e: any) {
-    toastError(e?.response?.data?.message || t('dashboard.load_failed'))
+    meta.value = data.meta
+  } catch {
+    error(t('dashboard.load_failed'))
   } finally {
     loading.value = false
   }
 }
 
-onMounted(() => loadPage())
-
 function openCreate() {
   editing.value = null
   name.value = ''
   description.value = ''
-  showForm.value = true
   fieldErrors.value = null
+  showForm.value = true
 }
 
-function openEdit(cat: Category) {
-  editing.value = cat
+function openEdit(cat: any) {
+  editing.value = cat.id
   name.value = cat.name
   description.value = cat.description || ''
-  showForm.value = true
   fieldErrors.value = null
+  showForm.value = true
 }
 
 async function save() {
   saving.value = true
   fieldErrors.value = null
   try {
+    const payload = { name: name.value, description: description.value }
     if (editing.value) {
-      await api.put(`/categories/${editing.value.id}`, { name: name.value, description: description.value })
-      success(t('common.save') + ' ✅')
+      await api.put(`/categories/${editing.value}`, payload)
     } else {
-      await api.post('/categories', { name: name.value, description: description.value })
-      success(t('common.create') + ' ✅')
+      await api.post('/categories', payload)
     }
+    success(t('common.save'))
     showForm.value = false
-    await loadPage(1)
+    load(page.value)
   } catch (e: any) {
-    if (e?.response?.data?.errors) {
+    if (e.response?.status === 422) {
       fieldErrors.value = e.response.data.errors
     } else {
-      toastError(e?.response?.data?.message || t('common.error'))
+      error(t('common.error'))
     }
   } finally {
     saving.value = false
@@ -79,62 +81,92 @@ async function save() {
 }
 
 async function remove(id: number) {
-  if (!confirm(t('common.confirm') + '?')) return
+  if (!confirm(t('common.delete') + '?')) return
   try {
     await api.delete(`/categories/${id}`)
-    categories.value = categories.value.filter((c) => c.id !== id)
-    success(t('common.delete') + ' ✅')
+    success(t('common.delete'))
+    load(page.value)
   } catch (e: any) {
-    toastError(e?.response?.data?.message || t('common.error'))
+    error(e.response?.data?.message || t('common.error'))
   }
 }
+
+onMounted(() => load(1))
 </script>
 
 <template>
-  <div class="space-y-4">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-      <h1 class="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-100">{{ t('categories.title') }}</h1>
-      <Button @click="openCreate" class="w-full sm:w-auto"><Plus class="size-4" /> {{ t('categories.new_category') }}</Button>
+  <div class="space-y-8 animate-in fade-in duration-700">
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-semibold tracking-tight text-foreground">{{ t('categories.title') }}</h1>
+        <p class="text-xs text-muted-foreground mt-1">Organize your inventory into manageable groups</p>
+      </div>
+      <Button size="sm" @click="openCreate">
+        <Plus class="size-3.5 mr-2" /> {{ t('categories.new_category') }}
+      </Button>
     </div>
 
-    <div v-if="loading" class="text-sm text-zinc-400 dark:text-zinc-500">{{ t('common.loading') }}</div>
-
-    <Card v-if="showForm" class="max-w-md">
-      <CardContent class="space-y-4 p-4">
-        <div class="space-y-1.5">
-          <Input v-model="name" :placeholder="t('categories.name')"
-            :class="firstError(fieldErrors, 'name') ? 'border-red-400 dark:border-red-500 focus-visible:ring-red-400' : ''" />
-          <p v-if="firstError(fieldErrors, 'name')" class="text-xs text-red-500 dark:text-red-400">{{ firstError(fieldErrors, 'name') }}</p>
-        </div>
-        <div class="space-y-1.5">
-          <Input v-model="description" :placeholder="t('categories.description')" />
-        </div>
-        <div class="flex gap-2">
-          <Button :disabled="saving" @click="save">{{ saving ? t('common.loading') : t('common.save') }}</Button>
-          <Button variant="outline" @click="showForm = false">{{ t('common.cancel') }}</Button>
-        </div>
-        <div v-if="fieldErrors && !firstError(fieldErrors, 'name')" class="text-xs text-red-500 dark:text-red-400 space-y-0.5">
-          <p v-for="fe in formatFieldErrors(fieldErrors)" :key="fe.label">{{ fe.label }}: {{ fe.messages.join(', ') }}</p>
-        </div>
-      </CardContent>
-    </Card>
-
-    <p v-if="!loading && showForm === false && categories.length === 0" class="text-sm text-zinc-400 dark:text-zinc-500 py-8 text-center">{{ t('common.no_data') }}</p>
-
-    <div v-if="categories.length" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      <Card v-for="cat in categories" :key="cat.id" class="transition-shadow hover:shadow-md">
-        <CardContent class="flex items-center justify-between p-4">
-          <div class="min-w-0">
-            <p class="font-medium text-zinc-900 dark:text-zinc-100 truncate">{{ cat.name }}</p>
-            <p class="text-xs text-zinc-400 dark:text-zinc-500">{{ cat.products_count }} {{ t('categories.products_count') }}</p>
+    <div v-if="showForm" class="animate-in slide-in-from-top-4 duration-300">
+      <Card class="max-w-xl border-border/60 shadow-none bg-muted/5">
+        <CardHeader class="pb-3 border-b border-border/40">
+          <CardTitle class="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+            {{ editing ? 'EDIT CATEGORY' : 'NEW CATEGORY' }}
+          </CardTitle>
+        </CardHeader>
+        <CardContent class="p-6 space-y-4">
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="space-y-1.5">
+              <label class="text-[10px] font-semibold text-muted-foreground uppercase ml-0.5">{{ t('categories.name') }}</label>
+              <Input v-model="name" class="h-9 text-xs" />
+              <p v-if="firstError(fieldErrors, 'name')" class="text-[10px] text-destructive ml-0.5">{{ firstError(fieldErrors, 'name') }}</p>
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-[10px] font-semibold text-muted-foreground uppercase ml-0.5">{{ t('categories.description') }}</label>
+              <Input v-model="description" class="h-9 text-xs" />
+            </div>
           </div>
-          <div class="flex gap-1 shrink-0">
-            <Button variant="ghost" size="icon" @click="openEdit(cat)"><Pencil class="size-4" /></Button>
-            <Button variant="ghost" size="icon" @click="remove(cat.id)" class="text-red-400 hover:text-red-600 dark:text-red-500 dark:hover:text-red-400"><Trash2 class="size-4" /></Button>
+          <div class="flex items-center gap-3 pt-2">
+            <Button size="sm" :disabled="saving" @click="save" class="h-8 px-6 text-[10px] font-semibold">
+              {{ saving ? 'SAVING...' : t('common.save').toUpperCase() }}
+            </Button>
+            <Button variant="ghost" size="sm" @click="showForm = false" class="h-8 text-[10px] font-semibold">
+              {{ t('common.cancel').toUpperCase() }}
+            </Button>
           </div>
         </CardContent>
       </Card>
     </div>
-    <Pagination :meta="meta" @page="loadPage" />
+
+    <div v-if="loading" class="flex h-64 items-center justify-center text-muted-foreground">
+      <div class="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+    </div>
+
+    <div v-else-if="categories.length === 0" class="py-20 text-center border rounded-xl border-dashed">
+      <Package class="size-10 mx-auto text-muted-foreground/20 mb-4" />
+      <p class="text-sm font-medium text-muted-foreground">{{ t('common.no_data') }}</p>
+    </div>
+
+    <div v-else class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <Card v-for="cat in categories" :key="cat.id" class="group hover:border-primary/40 transition-all shadow-none">
+        <CardContent class="p-5 flex items-center justify-between">
+          <div class="min-w-0">
+            <h3 class="font-semibold text-sm truncate group-hover:text-primary transition-colors">{{ cat.name }}</h3>
+            <p class="text-[10px] text-muted-foreground mt-1">{{ cat.products_count }} Products</p>
+          </div>
+          <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+            <Button variant="ghost" size="icon" class="size-7 rounded-full" @click="openEdit(cat)">
+              <Pencil class="size-3 text-muted-foreground hover:text-foreground" />
+            </Button>
+            <Button variant="ghost" size="icon" class="size-7 rounded-full text-destructive" @click="remove(cat.id)">
+              <Trash2 class="size-3" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+    
+    <div class="pt-8">
+      <Pagination :meta="meta" @page="load" />
+    </div>
   </div>
 </template>

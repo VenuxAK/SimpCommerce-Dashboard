@@ -45,6 +45,7 @@ export interface Product {
   base_price: number
   image: string | null
   image_url: string | null
+  total_stock: number
   variants: ProductVariant[]
   created_at?: string
   updated_at?: string
@@ -84,13 +85,14 @@ export interface Payment {
 export interface Invoice {
   id: number
   order_id: number
-  order?: Order
+  order?: Order & { total_amount: number }
   invoice_number: string
   issued_date: string
   due_date: string | null
   status: string
   notes: string | null
   terms: string | null
+  total_amount: number
   created_at?: string
   updated_at?: string
 }

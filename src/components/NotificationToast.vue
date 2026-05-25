@@ -12,9 +12,9 @@ function dismiss(id: number) {
 
 function bgClass(type: string) {
   return {
-    success: 'bg-green-600 dark:bg-green-500',
-    error: 'bg-red-600 dark:bg-red-500',
-    info: 'bg-zinc-800 dark:bg-zinc-700',
+    success: 'bg-success',
+    error: 'bg-destructive',
+    info: 'bg-foreground/80',
   }[type] || 'bg-zinc-800'
 }
 </script>

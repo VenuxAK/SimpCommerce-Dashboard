@@ -77,11 +77,11 @@ async function remove(id: number) {
 <template>
   <div class="space-y-4">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-      <h1 class="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-100">{{ t('nav.suppliers') }}</h1>
+      <h1 class="text-xl sm:text-2xl font-semibold text-foreground">{{ t('nav.suppliers') }}</h1>
       <Button @click="openCreate" class="w-full sm:w-auto"><Plus class="size-4" /> {{ t('common.create') }}</Button>
     </div>
 
-    <div v-if="loading" class="text-sm text-zinc-400">{{ t('common.loading') }}</div>
+    <div v-if="loading" class="text-sm text-muted-foreground">{{ t('common.loading') }}</div>
 
     <Card v-if="showForm" class="max-w-lg">
       <CardHeader><CardTitle>{{ editing ? t('common.edit') : t('common.create') }}</CardTitle></CardHeader>
@@ -101,17 +101,17 @@ async function remove(id: number) {
       </CardContent>
     </Card>
 
-    <div v-if="!loading && suppliers.length === 0" class="text-sm text-zinc-400 py-8 text-center">{{ t('validation.no_suppliers') }}</div>
+    <div v-if="!loading && suppliers.length === 0" class="text-sm text-muted-foreground py-8 text-center">{{ t('validation.no_suppliers') }}</div>
 
     <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       <Card v-for="s in suppliers" :key="s.id" class="transition-shadow hover:shadow-md">
         <CardContent class="p-4">
           <div class="flex items-start justify-between">
             <div class="min-w-0 flex-1">
-              <p class="font-medium text-zinc-900 dark:text-zinc-100 truncate">{{ s.name }}</p>
-              <p v-if="s.contact_person" class="text-xs text-zinc-500 dark:text-zinc-400">{{ s.contact_person }}</p>
-              <p v-if="s.phone" class="text-xs text-zinc-400">{{ s.phone }}</p>
-              <p v-if="s.products_count !== undefined" class="text-xs text-zinc-400 mt-1">{{ s.products_count }} {{ t('products.title') }}</p>
+              <p class="font-medium text-foreground truncate">{{ s.name }}</p>
+              <p v-if="s.contact_person" class="text-xs text-muted-foreground">{{ s.contact_person }}</p>
+              <p v-if="s.phone" class="text-xs text-muted-foreground">{{ s.phone }}</p>
+              <p v-if="s.products_count !== undefined" class="text-xs text-muted-foreground mt-1">{{ s.products_count }} {{ t('products.title') }}</p>
             </div>
             <div class="flex gap-1 shrink-0">
               <Button variant="ghost" size="icon" @click="openEdit(s)"><Pencil class="size-4" /></Button>

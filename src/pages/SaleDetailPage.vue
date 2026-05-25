@@ -6,7 +6,7 @@ import api from '../lib/axios'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
-import { RotateCcw } from 'lucide-vue-next'
+import { RotateCcw, ChevronLeft, Wallet, CreditCard, Check } from 'lucide-vue-next'
 import { useNotify } from '../lib/notify'
 import type { Order } from '../types'
 
@@ -79,84 +79,126 @@ function statusBadge(status: string) {
 </script>
 
 <template>
-  <div v-if="loading" class="text-sm text-zinc-400 dark:text-zinc-500">{{ t('common.loading') }}</div>
-
-  <div v-else-if="!order" class="py-12 text-center text-zinc-400 dark:text-zinc-500">
-    <p>{{ t('common.no_data') }}</p>
-    <Button variant="outline" class="mt-4" @click="router.back()">{{ t('common.back') }}</Button>
+  <div v-if="loading" class="flex h-96 items-center justify-center text-muted-foreground">
+    <div class="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
   </div>
 
-  <div v-else class="space-y-6">
-    <Button variant="outline" @click="router.back()">{{ t('common.back') }}</Button>
+  <div v-else-if="!order" class="py-24 text-center animate-in fade-in duration-500">
+    <p class="text-sm font-medium text-muted-foreground">{{ t('common.no_data') }}</p>
+    <Button variant="outline" class="mt-6" @click="router.back()">{{ t('common.back') }}</Button>
+  </div>
 
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-      <div>
-        <h1 class="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-100">{{ order.order_number }}</h1>
-        <p class="text-sm text-zinc-400 dark:text-zinc-500">{{ order.created_at }}</p>
+  <div v-else class="space-y-8 animate-in fade-in duration-700 max-w-5xl mx-auto">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <Button variant="ghost" size="icon" @click="router.back()" class="size-8">
+          <ChevronLeft class="size-4" />
+        </Button>
+        <div>
+          <h1 class="text-2xl font-semibold tracking-tight text-foreground">{{ order.order_number }}</h1>
+          <p class="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mt-1">{{ order.created_at }}</p>
+        </div>
       </div>
-      <Badge :variant="statusBadge(order.status) as any" class="text-sm px-4 py-1 w-fit">{{ order.status }}</Badge>
+      <Badge :variant="statusBadge(order.status) as any" class="h-6 px-3 text-[10px] font-medium uppercase tracking-wider">{{ order.status }}</Badge>
     </div>
 
-    <div class="grid gap-4 md:grid-cols-2">
-      <Card>
-        <CardHeader><CardTitle class="text-zinc-900 dark:text-zinc-100">{{ t('sales.customer') }}</CardTitle></CardHeader>
-        <CardContent>
-          <p v-if="order.customer" class="text-zinc-700 dark:text-zinc-300">{{ order.customer.name }}<br>
-            <span class="text-xs text-zinc-400 dark:text-zinc-500">{{ order.customer.phone }}</span></p>
-          <p v-else class="text-sm text-zinc-400 dark:text-zinc-500">—</p>
+    <div class="grid gap-6 md:grid-cols-2">
+      <Card class="shadow-none">
+        <CardHeader class="border-b bg-muted/10 py-3 px-5">
+          <CardTitle class="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">{{ t('sales.customer') }}</CardTitle>
+        </CardHeader>
+        <CardContent class="p-5">
+          <div v-if="order.customer" class="flex items-center gap-4">
+            <div class="size-10 rounded-full bg-secondary flex items-center justify-center text-foreground font-bold text-xs border shadow-sm">
+              {{ order.customer.name.charAt(0) }}
+            </div>
+            <div>
+              <p class="text-sm font-semibold text-foreground">{{ order.customer.name }}</p>
+              <p class="text-[11px] font-medium text-muted-foreground mt-0.5">{{ order.customer.phone || 'NO PHONE' }}</p>
+            </div>
+          </div>
+          <p v-else class="text-[11px] font-medium text-muted-foreground uppercase tracking-widest text-center py-2">— NO CUSTOMER —</p>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader><CardTitle class="text-zinc-900 dark:text-zinc-100">{{ t('pos.payment') }}</CardTitle></CardHeader>
-        <CardContent>
-          <p class="text-sm text-zinc-700 dark:text-zinc-300" v-if="order.payment">
-            {{ order.payment.method }} · {{ order.payment.amount.toLocaleString() }} Ks
-          </p>
-          <p v-else class="text-sm text-zinc-400 dark:text-zinc-500">—</p>
+      <Card class="shadow-none">
+        <CardHeader class="border-b bg-muted/10 py-3 px-5">
+          <CardTitle class="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">{{ t('pos.payment') }}</CardTitle>
+        </CardHeader>
+        <CardContent class="p-5">
+          <div v-if="order.payment" class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="size-10 rounded-md bg-secondary flex items-center justify-center text-muted-foreground border">
+                <Wallet v-if="order.payment.method === 'cash'" class="size-4" />
+                <CreditCard v-else class="size-4" />
+              </div>
+              <div>
+                <p class="text-xs font-semibold text-foreground uppercase tracking-wider">{{ order.payment.method }}</p>
+                <p class="text-[10px] font-medium text-muted-foreground mt-0.5">COMPLETED</p>
+              </div>
+            </div>
+            <p class="text-xl font-bold text-foreground tabular-nums">{{ order.payment.amount.toLocaleString() }} Ks</p>
+          </div>
+          <p v-else class="text-[11px] font-medium text-muted-foreground uppercase tracking-widest text-center py-2">— NO PAYMENT RECORD —</p>
         </CardContent>
       </Card>
     </div>
 
-    <Card>
-      <CardHeader class="flex flex-row items-center justify-between flex-wrap gap-2">
-        <CardTitle class="text-zinc-900 dark:text-zinc-100">{{ t('sales.items') }} ({{ order.items.length }})</CardTitle>
-        <Button v-if="['completed', 'refunded'].includes(order.status)" variant="outline" size="sm" @click="toggleReturnPanel">
-          <RotateCcw class="size-4" /> {{ t('common.refund') }}
+    <Card class="shadow-none overflow-hidden border">
+      <CardHeader class="flex flex-row items-center justify-between border-b bg-muted/10 py-3 px-6">
+        <CardTitle class="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">{{ t('sales.items') }} ({{ order.items.length }})</CardTitle>
+        <Button v-if="['completed', 'refunded'].includes(order.status)" variant="outline" size="sm" @click="toggleReturnPanel" class="h-7 text-[10px]">
+          <RotateCcw class="size-3 mr-1.5" /> {{ t('common.refund') }}
         </Button>
       </CardHeader>
       <CardContent class="p-0 overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead class="border-b bg-zinc-50 dark:bg-zinc-800/50">
-            <tr>
-              <th v-if="showReturnPanel" class="px-3 py-3 w-10"></th>
-              <th class="px-3 sm:px-4 py-3 text-left whitespace-nowrap text-zinc-500 dark:text-zinc-400 font-medium">{{ t('sales.items') }}</th>
-              <th class="px-3 sm:px-4 py-3 text-left whitespace-nowrap text-zinc-500 dark:text-zinc-400 font-medium hidden sm:table-cell">{{ t('common.variant') }}</th>
-              <th class="px-3 sm:px-4 py-3 text-right whitespace-nowrap text-zinc-500 dark:text-zinc-400 font-medium hidden md:table-cell">{{ t('products.sku') }}</th>
-              <th class="px-3 sm:px-4 py-3 text-right whitespace-nowrap text-zinc-500 dark:text-zinc-400 font-medium">{{ t('common.qty') }}</th>
-              <th class="px-3 sm:px-4 py-3 text-right whitespace-nowrap text-zinc-500 dark:text-zinc-400 font-medium">{{ t('products.base_price') }}</th>
-              <th class="px-3 sm:px-4 py-3 text-right whitespace-nowrap text-zinc-500 dark:text-zinc-400 font-medium">{{ t('common.subtotal') }}</th>
+        <table class="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr class="border-b bg-muted/20">
+              <th v-if="showReturnPanel" class="px-6 py-3 w-12 text-center">
+                <div class="flex justify-center"><Check class="size-3 text-muted-foreground" /></div>
+              </th>
+              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider">{{ t('sales.items') }}</th>
+              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider hidden sm:table-cell">{{ t('common.variant') }}</th>
+              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-right">{{ t('common.qty') }}</th>
+              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-right">{{ t('products.base_price') }}</th>
+              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-right">Subtotal</th>
             </tr>
           </thead>
-          <tbody>
-            <tr v-for="item in order.items" :key="item.id" class="border-b border-zinc-100 dark:border-zinc-800 last:border-0"
-              :class="showReturnPanel && returnItems[item.id]?.checked ? 'bg-amber-50 dark:bg-amber-900/10' : ''">
-              <td v-if="showReturnPanel" class="px-3 py-3">
-                <input type="checkbox" v-model="returnItems[item.id].checked" class="rounded" />
+          <tbody class="divide-y">
+            <tr v-for="item in order.items" :key="item.id" class="hover:bg-muted/30 transition-colors group"
+              :class="showReturnPanel && returnItems[item.id]?.checked ? 'bg-destructive/[0.03]' : ''">
+              <td v-if="showReturnPanel" class="px-6 py-4 text-center">
+                <input type="checkbox" v-model="returnItems[item.id].checked" class="size-4 rounded border-border text-primary focus:ring-primary/10 cursor-pointer" />
               </td>
-              <td class="px-3 sm:px-4 py-3 text-zinc-900 dark:text-zinc-100 whitespace-nowrap">{{ item.variant?.product?.name || '—' }}</td>
-              <td class="px-3 sm:px-4 py-3 text-zinc-500 dark:text-zinc-400 whitespace-nowrap hidden sm:table-cell">{{ item.variant?.size }} / {{ item.variant?.color }}</td>
-              <td class="px-3 sm:px-4 py-3 text-right text-zinc-500 dark:text-zinc-400 hidden md:table-cell">{{ item.variant?.sku }}</td>
-              <td class="px-3 sm:px-4 py-3 text-right text-zinc-700 dark:text-zinc-300">{{ item.quantity }}</td>
-              <td class="px-3 sm:px-4 py-3 text-right text-zinc-700 dark:text-zinc-300 whitespace-nowrap">{{ item.unit_price.toLocaleString() }}</td>
-              <td class="px-3 sm:px-4 py-3 text-right font-semibold text-zinc-900 dark:text-zinc-100 whitespace-nowrap">{{ item.subtotal.toLocaleString() }} Ks</td>
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                  <div class="size-10 rounded border bg-muted/50 overflow-hidden shrink-0">
+                    <img v-if="item.variant?.product?.image_url" :src="item.variant.product.image_url" class="size-full object-cover grayscale group-hover:grayscale-0 transition-all" />
+                    <span v-else class="flex size-full items-center justify-center text-sm opacity-20">👕</span>
+                  </div>
+                  <span class="font-semibold text-foreground">{{ item.variant?.product?.name || '—' }}</span>
+                </div>
+              </td>
+              <td class="px-6 py-4 text-muted-foreground font-medium hidden sm:table-cell">{{ item.variant?.size }} / {{ item.variant?.color }}</td>
+              <td class="px-6 py-4 text-right font-medium tabular-nums">{{ item.quantity }}</td>
+              <td class="px-6 py-4 text-right font-medium tabular-nums">{{ item.unit_price.toLocaleString() }}</td>
+              <td class="px-6 py-4 text-right font-bold tabular-nums italic text-foreground">{{ item.subtotal.toLocaleString() }} Ks</td>
             </tr>
-            <tr v-if="showReturnPanel && hasSelectedReturns">
-              <td :colspan="showReturnPanel ? 7 : 6" class="px-4 py-3">
-                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                  <span class="text-sm text-zinc-500 whitespace-nowrap">Returning selected items</span>
-                  <Button size="sm" variant="destructive" :disabled="refunding" @click="submitReturn">
-                    {{ refunding ? t('common.loading') : t('common.refund') }}
+            <tr v-if="showReturnPanel && hasSelectedReturns" class="bg-muted/5">
+              <td :colspan="showReturnPanel ? 6 : 5" class="px-6 py-6 border-t border-dashed">
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div class="flex items-center gap-3">
+                    <div class="size-10 rounded-full bg-destructive/10 flex items-center justify-center text-destructive">
+                      <RotateCcw class="size-5" />
+                    </div>
+                    <div>
+                      <p class="text-xs font-semibold text-foreground">Processing Refund</p>
+                      <p class="text-[10px] text-muted-foreground">Selected items will be restored to inventory</p>
+                    </div>
+                  </div>
+                  <Button size="sm" variant="destructive" :disabled="refunding" @click="submitReturn" class="h-9 px-6 font-semibold shadow-none">
+                    {{ refunding ? 'PROCESSING...' : 'CONFIRM REFUND' }}
                   </Button>
                 </div>
               </td>
@@ -166,9 +208,12 @@ function statusBadge(status: string) {
       </CardContent>
     </Card>
 
-    <div class="flex items-center justify-between">
-      <div class="text-right text-xl font-bold text-zinc-900 dark:text-zinc-100">
-        {{ t('common.total') }}: {{ order.total_amount.toLocaleString() }} Ks
+    <div class="flex justify-end pt-4">
+      <div class="text-right space-y-1">
+        <p class="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">{{ t('common.total') }}</p>
+        <div class="text-4xl font-bold text-foreground tracking-tight tabular-nums">
+          {{ order.total_amount.toLocaleString() }} <span class="text-sm font-medium text-muted-foreground ml-1">Ks</span>
+        </div>
       </div>
     </div>
   </div>

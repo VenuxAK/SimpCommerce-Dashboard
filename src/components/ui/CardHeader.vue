@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { cn } from '../../lib/utils'
 
-interface Props {
+const props = defineProps<{
   class?: string
-}
-
-const props = defineProps<Props>()
+}>()
 </script>
 
 <template>

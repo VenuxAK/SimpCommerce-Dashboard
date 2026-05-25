@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Plus, Pencil, Trash2 } from 'lucide-vue-next'
+import { Plus, Pencil, Trash2, Search, ShieldCheck } from 'lucide-vue-next'
 import api from '../lib/axios'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
 import Input from '../components/ui/Input.vue'
+import Select from '../components/ui/Select.vue'
 import { useNotify } from '../lib/notify'
 import { useAuthStore } from '../stores/auth'
 import Pagination from '../components/Pagination.vue'
@@ -22,6 +23,11 @@ const editing = ref<User | null>(null)
 const form = ref({ name: '', email: '', password: '', role: 'staff' })
 const loading = ref(true)
 const search = ref('')
+
+const roleOptions = [
+  { label: 'STAFF', value: 'staff' },
+  { label: 'ADMIN', value: 'admin' },
+]
 
 async function loadPage(page = 1) {
   loading.value = true
@@ -64,10 +70,10 @@ async function save() {
       const payload: Record<string, any> = { name: form.value.name, email: form.value.email, role: form.value.role }
       if (form.value.password) payload.password = form.value.password
       await api.put(`/users/${editing.value.id}`, payload)
-      success(t('common.save') + ' ✅')
+      success(t('common.save'))
     } else {
       await api.post('/users', form.value)
-      success(t('common.create') + ' ✅')
+      success(t('common.create'))
     }
     showForm.value = false
     await loadPage(1)
@@ -88,7 +94,7 @@ async function remove(id: number, name: string) {
   try {
     await api.delete(`/users/${id}`)
     users.value = users.value.filter((u) => u.id !== id)
-    success(t('common.delete') + ' ✅')
+    success(t('common.delete'))
   } catch (e: any) {
     error(e?.response?.data?.message || t('common.error'))
   }
@@ -100,77 +106,119 @@ function roleBadge(role: string) {
 </script>
 
 <template>
-  <div class="space-y-4">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-      <h1 class="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-100">{{ t('users.title') }}</h1>
-      <Button @click="openCreate" class="w-full sm:w-auto"><Plus class="size-4" /> {{ t('users.new_user') }}</Button>
+  <div class="space-y-8 animate-in fade-in duration-700">
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-semibold tracking-tight text-foreground">{{ t('users.title') }}</h1>
+        <p class="text-xs text-muted-foreground mt-1">Manage platform access and assign security roles</p>
+      </div>
+      <Button size="sm" @click="openCreate">
+        <Plus class="size-3.5 mr-2" /> {{ t('users.new_user') }}
+      </Button>
     </div>
 
-    <div v-if="loading" class="text-sm text-zinc-400 dark:text-zinc-500">{{ t('common.loading') }}</div>
+    <div v-if="showForm" class="animate-in slide-in-from-top-4 duration-300">
+      <Card class="max-w-xl border-border/60 shadow-none bg-muted/5">
+        <CardHeader class="pb-3 border-b border-border/40">
+          <CardTitle class="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+            {{ editing ? 'EDIT USER' : 'NEW USER' }}
+          </CardTitle>
+        </CardHeader>
+        <CardContent class="p-6 space-y-4">
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="space-y-1.5">
+              <label class="text-[11px] font-medium text-foreground ml-0.5">{{ t('users.name') }}</label>
+              <Input v-model="form.name" class="h-9" />
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-[11px] font-medium text-foreground ml-0.5">{{ t('users.role') }}</label>
+              <Select v-model="form.role" :options="roleOptions" />
+            </div>
+          </div>
+          <div class="space-y-1.5">
+            <label class="text-[11px] font-medium text-foreground ml-0.5">{{ t('auth.email') }}</label>
+            <Input v-model="form.email" type="email" class="h-9" />
+          </div>
+          <div class="space-y-1.5">
+            <label class="text-[11px] font-medium text-foreground ml-0.5">{{ editing ? 'New Password' : t('auth.password') }}</label>
+            <Input v-model="form.password" type="password" :placeholder="editing ? t('users.password_leave') : ''" class="h-9" />
+          </div>
+          <div class="flex items-center gap-3 pt-4 border-t">
+            <Button size="sm" @click="save" class="h-9 px-8">{{ t('common.save').toUpperCase() }}</Button>
+            <Button variant="ghost" size="sm" @click="showForm = false" class="h-9">{{ t('common.cancel').toUpperCase() }}</Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
 
-    <Card v-if="showForm" class="max-w-md">
-      <CardHeader><CardTitle>{{ editing ? t('users.edit_user') : t('users.new_user') }}</CardTitle></CardHeader>
-      <CardContent class="space-y-3">
-        <Input v-model="form.name" :placeholder="t('users.name')" />
-        <Input v-model="form.email" type="email" :placeholder="t('auth.email')" />
-        <Input v-model="form.password" type="password" :placeholder="editing ? t('users.password_leave') : t('auth.password')" />
-        <p v-if="editing && !form.password" class="text-xs text-zinc-400 dark:text-zinc-500">{{ t('users.password_leave') }}</p>
-        <select v-model="form.role"
-          class="w-full h-9 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 text-sm text-zinc-900 dark:text-zinc-100">
-          <option value="staff">Staff</option>
-          <option value="admin">Admin</option>
-        </select>
-        <div class="flex gap-2">
-          <Button @click="save">{{ t('common.save') }}</Button>
-          <Button variant="outline" @click="showForm = false">{{ t('common.cancel') }}</Button>
+    <Card class="shadow-none border-border/60 bg-muted/5">
+      <CardContent class="p-4">
+        <div class="relative max-w-md">
+          <Search class="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+          <Input v-model="search" :placeholder="t('common.search')" class="pl-9 h-9 text-xs border-border/40 shadow-none bg-background" />
         </div>
       </CardContent>
     </Card>
 
-    <template v-else>
-      <Input v-model="search" :placeholder="t('common.search')" class="sm:max-w-xs" />
+    <div v-if="loading" class="flex h-64 items-center justify-center text-muted-foreground">
+      <div class="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+    </div>
 
-      <Card>
-        <CardContent class="p-0 overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead class="border-b bg-zinc-50 dark:bg-zinc-800/50">
-              <tr>
-                <th class="px-3 sm:px-4 py-3 text-left whitespace-nowrap text-zinc-500 dark:text-zinc-400 font-medium">{{ t('users.name') }}</th>
-                <th class="px-3 sm:px-4 py-3 text-left whitespace-nowrap text-zinc-500 dark:text-zinc-400 font-medium hidden sm:table-cell">{{ t('auth.email') }}</th>
-                <th class="px-3 sm:px-4 py-3 text-left whitespace-nowrap text-zinc-500 dark:text-zinc-400 font-medium">{{ t('users.role') }}</th>
-                <th class="px-3 sm:px-4 py-3 text-right whitespace-nowrap text-zinc-500 dark:text-zinc-400 font-medium hidden md:table-cell">{{ t('common.date') }}</th>
-                <th class="px-3 sm:px-4 py-3"></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="u in filtered" :key="u.id"
-                class="border-b border-zinc-100 dark:border-zinc-800 last:border-0 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors"
-              >
-                <td class="px-3 sm:px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100">
-                  {{ u.name }}
-                  <span v-if="u.id === authStore.user?.id" class="text-xs text-zinc-400 dark:text-zinc-500 ml-1">(you)</span>
-                </td>
-                <td class="px-3 sm:px-4 py-3 text-zinc-500 dark:text-zinc-400 truncate max-w-40 hidden sm:table-cell">{{ u.email }}</td>
-                <td class="px-3 sm:px-4 py-3">
-                  <Badge :variant="roleBadge(u.role)">{{ u.role }}</Badge>
-                </td>
-                <td class="px-3 sm:px-4 py-3 text-zinc-500 dark:text-zinc-400 whitespace-nowrap hidden md:table-cell">{{ u.created_at?.split('T')[0] }}</td>
-                <td class="px-3 sm:px-4 py-3 text-right">
-                  <Button variant="ghost" size="icon" @click="openEdit(u)">
-                    <Pencil class="size-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" @click="remove(u.id, u.name)" class="text-red-400 hover:text-red-600 dark:text-red-500 dark:hover:text-red-400">
-                    <Trash2 class="size-4" />
-                  </Button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </CardContent>
-      </Card>
+    <div v-else-if="users.length === 0" class="py-20 text-center border border-dashed rounded-xl">
+      <ShieldCheck class="size-10 mx-auto text-muted-foreground/20 mb-4" />
+      <p class="text-sm font-medium text-muted-foreground">{{ t('common.no_data') }}</p>
+    </div>
 
-      <p v-if="!loading && filtered.length === 0" class="text-sm text-zinc-400 dark:text-zinc-500 py-8 text-center">{{ t('common.no_data') }}</p>
+    <div v-else class="border rounded-lg overflow-hidden bg-card">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr class="border-b bg-muted/20">
+              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider">{{ t('users.name') }}</th>
+              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider hidden sm:table-cell">{{ t('auth.email') }}</th>
+              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider">{{ t('users.role') }}</th>
+              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider hidden md:table-cell">Created</th>
+              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-right w-20">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y">
+            <tr v-for="u in filtered" :key="u.id" class="hover:bg-muted/30 transition-colors group">
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                  <div class="size-8 rounded-full bg-secondary flex items-center justify-center text-[10px] font-bold border">
+                    {{ u.name.charAt(0).toUpperCase() }}
+                  </div>
+                  <div>
+                    <span class="font-semibold text-foreground group-hover:text-primary transition-colors whitespace-nowrap">{{ u.name }}</span>
+                    <p v-if="u.id === authStore.user?.id" class="text-[9px] font-bold text-primary uppercase mt-0.5">Your Account</p>
+                  </div>
+                </div>
+              </td>
+              <td class="px-6 py-4 text-muted-foreground font-medium hidden sm:table-cell truncate max-w-40">{{ u.email }}</td>
+              <td class="px-6 py-4">
+                <Badge :variant="roleBadge(u.role)" class="h-5 px-2 text-[9px] font-medium uppercase tracking-wider">
+                  {{ u.role }}
+                </Badge>
+              </td>
+              <td class="px-6 py-4 text-muted-foreground font-medium hidden md:table-cell tabular-nums">{{ u.created_at?.split('T')[0] }}</td>
+              <td class="px-6 py-4 text-right">
+                <div class="flex items-center justify-end gap-1">
+                  <Button variant="ghost" size="icon" class="size-7" @click="openEdit(u)">
+                    <Pencil class="size-3.5 text-muted-foreground hover:text-foreground" />
+                  </Button>
+                  <Button v-if="u.id !== authStore.user?.id" variant="ghost" size="icon" class="size-7 text-destructive" @click="remove(u.id, u.name)">
+                    <Trash2 class="size-3.5" />
+                  </Button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <div class="pt-8">
       <Pagination :meta="meta" @page="loadPage" />
-    </template>
+    </div>
   </div>
 </template>

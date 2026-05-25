@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Plus, Pencil, Trash2 } from 'lucide-vue-next'
+import { Plus, Pencil, Trash2, Tag, Calendar, LayoutGrid } from 'lucide-vue-next'
 import api from '../lib/axios'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
 import Input from '../components/ui/Input.vue'
+import Select from '../components/ui/Select.vue'
 import Pagination from '../components/Pagination.vue'
 import { useNotify } from '../lib/notify'
 import type { Discount, Category, Product } from '../types'
@@ -14,7 +15,7 @@ import type { Discount, Category, Product } from '../types'
 const { t } = useI18n()
 const { success, error } = useNotify()
 const discounts = ref<Discount[]>([])
-const meta = ref<{ current_page: number; last_page: number; total: number; per_page: number } | null>(null)
+const meta = ref<any>(null)
 const categories = ref<Category[]>([])
 const products = ref<Product[]>([])
 const showForm = ref(false)
@@ -27,6 +28,27 @@ const form = ref({
 })
 const loading = ref(true)
 
+const typeOptions = [
+  { label: 'PERCENTAGE', value: 'percentage' },
+  { label: 'FIXED AMOUNT', value: 'fixed' },
+]
+
+const appliesToOptions = [
+  { label: 'ALL PRODUCTS', value: 'all' },
+  { label: 'SPECIFIC CATEGORY', value: 'category' },
+  { label: 'SPECIFIC PRODUCT', value: 'product' },
+]
+
+const categoryOptions = computed(() => [
+  { label: 'SELECT CATEGORY', value: '' },
+  ...categories.value.map(c => ({ label: c.name.toUpperCase(), value: c.id }))
+])
+
+const productOptions = computed(() => [
+  { label: 'SELECT PRODUCT', value: '' },
+  ...products.value.map(p => ({ label: p.name.toUpperCase(), value: p.id }))
+])
+
 async function loadPage(page = 1) {
   loading.value = true
   try {
@@ -38,7 +60,7 @@ async function loadPage(page = 1) {
     discounts.value = discRes.data.data
     categories.value = catRes.data.data
     products.value = prodRes.data.data
-    meta.value = { current_page: discRes.data.meta.current_page, last_page: discRes.data.meta.last_page, total: discRes.data.meta.total, per_page: discRes.data.meta.per_page }
+    meta.value = discRes.data.meta
   } catch { }
   finally { loading.value = false }
 }
@@ -73,10 +95,10 @@ async function save() {
 
     if (editing.value) {
       await api.put(`/discounts/${editing.value.id}`, payload)
-      success(t('common.save') + ' ✅')
+      success(t('common.save'))
     } else {
       await api.post('/discounts', payload)
-      success(t('common.create') + ' ✅')
+      success(t('common.create'))
     }
     showForm.value = false
     await loadPage(1)
@@ -89,108 +111,148 @@ async function remove(id: number) {
   if (!confirm(t('common.confirm') + '?')) return
   try {
     await api.delete(`/discounts/${id}`)
-    discounts.value = discounts.value.filter((d: any) => d.id !== id)
-    success(t('common.delete') + ' ✅')
+    success(t('common.delete'))
+    await loadPage(1)
   } catch { }
 }
 </script>
 
 <template>
-  <div class="space-y-4">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-      <h1 class="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-100">{{ t('nav.discounts') }}</h1>
-      <Button @click="openCreate" class="w-full sm:w-auto"><Plus class="size-4" /> {{ t('common.create') }}</Button>
+  <div class="space-y-8 animate-in fade-in duration-700">
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-semibold tracking-tight text-foreground">{{ t('nav.discounts') }}</h1>
+        <p class="text-xs text-muted-foreground mt-1">Manage promotional offers and seasonal pricing</p>
+      </div>
+      <Button size="sm" @click="openCreate">
+        <Plus class="size-3.5 mr-2" /> CREATE DISCOUNT
+      </Button>
     </div>
 
-    <div v-if="loading" class="text-sm text-zinc-400">{{ t('common.loading') }}</div>
+    <div v-if="showForm" class="animate-in slide-in-from-top-4 duration-300">
+      <Card class="max-w-2xl border-border/60 shadow-none bg-muted/5">
+        <CardHeader class="pb-3 border-b border-border/40">
+          <CardTitle class="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+            {{ editing ? 'EDIT DISCOUNT' : 'NEW DISCOUNT' }}
+          </CardTitle>
+        </CardHeader>
+        <CardContent class="p-6 space-y-6">
+          <div class="space-y-1.5">
+            <label class="text-[11px] font-medium text-foreground ml-0.5">Promotion Name</label>
+            <Input v-model="form.name" placeholder="e.g. Summer Sale 2026" class="h-10" />
+          </div>
 
-    <Card v-if="showForm" class="max-w-lg">
-      <CardHeader><CardTitle>{{ editing ? t('common.edit') : t('common.create') }}</CardTitle></CardHeader>
-      <CardContent class="space-y-4">
-        <Input v-model="form.name" :placeholder="t('validation.name')" />
-
-        <div class="grid grid-cols-2 gap-3">
-          <select v-model="form.type" class="h-9 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 text-sm text-zinc-900 dark:text-zinc-100">
-            <option value="percentage">{{ t('validation.percentage') }}</option>
-            <option value="fixed">{{ t('validation.fixed') }}</option>
-          </select>
-          <Input v-model.number="form.value" type="number" min="0" :placeholder="form.type === 'percentage' ? '%' : 'Ks'" />
-        </div>
-
-        <div>
-          <label class="text-xs font-medium text-zinc-400 dark:text-zinc-500 mb-1 block">{{ t('validation.applies_to') }}</label>
-          <select v-model="form.applies_to" class="w-full h-9 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 text-sm text-zinc-900 dark:text-zinc-100">
-            <option value="all">{{ t('validation.all_items') }}</option>
-            <option value="category">{{ t('validation.category_items') }}</option>
-            <option value="product">{{ t('validation.product_items') }}</option>
-          </select>
-        </div>
-
-        <div v-if="form.applies_to === 'category'">
-          <label class="text-xs font-medium text-zinc-400 dark:text-zinc-500 mb-1 block">{{ t('products.category') }}</label>
-          <select v-model="form.category_id" class="w-full h-9 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 text-sm text-zinc-900 dark:text-zinc-100">
-            <option value="" disabled>{{ t('common.select') }}</option>
-            <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
-          </select>
-        </div>
-
-        <div v-if="form.applies_to === 'product'">
-          <label class="text-xs font-medium text-zinc-400 dark:text-zinc-500 mb-1 block">{{ t('products.title') }}</label>
-          <select v-model="form.product_id" class="w-full h-9 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 text-sm text-zinc-900 dark:text-zinc-100">
-            <option value="" disabled>{{ t('common.select') }}</option>
-            <option v-for="p in products" :key="p.id" :value="p.id">{{ p.name }}</option>
-          </select>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <Input v-model="form.starts_at" type="date" :placeholder="t('validation.starts_at')" />
-          <Input v-model="form.ends_at" type="date" :placeholder="t('validation.ends_at')" />
-        </div>
-
-        <label class="flex items-center gap-2 text-sm">
-          <input type="checkbox" v-model="form.is_active" class="rounded" />
-          {{ t('validation.is_active') }}
-        </label>
-
-        <div class="flex gap-2 pt-1">
-          <Button @click="save">{{ t('common.save') }}</Button>
-          <Button variant="outline" @click="showForm = false">{{ t('common.cancel') }}</Button>
-        </div>
-      </CardContent>
-    </Card>
-
-    <div v-if="!loading && discounts.length === 0" class="text-sm text-zinc-400 py-8 text-center">{{ t('validation.no_discounts') }}</div>
-
-    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      <Card v-for="d in discounts" :key="d.id" class="transition-shadow hover:shadow-md">
-        <CardContent class="p-4">
-          <div class="flex items-start justify-between">
-            <div class="min-w-0">
-              <p class="font-medium text-zinc-900 dark:text-zinc-100 truncate">{{ d.name }}</p>
-              <p class="text-sm text-zinc-500 dark:text-zinc-400">
-                {{ d.type === 'percentage' ? d.value + '%' : d.value.toLocaleString() + ' Ks' }}
-                <span class="mx-1">·</span>
-                {{ d.applies_to }}
-              </p>
-              <p v-if="d.applies_to === 'category' && d.category_id" class="text-xs text-zinc-400">
-                Category: {{ categories.find((c: any) => c.id === d.category_id)?.name || '—' }}
-              </p>
-              <p v-if="d.applies_to === 'product' && d.product_id" class="text-xs text-zinc-400">
-                Product: {{ products.find((p: any) => p.id === d.product_id)?.name || '—' }}
-              </p>
-              <p v-if="d.starts_at || d.ends_at" class="text-xs text-zinc-400">
-                {{ d.starts_at || '—' }} ~ {{ d.ends_at || '—' }}
-              </p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div class="space-y-1.5">
+              <label class="text-[11px] font-medium text-foreground ml-0.5">Type</label>
+              <Select v-model="form.type" :options="typeOptions" />
             </div>
-            <div class="flex gap-1 shrink-0">
-              <Badge :variant="d.is_active ? 'success' : 'secondary'">{{ d.is_active ? 'ON' : 'OFF' }}</Badge>
-              <Button variant="ghost" size="icon" @click="openEdit(d)"><Pencil class="size-4" /></Button>
-              <Button variant="ghost" size="icon" @click="remove(d.id)" class="text-red-400"><Trash2 class="size-4" /></Button>
+            <div class="space-y-1.5">
+              <label class="text-[11px] font-medium text-foreground ml-0.5">Value ({{ form.type === 'percentage' ? '%' : 'Ks' }})</label>
+              <Input v-model.number="form.value" type="number" min="0" class="h-10" />
             </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-[11px] font-medium text-foreground ml-0.5">Applies To</label>
+            <Select v-model="form.applies_to" :options="appliesToOptions" />
+          </div>
+
+          <div v-if="form.applies_to !== 'all'" class="grid gap-6 animate-in fade-in slide-in-from-top-1">
+            <div v-if="form.applies_to === 'category'" class="space-y-1.5">
+              <label class="text-[11px] font-medium text-foreground ml-0.5">Category</label>
+              <Select v-model="form.category_id" :options="categoryOptions" />
+            </div>
+            <div v-if="form.applies_to === 'product'" class="space-y-1.5">
+              <label class="text-[11px] font-medium text-foreground ml-0.5">Product</label>
+              <Select v-model="form.product_id" :options="productOptions" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div class="space-y-1.5">
+              <label class="text-[11px] font-medium text-foreground ml-0.5">Start Date</label>
+              <Input v-model="form.starts_at" type="date" class="h-10" />
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-[11px] font-medium text-foreground ml-0.5">End Date</label>
+              <Input v-model="form.ends_at" type="date" class="h-10" />
+            </div>
+          </div>
+
+          <div class="flex items-center gap-4 pt-2">
+            <label class="flex items-center gap-2.5 cursor-pointer group">
+              <input type="checkbox" v-model="form.is_active" class="size-4 rounded border-border text-primary focus:ring-primary/20 transition-all" />
+              <span class="text-xs font-medium text-foreground group-hover:text-primary transition-colors">Mark as Active</span>
+            </label>
+          </div>
+
+          <div class="flex items-center gap-3 pt-4 border-t">
+            <Button size="sm" @click="save" class="h-9 px-8">SAVE DISCOUNT</Button>
+            <Button variant="ghost" size="sm" @click="showForm = false" class="h-9">CANCEL</Button>
           </div>
         </CardContent>
       </Card>
     </div>
-    <Pagination :meta="meta" @page="loadPage" />
+
+    <div v-if="loading" class="flex h-64 items-center justify-center text-muted-foreground">
+      <div class="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+    </div>
+
+    <div v-else-if="discounts.length === 0" class="py-20 text-center border border-dashed rounded-xl">
+      <Tag class="size-10 mx-auto text-muted-foreground/20 mb-4" />
+      <p class="text-sm font-medium text-muted-foreground">No active discounts found</p>
+    </div>
+
+    <div v-else class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <Card v-for="d in discounts" :key="d.id" class="group hover:border-primary/40 transition-all shadow-none flex flex-col h-full overflow-hidden">
+        <div class="p-5 flex-1 space-y-4">
+          <div class="flex items-start justify-between">
+            <div class="min-w-0">
+              <h3 class="font-semibold text-sm truncate group-hover:text-primary transition-colors uppercase tracking-tight">{{ d.name }}</h3>
+              <div class="flex items-center gap-2 mt-1">
+                <span class="text-2xl font-bold text-foreground tabular-nums">
+                  {{ d.type === 'percentage' ? d.value + '%' : d.value.toLocaleString() }}
+                </span>
+                <span v-if="d.type !== 'percentage'" class="text-[10px] font-medium text-muted-foreground self-end mb-1">Ks</span>
+              </div>
+            </div>
+            <Badge :variant="d.is_active ? 'success' : 'secondary'" class="h-5 px-1.5 text-[9px] font-medium uppercase tracking-wider">
+              {{ d.is_active ? 'Active' : 'Paused' }}
+            </Badge>
+          </div>
+
+          <div class="space-y-1.5">
+            <div class="flex items-center gap-2 text-[10px] font-medium text-muted-foreground uppercase tracking-widest">
+              <LayoutGrid class="size-3" />
+              {{ d.applies_to }} 
+              <span v-if="d.applies_to === 'category' && d.category_id" class="text-foreground italic">
+                ({{ categories.find((c: any) => c.id === d.category_id)?.name }})
+              </span>
+              <span v-if="d.applies_to === 'product' && d.product_id" class="text-foreground italic">
+                ({{ products.find((p: any) => p.id === d.product_id)?.name }})
+              </span>
+            </div>
+            <div v-if="d.starts_at || d.ends_at" class="flex items-center gap-2 text-[10px] font-medium text-muted-foreground">
+              <Calendar class="size-3" />
+              {{ d.starts_at || 'Anytime' }} — {{ d.ends_at || 'Indefinite' }}
+            </div>
+          </div>
+        </div>
+
+        <div class="p-4 bg-muted/10 border-t flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all">
+          <Button variant="ghost" size="icon" class="size-8" @click="openEdit(d)">
+            <Pencil class="size-3.5 text-muted-foreground hover:text-foreground" />
+          </Button>
+          <Button variant="ghost" size="icon" class="size-8 text-destructive" @click="remove(d.id)">
+            <Trash2 class="size-3.5" />
+          </Button>
+        </div>
+      </Card>
+    </div>
+    
+    <div class="pt-8">
+      <Pagination :meta="meta" @page="loadPage" />
+    </div>
   </div>
 </template>

@@ -2,11 +2,12 @@
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter, useRoute } from 'vue-router'
-import { Plus, X, AlertCircle, Upload } from 'lucide-vue-next'
+import { Plus, X, AlertCircle, Upload, ChevronLeft, Check } from 'lucide-vue-next'
 import api from '../lib/axios'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import Input from '../components/ui/Input.vue'
+import Select from '../components/ui/Select.vue'
 import { useNotify } from '../lib/notify'
 import { firstError, formatFieldErrors } from '../lib/i18n-errors'
 import type { Category, Product } from '../types'
@@ -41,14 +42,24 @@ const form = ref({
   variants: [] as VariantForm[],
 })
 
+const categoryOptions = computed(() => [
+  { label: 'SELECT CATEGORY', value: '' },
+  ...(categories.value || []).map(c => ({ label: c.name.toUpperCase(), value: c.id }))
+])
+
+const supplierOptions = computed(() => [
+  { label: 'SELECT SUPPLIER', value: '' },
+  ...(suppliers.value || []).map(s => ({ label: s.name.toUpperCase(), value: s.id }))
+])
+
+const storageUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8000').replace(/\/api\/?$/, '')
+
 const imageUrl = computed(() => {
   if (form.value.image_preview) return form.value.image_preview
   const img = form.value.image
   if (!img) return null
   return img.startsWith('http') ? img : `${storageUrl}/storage/${img}`
 })
-
-const storageUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8000').replace(/\/api\/?$/, '')
 
 function variantImageUrl(v: VariantForm): string | null {
   if (v.image_preview) return v.image_preview
@@ -63,9 +74,7 @@ onMounted(async () => {
   } catch {}
 
   try {
-    const [supRes] = await Promise.all([
-      api.get('/suppliers'),
-    ])
+    const { data: supRes } = await api.get('/suppliers')
     suppliers.value = supRes.data.data
   } catch {}
 
@@ -113,15 +122,11 @@ function onVariantImage(e: Event, idx: number) {
   reader.readAsDataURL(target.files[0])
 }
 
-function defaultVariant(): VariantForm {
-  return {
+function addVariant() {
+  form.value.variants.push({
     sku: '', size: '', color: '', price_adjustment: 0, purchase_price: null, stock_quantity: 0,
     image: null, image_file: null, image_preview: null,
-  }
-}
-
-function addVariant() {
-  form.value.variants.push(defaultVariant())
+  })
 }
 
 function removeVariant(idx: number) {
@@ -131,10 +136,6 @@ function removeVariant(idx: number) {
 function variantError(field: string, idx: number): string | null {
   const key = `variants.${idx}.${field}`
   return fieldErrors.value?.[key] ? firstError(fieldErrors.value, key) : null
-}
-
-function variantFieldClass(field: string, idx: number) {
-  return variantError(field, idx) ? 'border-red-400 dark:border-red-500 focus-visible:ring-red-400' : ''
 }
 
 async function save() {
@@ -162,27 +163,19 @@ async function save() {
       productId = res.data.data.id
     }
 
-    // Upload product image
     if (form.value.image_file) {
       const fd = new FormData()
       fd.append('image', form.value.image_file)
-      await api.post(`/products/${productId}/image`, fd, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
+      await api.post(`/products/${productId}/image`, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
     }
 
-    // Upload variant images using variant IDs from the saved product
-    const savedVariants = isEdit
-      ? (await api.get(`/products/${productId}`)).data.data.variants
-      : (await api.get(`/products/${productId}`)).data.data.variants
+    const savedVariants = (await api.get(`/products/${productId}`)).data.data.variants
     for (let i = 0; i < form.value.variants.length; i++) {
       const v = form.value.variants[i]
       if (v.image_file && savedVariants[i]) {
         const fd = new FormData()
         fd.append('image', v.image_file)
-        await api.post(`/variants/${savedVariants[i].id}/image`, fd, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        })
+        await api.post(`/variants/${savedVariants[i].id}/image`, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
       }
     }
 
@@ -201,144 +194,146 @@ async function save() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-2xl space-y-5">
-    <h1 class="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-100">{{ isEdit ? t('products.edit_product') : t('products.new_product') }}</h1>
+  <div class="mx-auto max-w-3xl space-y-8 animate-in fade-in duration-500">
+    <div class="flex items-center gap-4">
+      <Button variant="ghost" size="icon" @click="router.back()" class="size-8">
+        <ChevronLeft class="size-4" />
+      </Button>
+      <div>
+        <h1 class="text-2xl font-semibold tracking-tight text-foreground">{{ isEdit ? t('products.edit_product') : t('products.new_product') }}</h1>
+        <p class="text-xs text-muted-foreground mt-1">Provide detailed information for your inventory item</p>
+      </div>
+    </div>
 
-    <div v-if="fieldErrors && Object.keys(fieldErrors).length" class="flex items-start gap-3 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4">
-      <AlertCircle class="size-5 text-red-500 shrink-0 mt-0.5" />
-      <div class="text-sm text-red-700 dark:text-red-300 space-y-0.5">
+    <div v-if="fieldErrors && Object.keys(fieldErrors).length" class="flex items-start gap-3 rounded-lg border border-destructive/20 bg-destructive/5 p-4">
+      <AlertCircle class="size-4 text-destructive shrink-0 mt-0.5" />
+      <div class="text-[11px] text-destructive space-y-1">
         <p v-for="fe in formatFieldErrors(fieldErrors)" :key="fe.label">
-          <span class="font-medium">{{ fe.label }}:</span>
-          <span v-for="(msg, i) in fe.messages" :key="`${fe.label}-${i}`">{{ i > 0 ? ', ' : ' ' }}{{ msg }}</span>
+          <span class="font-bold uppercase">{{ fe.label }}:</span> {{ fe.messages.join(', ') }}
         </p>
       </div>
     </div>
 
-    <Card>
-      <CardHeader><CardTitle>{{ t('common.details') }}</CardTitle></CardHeader>
-      <CardContent class="space-y-5">
-        <div class="space-y-1.5">
-          <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ t('products.product_name') }}</label>
-          <Input v-model="form.name"
-            :class="firstError(fieldErrors, 'name') ? 'border-red-400 dark:border-red-500 focus-visible:ring-red-400' : ''" />
-          <p v-if="firstError(fieldErrors, 'name')" class="text-xs text-red-500 dark:text-red-400">{{ firstError(fieldErrors, 'name') }}</p>
-        </div>
-
-        <div class="space-y-1.5">
-          <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ t('products.category') }}</label>
-          <select v-model="form.category_id"
-            class="w-full h-9 rounded-md border bg-white dark:bg-zinc-900 px-3 text-sm text-zinc-900 dark:text-zinc-100 transition-colors"
-            :class="firstError(fieldErrors, 'category_id') ? 'border-red-400 dark:border-red-500' : 'border-zinc-200 dark:border-zinc-700'">
-            <option value="" disabled>{{ t('common.select') }}</option>
-            <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
-          </select>
-          <p v-if="firstError(fieldErrors, 'category_id')" class="text-xs text-red-500 dark:text-red-400">{{ firstError(fieldErrors, 'category_id') }}</p>
-        </div>
-
-        <div class="space-y-1.5">
-          <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ t('nav.suppliers') }}</label>
-          <select v-model="form.supplier_id"
-            class="w-full h-9 rounded-md border bg-white dark:bg-zinc-900 px-3 text-sm text-zinc-900 dark:text-zinc-100 transition-colors border-zinc-200 dark:border-zinc-700">
-            <option :value="null">{{ t('common.select') }}</option>
-            <option v-for="s in suppliers" :key="s.id" :value="s.id">{{ s.name }}</option>
-          </select>
-        </div>
-
-        <div class="space-y-1.5">
-          <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ t('products.base_price') }} (Ks)</label>
-          <Input v-model.number="form.base_price" type="number" min="0"
-            :class="firstError(fieldErrors, 'base_price') ? 'border-red-400 dark:border-red-500 focus-visible:ring-red-400' : ''" />
-          <p v-if="firstError(fieldErrors, 'base_price')" class="text-xs text-red-500 dark:text-red-400">{{ firstError(fieldErrors, 'base_price') }}</p>
-        </div>
-
-        <div class="space-y-1.5">
-          <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ t('products.image') }}</label>
-          <div class="flex items-start gap-4">
-            <div v-if="imageUrl" class="relative shrink-0">
-              <img :src="imageUrl" class="size-24 rounded-lg border border-zinc-200 dark:border-zinc-700 object-cover" />
-              <button @click="form.image_preview = null; form.image_file = null; form.image = null" class="absolute -top-2 -right-2 rounded-full bg-red-500 text-white p-0.5 shadow">
-                <X class="size-3" />
-              </button>
-            </div>
-            <label class="flex cursor-pointer items-center gap-2 rounded-lg border border-zinc-200 dark:border-zinc-700 px-4 py-2 text-sm text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
-              <Upload class="size-4" />
-              {{ imageUrl ? t('common.edit') : t('common.create') }}
-              <input type="file" accept="image/jpeg,image/png,image/webp" class="hidden" @change="onProductImage" />
-            </label>
-          </div>
-        </div>
-
-        <div class="space-y-1.5">
-          <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ t('common.description') }}</label>
-          <textarea v-model="form.description"
-            class="w-full rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 min-h-[80px] transition-colors" rows="3" />
-        </div>
-      </CardContent>
-    </Card>
-
-    <Card>
-      <CardHeader class="flex flex-row items-center justify-between flex-wrap gap-2">
-        <CardTitle>{{ t('products.variants') }}</CardTitle>
-        <Button variant="outline" size="sm" @click="addVariant"><Plus class="size-4" /> {{ t('products.add_variant') }}</Button>
-      </CardHeader>
-      <CardContent class="space-y-4">
-        <p v-if="form.variants.length === 0" class="text-sm text-zinc-400 dark:text-zinc-500">{{ t('products.no_variants') }}</p>
-
-        <div v-for="(v, idx) in form.variants" :key="idx"
-          class="relative rounded-lg border border-zinc-200 dark:border-zinc-700 p-4 space-y-3 transition-colors hover:border-zinc-300 dark:hover:border-zinc-600"
-        >
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-wide">{{ t('products.variant') }} #{{ idx + 1 }}</span>
-            <button @click="removeVariant(idx)" class="text-red-400 hover:text-red-600 dark:text-red-500 dark:hover:text-red-400 transition-colors" :title="t('common.delete')">
-              <X class="size-4" />
-            </button>
+    <div class="grid gap-8">
+      <Card class="shadow-none">
+        <CardHeader class="border-b bg-muted/10 py-3 px-6"><CardTitle class="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">{{ t('common.details') }}</CardTitle></CardHeader>
+        <CardContent class="p-6 space-y-6">
+          <div class="space-y-1.5">
+            <label class="text-[11px] font-medium text-foreground ml-0.5">{{ t('products.product_name') }}</label>
+            <Input v-model="form.name" class="h-10" />
           </div>
 
-          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            <div class="space-y-1 sm:col-span-2 lg:col-span-1">
-              <label class="text-xs text-zinc-400 dark:text-zinc-500 font-medium">{{ t('products.sku') }} / Barcode <span class="text-red-400">*</span></label>
-              <Input v-model="v.sku" :class="variantFieldClass('sku', idx)" />
-              <p v-if="variantError('sku', idx)" class="text-xs text-red-500 dark:text-red-400 leading-tight">{{ variantError('sku', idx) }}</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div class="space-y-1.5">
+              <label class="text-[11px] font-medium text-foreground ml-0.5">{{ t('products.category') }}</label>
+              <Select v-model="form.category_id" :options="categoryOptions" />
             </div>
-            <div class="space-y-1">
-              <label class="text-xs text-zinc-400 dark:text-zinc-500 font-medium">{{ t('products.size') }}</label>
-              <Input v-model="v.size" :class="variantFieldClass('size', idx)" />
-            </div>
-            <div class="space-y-1">
-              <label class="text-xs text-zinc-400 dark:text-zinc-500 font-medium">{{ t('products.color') }}</label>
-              <Input v-model="v.color" :class="variantFieldClass('color', idx)" />
-            </div>
-            <div class="space-y-1">
-              <label class="text-xs text-zinc-400 dark:text-zinc-500 font-medium">{{ t('products.price_adj') }}</label>
-              <Input v-model.number="v.price_adjustment" type="number" :class="variantFieldClass('price_adjustment', idx)" />
-            </div>
-            <div class="space-y-1">
-              <label class="text-xs text-zinc-400 dark:text-zinc-500 font-medium">Cost</label>
-              <Input :model-value="v.purchase_price ?? ''" @update:model-value="v.purchase_price = $event === '' ? null : Number($event)" type="number" min="0" :class="variantFieldClass('purchase_price', idx)" />
-            </div>
-            <div class="space-y-1">
-              <label class="text-xs text-zinc-400 dark:text-zinc-500 font-medium">{{ t('products.stock') }}</label>
-              <Input v-model.number="v.stock_quantity" type="number" min="0" :class="variantFieldClass('stock_quantity', idx)" />
+            <div class="space-y-1.5">
+              <label class="text-[11px] font-medium text-foreground ml-0.5">{{ t('nav.suppliers') }}</label>
+              <Select v-model="form.supplier_id" :options="supplierOptions" />
             </div>
           </div>
 
-          <div class="flex items-start gap-3">
-            <div v-if="variantImageUrl(v)" class="relative shrink-0">
-              <img :src="variantImageUrl(v)!" class="size-14 rounded-md border border-zinc-200 dark:border-zinc-700 object-cover" />
-            </div>
-            <label class="flex cursor-pointer items-center gap-1.5 rounded-md border border-zinc-200 dark:border-zinc-700 px-3 py-1.5 text-xs text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
-              <Upload class="size-3.5" />
-              {{ v.image_preview ? t('common.edit') : t('products.image') }}
-              <input type="file" accept="image/jpeg,image/png,image/webp" class="hidden" @change="onVariantImage($event, idx)" />
-            </label>
+          <div class="space-y-1.5">
+            <label class="text-[11px] font-medium text-foreground ml-0.5">{{ t('products.base_price') }} (Ks)</label>
+            <Input v-model.number="form.base_price" type="number" min="0" class="h-10" />
           </div>
-        </div>
-      </CardContent>
-    </Card>
 
-    <div class="flex flex-col sm:flex-row justify-end gap-2">
-      <Button variant="outline" @click="router.back()" class="w-full sm:w-auto">{{ t('common.cancel') }}</Button>
-      <Button :disabled="saving" @click="save" class="w-full sm:w-auto">{{ saving ? t('common.loading') : t('common.save') }}</Button>
+          <div class="space-y-3">
+            <label class="text-[11px] font-medium text-foreground ml-0.5">{{ t('products.image') }}</label>
+            <div class="flex items-center gap-6 p-4 rounded-lg border border-dashed bg-muted/5">
+              <div v-if="imageUrl" class="relative group shrink-0">
+                <img :src="imageUrl" class="size-20 rounded-md border object-cover transition-all" />
+                <button @click="form.image_preview = null; form.image_file = null; form.image = null" class="absolute -top-2 -right-2 rounded-full bg-destructive text-destructive-foreground p-1 shadow-md opacity-0 group-hover:opacity-100 transition-opacity">
+                  <X class="size-3" />
+                </button>
+              </div>
+              <div v-else class="size-20 rounded-md border bg-muted flex items-center justify-center opacity-20 shrink-0">
+                <Upload class="size-6" />
+              </div>
+              <div class="flex-1">
+                <p class="text-xs font-medium text-foreground">Featured Image</p>
+                <p class="text-[10px] text-muted-foreground mt-0.5">JPEG, PNG or WebP. Max 2MB.</p>
+                <label class="mt-3 inline-flex items-center px-3 py-1.5 rounded border bg-background hover:bg-accent text-[10px] font-medium cursor-pointer transition-all">
+                  {{ imageUrl ? 'Change Image' : 'Select Image' }}
+                  <input type="file" accept="image/*" class="hidden" @change="onProductImage" />
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-[11px] font-medium text-foreground ml-0.5">{{ t('common.description') }}</label>
+            <textarea v-model="form.description"
+              class="w-full rounded-md border border-input bg-background px-3 py-2 text-xs text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring min-h-[100px] transition-all" rows="4" />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card class="shadow-none">
+        <CardHeader class="flex flex-row items-center justify-between border-b bg-muted/10 py-3 px-6">
+          <CardTitle class="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">{{ t('products.variants') }}</CardTitle>
+          <Button variant="outline" size="sm" @click="addVariant" class="h-7 text-[10px]"><Plus class="size-3 mr-1" /> ADD VARIANT</Button>
+        </CardHeader>
+        <CardContent class="p-0">
+          <div v-if="form.variants.length === 0" class="py-12 text-center text-xs text-muted-foreground italic">
+            No variants defined. Add at least one variant.
+          </div>
+          <div v-else class="divide-y">
+            <div v-for="(v, idx) in form.variants" :key="idx" class="p-6 space-y-4 hover:bg-muted/5 transition-colors relative group">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-[10px] font-bold text-primary tracking-widest uppercase">Variant #{{ idx + 1 }}</span>
+                <button @click="removeVariant(idx)" class="text-muted-foreground hover:text-destructive transition-colors"><X class="size-4" /></button>
+              </div>
+
+              <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div class="space-y-1 sm:col-span-2 lg:col-span-1">
+                  <label class="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">SKU</label>
+                  <Input v-model="v.sku" class="h-8 text-xs" />
+                </div>
+                <div class="space-y-1">
+                  <label class="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Size</label>
+                  <Input v-model="v.size" class="h-8 text-xs" />
+                </div>
+                <div class="space-y-1">
+                  <label class="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Color</label>
+                  <Input v-model="v.color" class="h-8 text-xs" />
+                </div>
+                <div class="space-y-1">
+                  <label class="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Adj.</label>
+                  <Input v-model.number="v.price_adjustment" type="number" class="h-8 text-xs" />
+                </div>
+                <div class="space-y-1">
+                  <label class="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Cost</label>
+                  <Input :model-value="v.purchase_price ?? ''" @update:model-value="v.purchase_price = $event === '' ? null : Number($event)" type="number" min="0" class="h-8 text-xs" />
+                </div>
+                <div class="space-y-1">
+                  <label class="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Stock</label>
+                  <Input v-model.number="v.stock_quantity" type="number" min="0" class="h-8 text-xs" />
+                </div>
+              </div>
+
+              <div class="flex items-center gap-4">
+                <div v-if="variantImageUrl(v)" class="size-10 rounded border overflow-hidden shrink-0">
+                  <img :src="variantImageUrl(v)!" class="size-full object-cover" />
+                </div>
+                <label class="inline-flex items-center px-2 py-1 rounded border bg-background hover:bg-accent text-[9px] font-medium cursor-pointer transition-all">
+                  <Upload class="size-3 mr-1.5" /> {{ v.image_preview ? 'Change' : 'Variant Image' }}
+                  <input type="file" accept="image/*" class="hidden" @change="onVariantImage($event, idx)" />
+                </label>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+
+    <div class="flex items-center justify-end gap-3 pt-6 border-t">
+      <Button variant="ghost" size="sm" @click="router.back()">{{ t('common.cancel') }}</Button>
+      <Button size="sm" :disabled="saving" @click="save" class="h-9 px-8">
+        <Check v-if="!saving" class="size-3.5 mr-2" />
+        {{ saving ? 'Saving...' : t('common.save') }}
+      </Button>
     </div>
   </div>
 </template>

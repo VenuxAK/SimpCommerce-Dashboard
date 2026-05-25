@@ -30,25 +30,33 @@ function pages(): (number | string)[] {
 </script>
 
 <template>
-  <div v-if="meta && meta.last_page > 1" class="flex items-center justify-between gap-4 pt-2">
-    <span class="text-xs text-zinc-400 dark:text-zinc-500">
-      {{ (meta.current_page - 1) * meta.per_page + 1 }}–{{ Math.min(meta.current_page * meta.per_page, meta.total) }} of {{ meta.total }}
+  <div v-if="meta && meta.last_page > 1" class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-border/40">
+    <span class="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">
+      Showing {{ (meta.current_page - 1) * meta.per_page + 1 }} to {{ Math.min(meta.current_page * meta.per_page, meta.total) }} of {{ meta.total }} entries
     </span>
     <div class="flex items-center gap-1">
-      <Button variant="ghost" size="icon" :disabled="meta.current_page <= 1" @click="emit('page', meta.current_page - 1)">
-        <ChevronLeft class="size-4" />
+      <Button variant="outline" size="icon" class="size-8" :disabled="meta.current_page <= 1" @click="emit('page', meta.current_page - 1)">
+        <ChevronLeft class="size-3.5" />
       </Button>
-      <button v-for="p in pages()" :key="p"
-        @click="typeof p === 'number' && emit('page', p)"
-        class="min-w-[28px] h-8 rounded-md text-xs font-medium transition-colors"
-        :class="p === meta.current_page
-          ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900'
-          : typeof p === 'number' ? 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800' : 'text-zinc-300 cursor-default'"
-      >
-        {{ p }}
-      </button>
-      <Button variant="ghost" size="icon" :disabled="meta.current_page >= meta.last_page" @click="emit('page', meta.current_page + 1)">
-        <ChevronRight class="size-4" />
+      
+      <div class="flex items-center gap-1">
+        <button v-for="(p, i) in pages()" :key="i"
+          @click="typeof p === 'number' && emit('page', p)"
+          :class="[
+            'min-w-[32px] h-8 rounded-md text-[11px] font-semibold transition-all border',
+            p === meta.current_page
+              ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+              : typeof p === 'number' 
+                ? 'bg-background border-border hover:bg-accent text-foreground' 
+                : 'bg-transparent border-transparent text-muted-foreground cursor-default'
+          ]"
+        >
+          {{ p }}
+        </button>
+      </div>
+
+      <Button variant="outline" size="icon" class="size-8" :disabled="meta.current_page >= meta.last_page" @click="emit('page', meta.current_page + 1)">
+        <ChevronRight class="size-3.5" />
       </Button>
     </div>
   </div>

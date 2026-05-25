@@ -77,18 +77,18 @@ async function closeSession() {
 
 <template>
   <div class="space-y-4">
-    <h1 class="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-100">{{ t('nav.cash') }}</h1>
+    <h1 class="text-xl sm:text-2xl font-semibold text-foreground">{{ t('nav.cash') }}</h1>
 
-    <div v-if="loading" class="text-sm text-zinc-400">{{ t('common.loading') }}</div>
+    <div v-if="loading" class="text-sm text-muted-foreground">{{ t('common.loading') }}</div>
 
     <div v-if="!loading" class="flex items-center gap-4 p-4 rounded-lg border"
-      :class="activeSession ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20' : 'border-zinc-200 dark:border-zinc-700'">
-      <Wallet class="size-6" :class="activeSession ? 'text-green-600' : 'text-zinc-400'" />
+      :class="activeSession ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20' : 'border-border'">
+      <Wallet class="size-6" :class="activeSession ? 'text-green-600' : 'text-muted-foreground'" />
       <div class="flex-1">
-        <p class="font-medium text-zinc-900 dark:text-zinc-100">
+        <p class="font-medium text-foreground">
           {{ activeSession ? 'Register Open' : 'Register Closed' }}
         </p>
-        <p v-if="activeSession" class="text-sm text-zinc-500 dark:text-zinc-400">
+        <p v-if="activeSession" class="text-sm text-muted-foreground">
           Opened: {{ activeSession.opened_at }} · Balance: {{ (activeSession.opening_balance || 0).toLocaleString() }} Ks
         </p>
       </div>
@@ -99,7 +99,7 @@ async function closeSession() {
     <Card v-if="showOpenDialog" class="max-w-sm">
       <CardHeader class="flex flex-row items-center justify-between">
         <CardTitle>Open Register</CardTitle>
-        <button @click="showOpenDialog = false" class="text-zinc-400"><X class="size-4" /></button>
+        <button @click="showOpenDialog = false" class="text-muted-foreground"><X class="size-4" /></button>
       </CardHeader>
       <CardContent class="space-y-3">
         <Input v-model.number="openingBalance" type="number" min="0" placeholder="Opening balance (Ks)" />
@@ -110,7 +110,7 @@ async function closeSession() {
     <Card v-if="showCloseDialog" class="max-w-sm">
       <CardHeader class="flex flex-row items-center justify-between">
         <CardTitle>Close Register</CardTitle>
-        <button @click="showCloseDialog = false" class="text-zinc-400"><X class="size-4" /></button>
+        <button @click="showCloseDialog = false" class="text-muted-foreground"><X class="size-4" /></button>
       </CardHeader>
       <CardContent class="space-y-3">
         <Input v-model.number="closingBalance" type="number" min="0" placeholder="Closing balance (Ks)" />
@@ -122,26 +122,26 @@ async function closeSession() {
       <CardHeader><CardTitle>Session History</CardTitle></CardHeader>
       <CardContent class="p-0 overflow-x-auto">
         <table class="w-full text-sm">
-          <thead class="border-b bg-zinc-50 dark:bg-zinc-800/50">
+          <thead class="border-b bg-muted/30">
             <tr>
-              <th class="px-3 sm:px-4 py-3 text-left text-zinc-500 dark:text-zinc-400 font-medium">Date</th>
-              <th class="px-3 sm:px-4 py-3 text-left text-zinc-500 dark:text-zinc-400 font-medium hidden sm:table-cell">User</th>
-              <th class="px-3 sm:px-4 py-3 text-right text-zinc-500 dark:text-zinc-400 font-medium">Open</th>
-              <th class="px-3 sm:px-4 py-3 text-right text-zinc-500 dark:text-zinc-400 font-medium">Close</th>
-              <th class="px-3 sm:px-4 py-3 text-right text-zinc-500 dark:text-zinc-400 font-medium">Diff</th>
+              <th class="px-3 sm:px-4 py-3 text-left text-muted-foreground font-medium">Date</th>
+              <th class="px-3 sm:px-4 py-3 text-left text-muted-foreground font-medium hidden sm:table-cell">User</th>
+              <th class="px-3 sm:px-4 py-3 text-right text-muted-foreground font-medium">Open</th>
+              <th class="px-3 sm:px-4 py-3 text-right text-muted-foreground font-medium">Close</th>
+              <th class="px-3 sm:px-4 py-3 text-right text-muted-foreground font-medium">Diff</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="s in sessions" :key="s.id" class="border-b border-zinc-100 dark:border-zinc-800 last:border-0 hover:bg-zinc-50 dark:hover:bg-zinc-800/30">
-              <td class="px-3 sm:px-4 py-3 whitespace-nowrap text-zinc-600">{{ s.opened_at?.split('T')[0] }}</td>
-              <td class="px-3 sm:px-4 py-3 text-zinc-500 hidden sm:table-cell">{{ s.user?.name }}</td>
-              <td class="px-3 sm:px-4 py-3 text-right text-zinc-700">{{ (s.opening_balance || 0).toLocaleString() }} Ks</td>
-              <td class="px-3 sm:px-4 py-3 text-right text-zinc-700">{{ s.closing_balance != null ? s.closing_balance.toLocaleString() : '—' }} Ks</td>
+            <tr v-for="s in sessions" :key="s.id" class="border-b border-border/60 last:border-0 hover:bg-muted/30">
+              <td class="px-3 sm:px-4 py-3 whitespace-nowrap text-muted-foreground">{{ s.opened_at?.split('T')[0] }}</td>
+              <td class="px-3 sm:px-4 py-3 text-muted-foreground hidden sm:table-cell">{{ s.user?.name }}</td>
+              <td class="px-3 sm:px-4 py-3 text-right text-foreground/80">{{ (s.opening_balance || 0).toLocaleString() }} Ks</td>
+              <td class="px-3 sm:px-4 py-3 text-right text-foreground/80">{{ s.closing_balance != null ? s.closing_balance.toLocaleString() : '—' }} Ks</td>
               <td class="px-3 sm:px-4 py-3 text-right">
                 <span v-if="s.difference != null" :class="s.difference >= 0 ? 'text-green-600' : 'text-red-600'" class="font-semibold">
                   {{ s.difference > 0 ? '+' : '' }}{{ (s.difference || 0).toLocaleString() }}
                 </span>
-                <span v-else class="text-zinc-400">—</span>
+                <span v-else class="text-muted-foreground">—</span>
               </td>
             </tr>
           </tbody>

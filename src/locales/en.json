@@ -2,6 +2,7 @@
   "app": "SimpCommerce",
   "nav": {
     "dashboard": "Dashboard",
+    "dashboard_overview": "Overview",
     "pos": "POS",
     "products": "Products",
     "categories": "Categories",
@@ -14,7 +15,10 @@
     "discounts": "Discounts",
     "suppliers": "Suppliers",
     "cash": "Cash",
-    "stock": "Stock"
+    "stock": "Stock",
+    "backups": "Backups",
+    "no_backups": "No backups found.",
+    "audit": "Audit Logs"
   },
   "auth": {
     "login": "Login",
@@ -52,7 +56,9 @@
     "all": "All",
     "error": "Something went wrong",
     "error_short": "Error",
-    "select": "Select..."
+    "select": "Select...",
+    "left": "left",
+    "theme_color": "Theme Color"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -151,6 +157,7 @@
   "reports": {
     "title": "Reports",
     "sales_report": "Sales Report",
+    "sales_revenue": "Sales Revenue",
     "date_from": "From",
     "date_to": "To",
     "total_sales": "Total Sales",

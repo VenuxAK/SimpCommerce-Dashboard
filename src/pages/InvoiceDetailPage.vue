@@ -71,9 +71,9 @@ async function downloadPdf() {
 </script>
 
 <template>
-  <div v-if="loading" class="text-sm text-zinc-400 dark:text-zinc-500">{{ t('common.loading') }}</div>
+  <div v-if="loading" class="text-sm text-muted-foreground">{{ t('common.loading') }}</div>
 
-  <div v-else-if="!invoice" class="py-12 text-center text-zinc-400 dark:text-zinc-500">
+  <div v-else-if="!invoice" class="py-12 text-center text-muted-foreground">
     <p>{{ t('common.no_data') }}</p>
     <Button variant="outline" class="mt-4" @click="router.back()">{{ t('common.back') }}</Button>
   </div>
@@ -90,17 +90,17 @@ async function downloadPdf() {
 
     <Card id="invoice-print" class="mx-auto max-w-2xl">
       <CardContent class="p-4 sm:p-8 space-y-6">
-        <div class="text-center border-b border-zinc-200 dark:border-zinc-700 pb-4">
-          <h2 class="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-100">{{ shopInfo.shop_name || t('app') }}</h2>
-          <p class="text-sm text-zinc-400 dark:text-zinc-500">{{ shopInfo.shop_address }}</p>
-          <p class="text-sm text-zinc-400 dark:text-zinc-500">{{ shopInfo.shop_phone }}</p>
+        <div class="text-center border-b border-border pb-4">
+          <h2 class="text-xl sm:text-2xl font-bold text-foreground">{{ shopInfo.shop_name || t('app') }}</h2>
+          <p class="text-sm text-muted-foreground">{{ shopInfo.shop_address }}</p>
+          <p class="text-sm text-muted-foreground">{{ shopInfo.shop_phone }}</p>
         </div>
 
         <div class="flex flex-col sm:flex-row justify-between gap-2 text-sm">
-          <div class="text-zinc-700 dark:text-zinc-300">
-            <p><span class="font-semibold text-zinc-900 dark:text-zinc-100">{{ t('invoices.invoice_number') }}:</span> {{ invoice.invoice_number }}</p>
-            <p><span class="font-semibold text-zinc-900 dark:text-zinc-100">{{ t('invoices.issued_date') }}:</span> {{ invoice.issued_date }}</p>
-            <p v-if="invoice.due_date"><span class="font-semibold text-zinc-900 dark:text-zinc-100">{{ t('invoices.due_date') }}:</span> {{ invoice.due_date }}</p>
+          <div class="text-foreground/80">
+            <p><span class="font-semibold text-foreground">{{ t('invoices.invoice_number') }}:</span> {{ invoice.invoice_number }}</p>
+            <p><span class="font-semibold text-foreground">{{ t('invoices.issued_date') }}:</span> {{ invoice.issued_date }}</p>
+            <p v-if="invoice.due_date"><span class="font-semibold text-foreground">{{ t('invoices.due_date') }}:</span> {{ invoice.due_date }}</p>
           </div>
           <div class="sm:text-right">
             <Badge :variant="statusBadgeVariant(invoice.status) as any">{{ invoice.status }}</Badge>
@@ -108,38 +108,38 @@ async function downloadPdf() {
         </div>
 
         <div v-if="invoice.order" class="space-y-2">
-          <p class="font-semibold text-zinc-900 dark:text-zinc-100">{{ t('sales.order_number') }}: {{ invoice.order.order_number }}</p>
-          <p v-if="invoice.order.customer" class="text-sm text-zinc-700 dark:text-zinc-300">
+          <p class="font-semibold text-foreground">{{ t('sales.order_number') }}: {{ invoice.order.order_number }}</p>
+          <p v-if="invoice.order.customer" class="text-sm text-foreground/80">
             {{ t('sales.customer') }}: {{ invoice.order.customer.name }}
           </p>
 
           <div class="overflow-x-auto">
             <table class="w-full text-sm mt-4">
-              <thead class="border-y border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50">
+              <thead class="border-y border-border bg-muted/30">
                 <tr>
-                  <th class="px-2 sm:px-3 py-2 text-left whitespace-nowrap text-zinc-500 dark:text-zinc-400 font-medium">{{ t('common.items') }}</th>
-                  <th class="px-2 sm:px-3 py-2 text-right whitespace-nowrap text-zinc-500 dark:text-zinc-400 font-medium">{{ t('common.qty') }}</th>
-                  <th class="px-2 sm:px-3 py-2 text-right whitespace-nowrap text-zinc-500 dark:text-zinc-400 font-medium">{{ t('products.base_price') }}</th>
-                  <th class="px-2 sm:px-3 py-2 text-right whitespace-nowrap text-zinc-500 dark:text-zinc-400 font-medium">{{ t('common.subtotal') }}</th>
+                  <th class="px-2 sm:px-3 py-2 text-left whitespace-nowrap text-muted-foreground font-medium">{{ t('common.items') }}</th>
+                  <th class="px-2 sm:px-3 py-2 text-right whitespace-nowrap text-muted-foreground font-medium">{{ t('common.qty') }}</th>
+                  <th class="px-2 sm:px-3 py-2 text-right whitespace-nowrap text-muted-foreground font-medium">{{ t('products.base_price') }}</th>
+                  <th class="px-2 sm:px-3 py-2 text-right whitespace-nowrap text-muted-foreground font-medium">{{ t('common.subtotal') }}</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="item in invoice.order.items" :key="item.id" class="border-b border-zinc-100 dark:border-zinc-800">
-                  <td class="px-2 sm:px-3 py-2 text-zinc-900 dark:text-zinc-100 whitespace-nowrap">{{ item.variant?.product?.name }} ({{ item.variant?.size }}/{{ item.variant?.color }})</td>
-                  <td class="px-2 sm:px-3 py-2 text-right text-zinc-700 dark:text-zinc-300">{{ item.quantity }}</td>
-                  <td class="px-2 sm:px-3 py-2 text-right text-zinc-700 dark:text-zinc-300 whitespace-nowrap">{{ item.unit_price.toLocaleString() }}</td>
-                  <td class="px-2 sm:px-3 py-2 text-right font-semibold text-zinc-900 dark:text-zinc-100 whitespace-nowrap">{{ item.subtotal.toLocaleString() }} Ks</td>
+                <tr v-for="item in invoice.order.items" :key="item.id" class="border-b border-border/60">
+                  <td class="px-2 sm:px-3 py-2 text-foreground whitespace-nowrap">{{ item.variant?.product?.name }} ({{ item.variant?.size }}/{{ item.variant?.color }})</td>
+                  <td class="px-2 sm:px-3 py-2 text-right text-foreground/80">{{ item.quantity }}</td>
+                  <td class="px-2 sm:px-3 py-2 text-right text-foreground/80 whitespace-nowrap">{{ item.unit_price.toLocaleString() }}</td>
+                  <td class="px-2 sm:px-3 py-2 text-right font-semibold text-foreground whitespace-nowrap">{{ item.subtotal.toLocaleString() }} Ks</td>
                 </tr>
               </tbody>
             </table>
           </div>
 
-          <div class="text-right text-xl font-bold text-zinc-900 dark:text-zinc-100 pt-2">
+          <div class="text-right text-xl font-bold text-foreground pt-2">
             {{ t('common.total') }}: {{ invoice.order.total_amount.toLocaleString() }} Ks
           </div>
         </div>
 
-        <div v-if="invoice.terms" class="border-t border-zinc-200 dark:border-zinc-700 pt-4 text-xs text-zinc-400 dark:text-zinc-500">
+        <div v-if="invoice.terms" class="border-t border-border pt-4 text-xs text-muted-foreground">
           {{ invoice.terms }}
         </div>
       </CardContent>

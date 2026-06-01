@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { Languages, Moon, Sun, LogOut, UserCircle, Palette, ChevronRight } from 'lucide-vue-next'
+import { Languages, Moon, Sun, LogOut, UserCircle, Palette, ChevronRight, ChevronDown, Building2 } from 'lucide-vue-next'
 import { useAuthStore } from '../../stores/auth'
 import { useTheme } from '../../lib/theme'
 import { useUIStore, type ThemeColor } from '../../stores/ui'
@@ -18,6 +18,8 @@ const route = useRoute()
 
 const dropdownOpen = ref(false)
 const themePickerOpen = ref(false)
+const storePickerOpen = ref(false)
+const stores = ref<{ id: number; name: string; slug: string }[]>([])
 
 const themes: { name: ThemeColor; color: string }[] = [
   { name: 'zinc', color: 'bg-zinc-500' },
@@ -48,6 +50,7 @@ const breadcrumbLabels: Record<string, string> = {
   'cash-sessions': 'nav.cash',
   'audit-logs': 'nav.audit',
   users: 'nav.users',
+  stores: 'nav.stores',
   profile: 'nav.profile',
 }
 
@@ -59,6 +62,24 @@ const breadcrumbs = computed(() => {
     label: t(breadcrumbLabels[r.name as string] || r.name as string),
   }))
 })
+
+const currentStoreName = computed(() => {
+  if (!auth.isRoot) return ''
+  return stores.value.find(s => s.slug === ui.activeStoreSlug)?.name || 'All Stores'
+})
+
+async function fetchStores() {
+  try {
+    const res = await api.get('/stores')
+    stores.value = res.data.data || []
+  } catch {}
+}
+
+function selectStore(slug: string) {
+  ui.setStore(slug)
+  storePickerOpen.value = false
+  router.push('/') // refresh dashboard with new store context
+}
 
 function toggleLang() {
   const next = locale.value === 'en' ? 'my' : 'en'
@@ -81,29 +102,66 @@ function handleClickOutside(e: MouseEvent) {
     dropdownOpen.value = false
     themePickerOpen.value = false
   }
+  if (storePickerOpen.value && !target.closest('.store-picker')) {
+    storePickerOpen.value = false
+  }
 }
 
 onMounted(() => {
   document.documentElement.setAttribute('lang', locale.value)
   window.addEventListener('click', handleClickOutside)
+  if (auth.isRoot) fetchStores()
 })
 onUnmounted(() => window.removeEventListener('click', handleClickOutside))
 </script>
 
 <template>
   <div class="flex items-center justify-between w-full">
-    <!-- Breadcrumbs -->
-    <nav v-if="breadcrumbs.length" class="flex items-center gap-1.5 text-xs text-muted-foreground">
-      <router-link to="/" class="hover:text-foreground transition-colors">{{ t('nav.dashboard') }}</router-link>
-      <template v-for="(crumb, i) in breadcrumbs" :key="crumb.name">
-        <ChevronRight class="size-3 text-muted-foreground/50" />
-        <span v-if="i === breadcrumbs.length - 1" class="font-medium text-foreground">{{ crumb.label }}</span>
-        <router-link v-else :to="{ name: crumb.name }" class="hover:text-foreground transition-colors">
-          {{ crumb.label }}
-        </router-link>
-      </template>
-    </nav>
-    <div v-else />
+    <div class="flex items-center gap-3">
+      <!-- Store Selector (root only) -->
+      <div v-if="auth.isRoot" class="relative store-picker">
+        <button
+          @click="storePickerOpen = !storePickerOpen"
+          class="flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-all border border-border/60"
+        >
+          <Building2 class="size-3.5" />
+          <span>{{ currentStoreName || 'All Stores' }}</span>
+          <ChevronDown class="size-3" :class="storePickerOpen ? 'rotate-180' : ''" />
+        </button>
+        <div v-if="storePickerOpen"
+          class="absolute left-0 top-full mt-1.5 w-48 rounded-md border bg-popover p-1 shadow-lg z-50 text-popover-foreground animate-in fade-in zoom-in-95"
+        >
+          <button
+            @click="selectStore('')"
+            class="flex w-full items-center rounded-sm px-2.5 py-2 text-xs hover:bg-accent transition-all"
+            :class="!ui.activeStoreSlug ? 'font-medium text-foreground bg-accent' : 'text-muted-foreground'"
+          >
+            All Stores
+          </button>
+          <button
+            v-for="s in stores"
+            :key="s.id"
+            @click="selectStore(s.slug)"
+            class="flex w-full items-center rounded-sm px-2.5 py-2 text-xs hover:bg-accent transition-all"
+            :class="ui.activeStoreSlug === s.slug ? 'font-medium text-foreground bg-accent' : 'text-muted-foreground'"
+          >
+            {{ s.name }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Breadcrumbs -->
+      <nav v-if="breadcrumbs.length" class="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <router-link to="/" class="hover:text-foreground transition-colors">{{ t('nav.dashboard') }}</router-link>
+        <template v-for="(crumb, i) in breadcrumbs" :key="crumb.name">
+          <ChevronRight class="size-3 text-muted-foreground/50" />
+          <span v-if="i === breadcrumbs.length - 1" class="font-medium text-foreground">{{ crumb.label }}</span>
+          <router-link v-else :to="{ name: crumb.name }" class="hover:text-foreground transition-colors">
+            {{ crumb.label }}
+          </router-link>
+        </template>
+      </nav>
+    </div>
 
     <!-- Actions -->
     <div class="flex items-center gap-1">

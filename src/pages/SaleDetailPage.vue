@@ -6,7 +6,8 @@ import api from '../lib/axios'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
-import { RotateCcw, ChevronLeft, Wallet, CreditCard, Check } from 'lucide-vue-next'
+import Input from '../components/ui/Input.vue'
+import { RotateCcw, ChevronLeft, Wallet, CreditCard, Check, Package, Truck, XCircle, MapPin } from 'lucide-vue-next'
 import { useNotify } from '../lib/notify'
 import type { Order } from '../types'
 
@@ -19,6 +20,10 @@ const loading = ref(true)
 const refunding = ref(false)
 const showReturnPanel = ref(false)
 const returnItems = ref<Record<number, { checked: boolean; quantity: number; reason: string }>>({})
+
+const showTrackingModal = ref(false)
+const trackingNumber = ref('')
+const statusUpdating = ref(false)
 
 onMounted(async () => {
   try {
@@ -72,10 +77,39 @@ async function submitReturn() {
   }
 }
 
+async function updateOrderStatus(newStatus: string) {
+  statusUpdating.value = true
+  try {
+    const body: any = { status: newStatus }
+    if (newStatus === 'shipped' && trackingNumber.value) {
+      body.tracking_number = trackingNumber.value
+    }
+    const res = await api.patch(`/orders/${route.params.id}/status`, body)
+    order.value = res.data.data
+    showTrackingModal.value = false
+    trackingNumber.value = ''
+    success(`Order marked as ${newStatus}`)
+  } catch (e: any) {
+    error(e?.response?.data?.message || t('common.error'))
+  } finally {
+    statusUpdating.value = false
+  }
+}
+
 function statusBadge(status: string) {
-  const map: Record<string, string> = { completed: 'success', pending: 'warning', cancelled: 'destructive', refunded: 'secondary' }
+  const map: Record<string, string> = {
+    completed: 'success',
+    pending: 'warning',
+    processing: 'warning',
+    shipped: 'default',
+    delivered: 'success',
+    cancelled: 'destructive',
+    refunded: 'secondary',
+  }
   return map[status] || 'default'
 }
+
+const shipment = computed(() => order.value?.shipment)
 </script>
 
 <template>
@@ -89,19 +123,35 @@ function statusBadge(status: string) {
   </div>
 
   <div v-else class="space-y-8 animate-in fade-in duration-700 max-w-5xl mx-auto">
+    <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div class="flex items-center gap-4">
         <Button variant="ghost" size="icon" @click="router.back()" class="size-8">
           <ChevronLeft class="size-4" />
         </Button>
         <div>
-          <h1 class="text-2xl font-semibold tracking-tight text-foreground">{{ order.order_number }}</h1>
+          <div class="flex items-center gap-3">
+            <h1 class="text-2xl font-semibold tracking-tight text-foreground">{{ order.order_number }}</h1>
+            <Badge v-if="order.source === 'online'" variant="default" class="h-5 px-2 text-[10px]">ONLINE</Badge>
+            <Badge v-else variant="outline" class="h-5 px-2 text-[10px]">POS</Badge>
+          </div>
           <p class="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mt-1">{{ order.created_at }}</p>
         </div>
       </div>
-      <Badge :variant="statusBadge(order.status) as any" class="h-6 px-3 text-[10px] font-medium uppercase tracking-wider">{{ order.status }}</Badge>
+      <div class="flex items-center gap-3">
+        <Badge :variant="statusBadge(order.status) as any" class="h-6 px-3 text-[10px] font-medium uppercase tracking-wider">{{ order.status }}</Badge>
+        <!-- Mark Shipped -->
+        <Button v-if="order.status === 'processing' && order.source === 'online'" size="sm" @click="showTrackingModal = true" class="h-8 text-[10px]">
+          <Truck class="size-3 mr-1.5" /> Mark Shipped
+        </Button>
+        <!-- Mark Delivered -->
+        <Button v-if="order.status === 'shipped' && order.source === 'online'" size="sm" @click="updateOrderStatus('delivered')" :disabled="statusUpdating" class="h-8 text-[10px]">
+          <Check class="size-3 mr-1.5" /> Mark Delivered
+        </Button>
+      </div>
     </div>
 
+    <!-- Customer + Payment Cards -->
     <div class="grid gap-6 md:grid-cols-2">
       <Card class="shadow-none">
         <CardHeader class="border-b bg-muted/10 py-3 px-5">
@@ -139,11 +189,58 @@ function statusBadge(status: string) {
             </div>
             <p class="text-xl font-bold text-foreground tabular-nums">{{ order.payment.amount.toLocaleString() }} Ks</p>
           </div>
-          <p v-else class="text-[11px] font-medium text-muted-foreground uppercase tracking-widest text-center py-2">— NO PAYMENT RECORD —</p>
+          <p v-else class="text-[11px] font-medium text-muted-foreground uppercase tracking-widest text-center py-2">— CASH ON DELIVERY —</p>
         </CardContent>
       </Card>
     </div>
 
+    <!-- Shipment Card (online orders) -->
+    <Card v-if="shipment" class="shadow-none">
+      <CardHeader class="border-b bg-muted/10 py-3 px-5">
+        <CardTitle class="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Shipment</CardTitle>
+      </CardHeader>
+      <CardContent class="p-5 space-y-4">
+        <div v-if="shipment.address" class="flex items-start gap-3">
+          <MapPin class="size-4 text-muted-foreground mt-0.5 shrink-0" />
+          <div class="text-xs text-foreground space-y-1">
+            <p class="font-medium">{{ shipment.address.name }}</p>
+            <p class="text-muted-foreground">{{ shipment.address.phone }}</p>
+            <p class="text-muted-foreground">{{ shipment.address.street }}, {{ shipment.address.city }}, {{ shipment.address.state }} {{ shipment.address.postal_code }}</p>
+          </div>
+        </div>
+        <div class="flex gap-6 text-xs">
+          <div>
+            <span class="text-muted-foreground">Method:</span> {{ shipment.method }}
+          </div>
+          <div v-if="shipment.tracking_number">
+            <span class="text-muted-foreground">Tracking:</span> {{ shipment.tracking_number }}
+          </div>
+        </div>
+        <!-- Timeline -->
+        <div class="flex items-center gap-6 pt-2 border-t border-border/60">
+          <div class="flex items-center gap-2">
+            <div class="size-6 rounded-full bg-success/10 flex items-center justify-center"><Check class="size-3 text-success" /></div>
+            <span class="text-[10px] font-medium text-foreground">Ordered</span>
+          </div>
+          <div class="h-px w-6 bg-border" />
+          <div class="flex items-center gap-2">
+            <div :class="['size-6 rounded-full flex items-center justify-center', shipment.shipped_at ? 'bg-success/10' : 'bg-muted']">
+              <Truck :class="['size-3', shipment.shipped_at ? 'text-success' : 'text-muted-foreground']" />
+            </div>
+            <span class="text-[10px] font-medium" :class="shipment.shipped_at ? 'text-foreground' : 'text-muted-foreground'">Shipped</span>
+          </div>
+          <div class="h-px w-6 bg-border" />
+          <div class="flex items-center gap-2">
+            <div :class="['size-6 rounded-full flex items-center justify-center', shipment.delivered_at ? 'bg-success/10' : 'bg-muted']">
+              <Check :class="['size-3', shipment.delivered_at ? 'text-success' : 'text-muted-foreground']" />
+            </div>
+            <span class="text-[10px] font-medium" :class="shipment.delivered_at ? 'text-foreground' : 'text-muted-foreground'">Delivered</span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+
+    <!-- Items -->
     <Card class="shadow-none overflow-hidden border">
       <CardHeader class="flex flex-row items-center justify-between border-b bg-muted/10 py-3 px-6">
         <CardTitle class="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">{{ t('sales.items') }} ({{ order.items.length }})</CardTitle>
@@ -155,9 +252,7 @@ function statusBadge(status: string) {
         <table class="w-full text-left text-xs border-collapse">
           <thead>
             <tr class="border-b bg-muted/20">
-              <th v-if="showReturnPanel" class="px-6 py-3 w-12 text-center">
-                <div class="flex justify-center"><Check class="size-3 text-muted-foreground" /></div>
-              </th>
+              <th v-if="showReturnPanel" class="px-6 py-3 w-12 text-center"><Check class="size-3 text-muted-foreground mx-auto" /></th>
               <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider">{{ t('sales.items') }}</th>
               <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider hidden sm:table-cell">{{ t('common.variant') }}</th>
               <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-right">{{ t('common.qty') }}</th>
@@ -183,7 +278,7 @@ function statusBadge(status: string) {
               <td class="px-6 py-4 text-muted-foreground font-medium hidden sm:table-cell">{{ item.variant?.size }} / {{ item.variant?.color }}</td>
               <td class="px-6 py-4 text-right font-medium tabular-nums">{{ item.quantity }}</td>
               <td class="px-6 py-4 text-right font-medium tabular-nums">{{ item.unit_price.toLocaleString() }}</td>
-              <td class="px-6 py-4 text-right font-bold tabular-nums italic text-foreground">{{ item.subtotal.toLocaleString() }} Ks</td>
+              <td class="px-6 py-4 text-right font-bold tabular-nums text-foreground">{{ item.subtotal.toLocaleString() }} Ks</td>
             </tr>
             <tr v-if="showReturnPanel && hasSelectedReturns" class="bg-muted/5">
               <td :colspan="showReturnPanel ? 6 : 5" class="px-6 py-6 border-t border-dashed">
@@ -208,6 +303,7 @@ function statusBadge(status: string) {
       </CardContent>
     </Card>
 
+    <!-- Total -->
     <div class="flex justify-end pt-4">
       <div class="text-right space-y-1">
         <p class="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">{{ t('common.total') }}</p>
@@ -217,4 +313,21 @@ function statusBadge(status: string) {
       </div>
     </div>
   </div>
+
+  <!-- Tracking Number Modal -->
+  <Teleport to="body">
+    <div v-if="showTrackingModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" @click.self="showTrackingModal = false">
+      <div class="w-full max-w-sm rounded-lg border bg-popover p-6 shadow-xl animate-in fade-in zoom-in-95">
+        <h3 class="text-sm font-semibold text-foreground mb-2">Mark Order as Shipped</h3>
+        <p class="text-xs text-muted-foreground mb-4">Enter tracking number (optional)</p>
+        <Input v-model="trackingNumber" placeholder="Tracking number..." class="mb-4" />
+        <div class="flex justify-end gap-2">
+          <Button variant="outline" size="sm" @click="showTrackingModal = false">Cancel</Button>
+          <Button size="sm" :disabled="statusUpdating" @click="updateOrderStatus('shipped')">
+            <Truck class="size-3.5 mr-1.5" /> Confirm Shipment
+          </Button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>

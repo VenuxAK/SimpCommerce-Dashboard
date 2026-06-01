@@ -21,16 +21,25 @@ const loading = ref(true)
 const meta = ref<any>({})
 const page = ref(1)
 
-// Filters
 const search = ref('')
 const status = ref('')
+const source = ref('')
 
 const statusOptions = [
   { label: 'ALL STATUS', value: '' },
-  { label: 'COMPLETED', value: 'completed' },
   { label: 'PENDING', value: 'pending' },
+  { label: 'COMPLETED', value: 'completed' },
+  { label: 'PROCESSING', value: 'processing' },
+  { label: 'SHIPPED', value: 'shipped' },
+  { label: 'DELIVERED', value: 'delivered' },
   { label: 'CANCELLED', value: 'cancelled' },
   { label: 'REFUNDED', value: 'refunded' },
+]
+
+const sourceOptions = [
+  { label: 'ALL SOURCES', value: '' },
+  { label: 'POS', value: 'pos' },
+  { label: 'ONLINE', value: 'online' },
 ]
 
 async function load(p = 1) {
@@ -40,8 +49,9 @@ async function load(p = 1) {
     const { data } = await api.get('/orders', {
       params: {
         page: p,
-        search: search.value,
+        search: search.value || undefined,
         status: status.value || undefined,
+        source: source.value || undefined,
       },
     })
     orders.value = data.data
@@ -54,7 +64,7 @@ async function load(p = 1) {
 }
 
 let timer: any
-watch([search, status], () => {
+watch([search, status, source], () => {
   clearTimeout(timer)
   timer = setTimeout(() => load(1), 300)
 })
@@ -62,7 +72,15 @@ watch([search, status], () => {
 onMounted(() => load(1))
 
 function statusBadge(s: string) {
-  const map: any = { completed: 'success', pending: 'warning', cancelled: 'destructive', refunded: 'secondary' }
+  const map: any = {
+    completed: 'success',
+    pending: 'warning',
+    processing: 'warning',
+    shipped: 'default',
+    delivered: 'success',
+    cancelled: 'destructive',
+    refunded: 'secondary',
+  }
   return map[s] || 'default'
 }
 </script>
@@ -84,7 +102,8 @@ function statusBadge(s: string) {
             <Input v-model="search" :placeholder="t('common.search') + ' (Order #, Customer...)'" class="pl-9 h-9 text-xs border-border/40 shadow-none bg-background" />
           </div>
           <div class="flex gap-3">
-            <Select v-model="status" :options="statusOptions" class="w-48 h-9 text-xs border-border/40 bg-background" />
+            <Select v-model="source" :options="sourceOptions" class="w-36 h-9 text-xs border-border/40 bg-background" />
+            <Select v-model="status" :options="statusOptions" class="w-44 h-9 text-xs border-border/40 bg-background" />
           </div>
         </div>
       </CardContent>
@@ -106,6 +125,7 @@ function statusBadge(s: string) {
             <tr class="border-b bg-muted/20">
               <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider">{{ t('sales.order_number') }}</th>
               <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider">{{ t('sales.customer') }}</th>
+              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-center">Source</th>
               <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider">{{ t('common.date') }}</th>
               <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-center">{{ t('common.status') }}</th>
               <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-right">{{ t('sales.total') }}</th>
@@ -125,6 +145,10 @@ function statusBadge(s: string) {
                   <span>{{ order.customer?.name || 'Walk-in Customer' }}</span>
                 </div>
               </td>
+              <td class="px-6 py-4 text-center">
+                <Badge v-if="order.source === 'online'" variant="default" class="font-medium h-5 px-2 text-[10px]">ONLINE</Badge>
+                <Badge v-else variant="outline" class="font-medium h-5 px-2 text-[10px]">POS</Badge>
+              </td>
               <td class="px-6 py-4 text-muted-foreground tabular-nums">
                 {{ order.created_at }}
               </td>
@@ -133,7 +157,7 @@ function statusBadge(s: string) {
                   {{ order.status.toUpperCase() }}
                 </Badge>
               </td>
-              <td class="px-6 py-4 text-right font-bold tabular-nums italic">
+              <td class="px-6 py-4 text-right font-bold tabular-nums">
                 {{ order.total_amount.toLocaleString() }} Ks
               </td>
               <td class="px-6 py-4 text-right">
@@ -146,7 +170,7 @@ function statusBadge(s: string) {
         </table>
       </div>
     </div>
-    
+
     <div class="pt-8">
       <Pagination :meta="meta" @page="load" />
     </div>

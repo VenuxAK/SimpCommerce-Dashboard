@@ -18,7 +18,8 @@
     "stock": "Stock",
     "backups": "Backups",
     "no_backups": "No backups found.",
-    "audit": "Audit Logs"
+    "audit": "Audit Logs",
+    "stores": "Stores"
   },
   "auth": {
     "login": "Login",

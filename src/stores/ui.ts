@@ -6,6 +6,7 @@ export type ThemeColor = 'zinc' | 'blue' | 'violet' | 'rose' | 'orange' | 'emera
 export const useUIStore = defineStore('ui', () => {
   const theme = ref<ThemeColor>((localStorage.getItem('theme-color') as ThemeColor) || 'zinc')
   const sidebarCollapsed = ref(localStorage.getItem('sidebar-collapsed') === 'true')
+  const activeStoreSlug = ref(localStorage.getItem('active-store-slug') || '')
 
   watch(theme, (val) => {
     localStorage.setItem('theme-color', val)
@@ -14,6 +15,10 @@ export const useUIStore = defineStore('ui', () => {
 
   watch(sidebarCollapsed, (val) => {
     localStorage.setItem('sidebar-collapsed', String(val))
+  })
+
+  watch(activeStoreSlug, (val) => {
+    localStorage.setItem('active-store-slug', val)
   })
 
   function applyTheme(val: ThemeColor) {
@@ -26,7 +31,9 @@ export const useUIStore = defineStore('ui', () => {
   return {
     theme,
     sidebarCollapsed,
+    activeStoreSlug,
     toggleSidebar: () => sidebarCollapsed.value = !sidebarCollapsed.value,
-    setTheme: (val: ThemeColor) => theme.value = val
+    setTheme: (val: ThemeColor) => theme.value = val,
+    setStore: (slug: string) => activeStoreSlug.value = slug,
   }
 })

@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { useAuthStore } from '../stores/auth'
+import { useUIStore } from '../stores/ui'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
@@ -11,6 +12,12 @@ api.interceptors.request.use((config) => {
   if (auth.token) {
     config.headers.Authorization = `Bearer ${auth.token}`
   }
+
+  const ui = useUIStore()
+  if (ui.activeStoreSlug) {
+    config.headers['X-Store'] = ui.activeStoreSlug
+  }
+
   return config
 })
 

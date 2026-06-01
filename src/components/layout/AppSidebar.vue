@@ -21,6 +21,7 @@ import {
   History,
   ChevronLeft,
   ChevronRight,
+  Building2,
 } from 'lucide-vue-next'
 import { useAuthStore } from '../../stores/auth'
 import { useUIStore } from '../../stores/ui'
@@ -61,8 +62,9 @@ const navGroups = [
   {
     label: 'System',
     items: [
-      { to: '/audit-logs', icon: History, label: 'nav.audit', admin: true },
-      { to: '/users', icon: Shield, label: 'nav.users', admin: true },
+      { to: '/audit-logs', icon: History, label: 'nav.audit', root: true },
+      { to: '/users', icon: Shield, label: 'nav.users', root: true },
+      { to: '/stores', icon: Building2, label: 'nav.stores', root: true },
       { to: '/profile', icon: UserCog, label: 'nav.profile' },
     ],
   },
@@ -135,7 +137,7 @@ function navigate(to: string) {
           <button
             v-for="item in group.items"
             :key="item.to"
-            v-show="!item.admin || auth.isAdmin"
+            v-show="!item.root || auth.isRoot"
             @click="navigate(item.to)"
             :class="[
               'relative flex items-center rounded-md px-3 py-2 text-xs font-medium transition-all group w-full cursor-pointer',

@@ -31,9 +31,9 @@ const router = createRouter({
         { path: 'discounts', name: 'discounts', component: () => import('../pages/DiscountListPage.vue') },
         { path: 'suppliers', name: 'suppliers', component: () => import('../pages/SupplierListPage.vue') },
         { path: 'cash-sessions', name: 'cash-sessions', component: () => import('../pages/CashSessionsPage.vue') },
-        { path: 'audit-logs', name: 'audit-logs', component: () => import('../pages/AuditLogPage.vue'), meta: { admin: true } },
+        { path: 'audit-logs', name: 'audit-logs', component: () => import('../pages/AuditLogPage.vue'), meta: { root: true } },
         { path: 'stock', name: 'stock', component: () => import('../pages/StockHistoryPage.vue') },
-        { path: 'users', name: 'users', component: () => import('../pages/UsersPage.vue'), meta: { admin: true } },
+        { path: 'users', name: 'users', component: () => import('../pages/UsersPage.vue'), meta: { root: true } },
         { path: 'profile', name: 'profile', component: () => import('../pages/ProfilePage.vue') },
       ],
     },
@@ -55,7 +55,7 @@ router.beforeEach(async (to) => {
     return '/'
   }
 
-  if (to.meta.admin && !auth.isAdmin) {
+  if (to.meta.root && !auth.isRoot) {
     return '/'
   }
 })

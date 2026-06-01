@@ -138,18 +138,20 @@ async function loadChart() {
 async function load() {
   loading.value = true
   try {
-    const [sumRes, backupRes] = await Promise.all([
-      api.get('/dashboard/summary'),
-      api.get('/backups'),
-    ])
-    summary.value = sumRes.data
-    backups.value = backupRes.data.data || []
+    const { data } = await api.get('/dashboard/summary')
+    summary.value = data
     await loadChart()
   } catch (e: any) {
     error(e?.response?.data?.message || t('dashboard.load_failed'))
   } finally {
     loading.value = false
   }
+
+  // Load backups separately (root only — 403 is silently ignored).
+  try {
+    const res = await api.get('/backups')
+    backups.value = res.data.data || []
+  } catch {}
 }
 
 async function createBackup() {

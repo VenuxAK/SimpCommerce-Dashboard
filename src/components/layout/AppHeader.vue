@@ -118,8 +118,8 @@ onUnmounted(() => window.removeEventListener('click', handleClickOutside))
 <template>
   <div class="flex items-center justify-between w-full">
     <div class="flex items-center gap-3">
-      <!-- Store Selector (root only) -->
-      <div v-if="auth.isRoot" class="relative store-picker">
+      <!-- Store Selector (root only, hidden in fixed-store deployments) -->
+      <div v-if="auth.isRoot && !ui.isStoreFixed" class="relative store-picker">
         <button
           @click="storePickerOpen = !storePickerOpen"
           class="flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-all border border-border/60"

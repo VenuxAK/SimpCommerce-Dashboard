@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
+import { useUIStore } from '../stores/ui'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import Input from '../components/ui/Input.vue'
@@ -10,6 +11,7 @@ import Input from '../components/ui/Input.vue'
 const { t, locale } = useI18n()
 const router = useRouter()
 const auth = useAuthStore()
+const ui = useUIStore()
 
 const email = ref('')
 const password = ref('')
@@ -21,6 +23,14 @@ async function handleLogin() {
   error.value = ''
   try {
     await auth.login(email.value, password.value)
+
+    if (ui.isStoreFixed && auth.isRoot) {
+      error.value = 'Root users cannot sign in to a per-store dashboard. Please use the root dashboard.'
+      auth.logout()
+      loading.value = false
+      return
+    }
+
     router.push('/')
   } catch (err: any) {
     if (!err.response) {

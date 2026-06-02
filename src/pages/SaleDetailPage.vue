@@ -113,7 +113,8 @@ const shipment = computed(() => order.value?.shipment)
 </script>
 
 <template>
-  <div v-if="loading" class="flex h-96 items-center justify-center text-muted-foreground">
+  <div>
+    <div v-if="loading" class="flex h-96 items-center justify-center text-muted-foreground">
     <div class="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
   </div>
 
@@ -330,4 +331,5 @@ const shipment = computed(() => order.value?.shipment)
       </div>
     </div>
   </Teleport>
+  </div>
 </template>

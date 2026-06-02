@@ -33,6 +33,61 @@ VITE_API_URL=http://localhost:8000/api
 
 The Vite dev server proxies `/api` and `/storage` to the Laravel backend automatically.
 
+## Deployment
+
+This single codebase serves two deployment modes controlled by the `VITE_STORE_SLUG` environment variable.
+
+### Root Dashboard (multi-store)
+
+Deploy with `VITE_STORE_SLUG` empty or unset. Root users can log in, see all stores,
+use the store selector dropdown, and access system-level pages (Users, Stores, Audit Logs).
+
+```bash
+cd admin
+
+# Root dashboard — no store slug
+VITE_API_URL=https://api.example.com/api bun run build
+# → dist/  (deploy to root-dashboard.example.com)
+```
+
+```bash
+# Development
+VITE_API_URL=http://localhost:8000/api bun run dev --port 3000
+```
+
+### Per-Store Dashboards (single-store)
+
+Deploy with `VITE_STORE_SLUG` set to the store's slug. The store selector is hidden,
+root users are blocked from logging in, and only store_admin/staff users can sign in.
+
+```bash
+cd admin
+
+# Clothing store dashboard
+VITE_API_URL=https://api.example.com/api VITE_STORE_SLUG=clothing bun run build
+# → dist/  (deploy to clothing.example.com)
+
+# Electronics store dashboard
+VITE_API_URL=https://api.example.com/api VITE_STORE_SLUG=electronics bun run build
+# → dist/  (deploy to electronics.example.com)
+```
+
+```bash
+# Development — run multiple instances on different ports
+VITE_API_URL=http://localhost:8000/api VITE_STORE_SLUG=clothing bun run dev --port 3001
+VITE_API_URL=http://localhost:8000/api VITE_STORE_SLUG=electronics bun run dev --port 3002
+```
+
+### What the env var controls
+
+| Behavior | Root (`VITE_STORE_SLUG` empty) | Per-Store (`VITE_STORE_SLUG=clothing`) |
+|---|---|---|
+| Store selector in header | ✅ Shown for root users | ❌ Hidden |
+| Login restriction | None | Blocks root users |
+| X-Store header sent to API | From store selector selection | Fixed to the deployment slug |
+| System pages (Users, Stores, Audit) | ✅ Visible | ❌ Hidden |
+| Default store scope | "All Stores" (unless a store is selected) | Fixed to the deployment store |
+
 ## Project Structure
 
 ```

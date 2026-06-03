@@ -9,6 +9,7 @@ import { useNotify } from '../lib/notify'
 import type { DashboardSummary } from '../types'
 import { useRouter } from 'vue-router'
 import { useTheme } from '../lib/theme'
+import { useAuthStore } from '../stores/auth'
 import {
   DollarSign,
   ShoppingBag,
@@ -23,6 +24,7 @@ import { Bar } from 'vue-chartjs'
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip } from 'chart.js'
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip)
 
+const auth = useAuthStore()
 const { t } = useI18n()
 const router = useRouter()
 const { success, error } = useNotify()
@@ -49,7 +51,7 @@ const chartOptions = computed(() => ({
       padding: 10,
       cornerRadius: 6,
       displayColors: false,
-      titleFont: { size: 11, weight: '500' as const },
+      titleFont: { size: 11, weight: 500 },
       bodyFont: { size: 11 },
     },
   },
@@ -147,11 +149,13 @@ async function load() {
     loading.value = false
   }
 
-  // Load backups separately (root only — 403 is silently ignored).
-  try {
-    const res = await api.get('/backups')
-    backups.value = res.data.data || []
-  } catch {}
+  // Load backups (root only).
+  if (auth.isRoot) {
+    try {
+      const res = await api.get('/backups')
+      backups.value = res.data.data || []
+    } catch {}
+  }
 }
 
 async function createBackup() {
@@ -216,8 +220,8 @@ function statusBadge(status: string) {
       </div>
 
       <!-- Chart + Backups -->
-      <div class="grid gap-6 lg:grid-cols-3">
-        <Card class="lg:col-span-2">
+      <div class="grid gap-6" :class="auth.isRoot ? 'lg:grid-cols-3' : 'lg:grid-cols-1'">
+        <Card :class="auth.isRoot ? 'lg:col-span-2' : ''">
           <CardHeader class="flex flex-row items-center justify-between py-3 px-5 border-b">
             <CardTitle class="text-sm font-medium">{{ t('reports.sales_revenue') }}</CardTitle>
             <div class="flex items-center gap-1 bg-muted rounded-md p-0.5">
@@ -244,7 +248,7 @@ function statusBadge(status: string) {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card v-if="auth.isRoot">
           <CardHeader class="flex flex-row items-center justify-between py-3 px-5 border-b">
             <CardTitle class="text-sm font-medium">{{ t('nav.backups') }}</CardTitle>
             <Button size="icon" variant="outline" class="size-7" @click="createBackup">

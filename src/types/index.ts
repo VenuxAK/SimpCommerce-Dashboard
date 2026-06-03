@@ -98,6 +98,36 @@ export interface Invoice {
   updated_at?: string
 }
 
+export interface Address {
+  id: number
+  customer_id: number
+  type: string
+  name: string
+  phone: string
+  street: string
+  city: string
+  state: string
+  postal_code: string
+  is_default: boolean
+  created_at?: string
+  updated_at?: string
+}
+
+export interface Shipment {
+  id: number
+  order_id: number
+  address_id: number
+  address?: Address
+  method: string
+  tracking_number: string | null
+  tracking_url: string | null
+  shipped_at: string | null
+  delivered_at: string | null
+  notes: string | null
+  created_at?: string
+  updated_at?: string
+}
+
 export interface Order {
   id: number
   user_id: number
@@ -107,10 +137,12 @@ export interface Order {
   order_number: string
   total_amount: number
   status: string
+  source?: string
   notes: string | null
   items: OrderItem[]
   payment?: Payment
   invoice?: Invoice
+  shipment?: Shipment
   created_at: string
   updated_at?: string
 }

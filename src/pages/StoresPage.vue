@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import api from '../lib/axios'
 import { Button } from '../components/ui/button'
@@ -7,25 +7,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
 import { useNotify } from '../lib/notify'
 import { Plus, Pencil, Trash2 } from 'lucide-vue-next'
+import LoadingSpinner from '../components/LoadingSpinner.vue'
+import PageHeader from '../components/PageHeader.vue'
+import { useListing } from '../composables'
 
 const { t } = useI18n()
 const { success, error } = useNotify()
-const stores = ref<any[]>([])
-const loading = ref(true)
+const { items: stores, loading, loadPage } = useListing<any>('/stores')
+
 const showForm = ref(false)
 const editing = ref<any | null>(null)
 const form = ref({ name: '', slug: '', description: '' })
-
-async function load() {
-  loading.value = true
-  try {
-    const { data } = await api.get('/stores')
-    stores.value = data.data
-  } catch { error('Failed to load stores') }
-  finally { loading.value = false }
-}
-
-onMounted(() => load())
+const saving = ref(false)
 
 function openCreate() {
   editing.value = null
@@ -40,6 +33,7 @@ function openEdit(s: any) {
 }
 
 async function save() {
+  saving.value = true
   try {
     if (editing.value) {
       await api.put(`/stores/${editing.value.id}`, form.value)
@@ -48,9 +42,11 @@ async function save() {
     }
     success('Store saved.')
     showForm.value = false
-    await load()
+    await loadPage(1)
   } catch (e: any) {
     error(e?.response?.data?.message || t('common.error'))
+  } finally {
+    saving.value = false
   }
 }
 
@@ -66,26 +62,19 @@ async function remove(id: number) {
 
 <template>
   <div class="space-y-8 animate-in fade-in duration-700">
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-semibold tracking-tight text-foreground">{{ t('nav.stores') }}</h1>
-      </div>
-      <Button size="sm" @click="openCreate"><Plus class="size-3.5 mr-2" /> Create Store</Button>
-    </div>
+    <PageHeader title="Stores" action-label="Create Store" @action="openCreate" />
 
     <div v-if="showForm" class="rounded-lg border bg-muted/5 p-5 space-y-4 max-w-lg">
       <input v-model="form.name" placeholder="Store name" class="w-full h-9 rounded-md border border-input bg-background px-3 text-xs" />
       <input v-model="form.slug" placeholder="Slug" class="w-full h-9 rounded-md border border-input bg-background px-3 text-xs" />
       <input v-model="form.description" placeholder="Description" class="w-full h-9 rounded-md border border-input bg-background px-3 text-xs" />
       <div class="flex gap-2">
-        <Button size="sm" @click="save">{{ editing ? 'Update' : 'Create' }}</Button>
+        <Button size="sm" :disabled="saving" @click="save">{{ editing ? 'Update' : 'Create' }}</Button>
         <Button variant="ghost" size="sm" @click="showForm = false">Cancel</Button>
       </div>
     </div>
 
-    <div v-if="loading" class="flex h-64 items-center justify-center">
-      <div class="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-    </div>
+    <LoadingSpinner v-if="loading" />
 
     <div v-else class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <Card v-for="s in stores" :key="s.id" class="shadow-none">

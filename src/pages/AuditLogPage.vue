@@ -1,18 +1,21 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import api from '../lib/axios'
 import { Card, CardContent } from '../components/ui/card'
 import Select from '../components/ui/Select.vue'
 import { Badge } from '../components/ui/badge'
 import Pagination from '../components/Pagination.vue'
+import LoadingSpinner from '../components/LoadingSpinner.vue'
+import EmptyState from '../components/EmptyState.vue'
+import PageHeader from '../components/PageHeader.vue'
+import { useListing, useDebouncedWatch } from '../composables'
 import type { AuditLog } from '../types'
 import { Activity } from 'lucide-vue-next'
 
 const { t } = useI18n()
-const logs = ref<AuditLog[]>([])
-const meta = ref<any>(null)
-const loading = ref(true)
+const { items: logs, meta, loading, loadPage } = useListing<AuditLog>('/audit-logs', { immediate: false })
+
 const actionFilter = ref('')
 
 const actionOptions = [
@@ -22,30 +25,14 @@ const actionOptions = [
   { label: 'DELETED', value: 'deleted' },
 ]
 
-async function loadPage(page = 1) {
-  loading.value = true
-  try {
-    const params: Record<string, any> = { page }
-    if (actionFilter.value) params.action = actionFilter.value
-    const { data } = await api.get('/audit-logs', { params })
-    logs.value = data.data
-    meta.value = { current_page: data.meta.current_page, last_page: data.meta.last_page, total: data.meta.total, per_page: data.meta.per_page }
-  } catch {}
-  finally { loading.value = false }
-}
+useDebouncedWatch(actionFilter, () => loadPage(1))
 
-onMounted(() => loadPage())
-watch(actionFilter, () => loadPage(1))
+loadPage(1)
 </script>
 
 <template>
   <div class="space-y-8 animate-in fade-in duration-700">
-    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-      <div>
-        <h1 class="text-2xl font-semibold tracking-tight text-foreground">Audit Log</h1>
-        <p class="text-xs text-muted-foreground mt-1">Review system activity and administrative changes</p>
-      </div>
-    </div>
+    <PageHeader title="Audit Log" subtitle="Review system activity and administrative changes" />
 
     <Card class="shadow-none border-border/60 bg-muted/5">
       <CardContent class="p-4">
@@ -53,14 +40,9 @@ watch(actionFilter, () => loadPage(1))
       </CardContent>
     </Card>
 
-    <div v-if="loading" class="flex h-64 items-center justify-center text-muted-foreground">
-      <div class="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-    </div>
+    <LoadingSpinner v-if="loading" />
 
-    <div v-else-if="logs.length === 0" class="py-20 text-center border border-dashed rounded-xl">
-      <Activity class="size-10 mx-auto text-muted-foreground/20 mb-4" />
-      <p class="text-sm font-medium text-muted-foreground">{{ t('common.no_data') }}</p>
-    </div>
+    <EmptyState v-else-if="logs.length === 0" :icon="Activity" :title="t('common.no_data')" />
 
     <div v-else class="border rounded-lg overflow-hidden bg-card">
       <div class="overflow-x-auto">
@@ -103,7 +85,7 @@ watch(actionFilter, () => loadPage(1))
         </table>
       </div>
     </div>
-    
+
     <div class="pt-8">
       <Pagination :meta="meta" @page="loadPage" />
     </div>

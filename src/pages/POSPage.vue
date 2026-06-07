@@ -119,7 +119,7 @@ function imgUrl(product: Product): string | null {
 onMounted(async () => {
   try {
     const [prodRes, catRes] = await Promise.all([
-      api.get('/products'),
+      api.get('/products', { params: { per_page: 500 } }),
       api.get('/categories'),
     ])
     products.value = prodRes.data.data
@@ -339,7 +339,7 @@ async function completeSale() {
       </div>
     </div>
 
-    <aside :class="['w-full lg:w-[400px] shrink-0 transition-all duration-300', isFullscreen ? 'lg:pt-0' : '', showCart ? 'block' : 'hidden lg:block']">
+    <aside :class="['w-full lg:w-[400px] shrink-0 transition-all duration-300 lg:sticky lg:top-4 lg:self-start', isFullscreen ? 'lg:pt-0' : '', showCart ? 'block' : 'hidden lg:block']">
       <Card class="border shadow-none rounded-xl overflow-hidden flex flex-col h-full lg:max-h-[calc(100vh-8rem)]">
         <div class="p-5 border-b bg-muted/10">
           <div class="flex items-center justify-between mb-4">

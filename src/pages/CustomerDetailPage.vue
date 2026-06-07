@@ -6,6 +6,7 @@ import api from '../lib/axios'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
+import LoadingSpinner from '../components/LoadingSpinner.vue'
 import { useNotify } from '../lib/notify'
 import type { Customer, Order } from '../types'
 
@@ -43,7 +44,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div v-if="loading" class="text-sm text-muted-foreground">{{ t('common.loading') }}</div>
+  <LoadingSpinner v-if="loading" />
 
   <div v-else-if="!customer" class="py-12 text-center text-muted-foreground">
     <p>{{ t('common.no_data') }}</p>

@@ -1,21 +1,29 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Plus, Pencil, Trash2, Tag, Calendar, LayoutGrid } from 'lucide-vue-next'
-import api from '../lib/axios'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
 import Input from '../components/ui/Input.vue'
 import Select from '../components/ui/Select.vue'
 import Pagination from '../components/Pagination.vue'
+import LoadingSpinner from '../components/LoadingSpinner.vue'
+import EmptyState from '../components/EmptyState.vue'
+import PageHeader from '../components/PageHeader.vue'
 import { useNotify } from '../lib/notify'
+import { useListing } from '../composables'
+import { useDiscountApi, useCategoryApi, useProductApi } from '../composables/api'
 import type { Discount, Category, Product } from '../types'
 
 const { t } = useI18n()
 const { success, error } = useNotify()
-const discounts = ref<Discount[]>([])
-const meta = ref<any>(null)
+const discountApi = useDiscountApi()
+const categoryApi = useCategoryApi()
+const productApi = useProductApi()
+
+const { items: discounts, meta, loading, loadPage } = useListing<Discount>('/discounts')
+
 const categories = ref<Category[]>([])
 const products = ref<Product[]>([])
 const showForm = ref(false)
@@ -26,7 +34,6 @@ const form = ref({
   product_id: null as number | null,
   starts_at: '', ends_at: '', is_active: true,
 })
-const loading = ref(true)
 
 const typeOptions = [
   { label: 'PERCENTAGE', value: 'percentage' },
@@ -41,39 +48,32 @@ const appliesToOptions = [
 
 const categoryOptions = computed(() => [
   { label: 'SELECT CATEGORY', value: '' },
-  ...categories.value.map(c => ({ label: c.name.toUpperCase(), value: c.id }))
+  ...categories.value.map(c => ({ label: c.name.toUpperCase(), value: c.id })),
 ])
 
 const productOptions = computed(() => [
   { label: 'SELECT PRODUCT', value: '' },
-  ...products.value.map(p => ({ label: p.name.toUpperCase(), value: p.id }))
+  ...products.value.map(p => ({ label: p.name.toUpperCase(), value: p.id })),
 ])
 
-async function loadPage(page = 1) {
-  loading.value = true
+onMounted(async () => {
   try {
-    const [discRes, catRes, prodRes] = await Promise.all([
-      api.get('/discounts', { params: { page } }),
-      api.get('/categories'),
-      api.get('/products'),
+    const [catRes, prodRes] = await Promise.all([
+      categoryApi.list(),
+      productApi.list(),
     ])
-    discounts.value = discRes.data.data
     categories.value = catRes.data.data
     products.value = prodRes.data.data
-    meta.value = discRes.data.meta
-  } catch { }
-  finally { loading.value = false }
-}
+  } catch {}
+})
 
-onMounted(() => loadPage())
-
-function openCreate() {
+const openCreate = () => {
   editing.value = null
   form.value = { name: '', type: 'percentage', value: 0, applies_to: 'all', category_id: null, product_id: null, starts_at: '', ends_at: '', is_active: true }
   showForm.value = true
 }
 
-function openEdit(d: any) {
+const openEdit = (d: any) => {
   editing.value = d
   form.value = {
     name: d.name, type: d.type, value: d.value,
@@ -85,7 +85,7 @@ function openEdit(d: any) {
   showForm.value = true
 }
 
-async function save() {
+const save = async () => {
   try {
     const payload: Record<string, any> = { ...form.value }
     if (!payload.starts_at) payload.starts_at = null
@@ -94,10 +94,10 @@ async function save() {
     if (payload.applies_to !== 'product') payload.product_id = null
 
     if (editing.value) {
-      await api.put(`/discounts/${editing.value.id}`, payload)
+      await discountApi.update(editing.value.id, payload)
       success(t('common.save'))
     } else {
-      await api.post('/discounts', payload)
+      await discountApi.create(payload)
       success(t('common.create'))
     }
     showForm.value = false
@@ -107,27 +107,19 @@ async function save() {
   }
 }
 
-async function remove(id: number) {
+const remove = async (id: number) => {
   if (!confirm(t('common.confirm') + '?')) return
   try {
-    await api.delete(`/discounts/${id}`)
+    await discountApi.remove(id)
     success(t('common.delete'))
     await loadPage(1)
-  } catch { }
+  } catch {}
 }
 </script>
 
 <template>
   <div class="space-y-8 animate-in fade-in duration-700">
-    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-      <div>
-        <h1 class="text-2xl font-semibold tracking-tight text-foreground">{{ t('nav.discounts') }}</h1>
-        <p class="text-xs text-muted-foreground mt-1">Manage promotional offers and seasonal pricing</p>
-      </div>
-      <Button size="sm" @click="openCreate">
-        <Plus class="size-3.5 mr-2" /> CREATE DISCOUNT
-      </Button>
-    </div>
+    <PageHeader title="Discounts" subtitle="Manage promotional offers and seasonal pricing" action-label="CREATE DISCOUNT" @action="openCreate" />
 
     <div v-if="showForm" class="animate-in slide-in-from-top-4 duration-300">
       <Card class="max-w-2xl border-border/60 shadow-none bg-muted/5">
@@ -195,14 +187,9 @@ async function remove(id: number) {
       </Card>
     </div>
 
-    <div v-if="loading" class="flex h-64 items-center justify-center text-muted-foreground">
-      <div class="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-    </div>
+    <LoadingSpinner v-if="loading" />
 
-    <div v-else-if="discounts.length === 0" class="py-20 text-center border border-dashed rounded-xl">
-      <Tag class="size-10 mx-auto text-muted-foreground/20 mb-4" />
-      <p class="text-sm font-medium text-muted-foreground">No active discounts found</p>
-    </div>
+    <EmptyState v-else-if="discounts.length === 0" :icon="Tag" title="No active discounts found" />
 
     <div v-else class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       <Card v-for="d in discounts" :key="d.id" class="group hover:border-primary/40 transition-all shadow-none flex flex-col h-full overflow-hidden">
@@ -225,7 +212,7 @@ async function remove(id: number) {
           <div class="space-y-1.5">
             <div class="flex items-center gap-2 text-[10px] font-medium text-muted-foreground uppercase tracking-widest">
               <LayoutGrid class="size-3" />
-              {{ d.applies_to }} 
+              {{ d.applies_to }}
               <span v-if="d.applies_to === 'category' && d.category_id" class="text-foreground italic">
                 ({{ categories.find((c: any) => c.id === d.category_id)?.name }})
               </span>
@@ -250,7 +237,7 @@ async function remove(id: number) {
         </div>
       </Card>
     </div>
-    
+
     <div class="pt-8">
       <Pagination :meta="meta" @page="loadPage" />
     </div>

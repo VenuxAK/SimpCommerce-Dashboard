@@ -1,53 +1,42 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
-import { Plus, Search, User, Eye, Phone, Mail, X, Check } from 'lucide-vue-next'
-import api from '../lib/axios'
+import { Search, User, Eye, Phone, Mail, X, Check } from 'lucide-vue-next'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import Input from '../components/ui/Input.vue'
-import { useNotify } from '../lib/notify'
 import Pagination from '../components/Pagination.vue'
+import LoadingSpinner from '../components/LoadingSpinner.vue'
+import EmptyState from '../components/EmptyState.vue'
+import PageHeader from '../components/PageHeader.vue'
+import { useNotify } from '../lib/notify'
+import { useListing, useDebouncedWatch } from '../composables'
+import { useCustomerApi } from '../composables/api'
 import type { Customer } from '../types'
 
 const { t } = useI18n()
 const router = useRouter()
 const { success, error } = useNotify()
+const customerApi = useCustomerApi()
 
-const customers = ref<Customer[]>([])
-const loading = ref(true)
-const meta = ref<any>({})
-const page = ref(1)
+const { items: customers, meta, loading, loadPage } = useListing<Customer>('/customers', { immediate: false })
+
 const search = ref('')
 const showForm = ref(false)
 const form = ref({ name: '', email: '', phone: '', address: '' })
 const saving = ref(false)
 
-async function load(p = 1) {
-  loading.value = true
-  page.value = p
-  try {
-    const { data } = await api.get('/customers', {
-      params: { page: p, search: search.value },
-    })
-    customers.value = data.data
-    meta.value = data.meta
-  } catch (e: any) {
-    error(e?.response?.data?.message || t('dashboard.load_failed'))
-  } finally {
-    loading.value = false
-  }
-}
+useDebouncedWatch(search, () => loadPage(1))
 
-async function save() {
+const save = async () => {
   saving.value = true
   try {
-    await api.post('/customers', form.value)
+    await customerApi.create(form.value)
     success('Customer created.')
     showForm.value = false
     form.value = { name: '', email: '', phone: '', address: '' }
-    await load(1)
+    await loadPage(1)
   } catch (e: any) {
     error(e?.response?.data?.message || t('common.error'))
   } finally {
@@ -55,26 +44,12 @@ async function save() {
   }
 }
 
-let timer: any
-watch(search, () => {
-  clearTimeout(timer)
-  timer = setTimeout(() => load(1), 300)
-})
-
-onMounted(() => load(1))
+loadPage(1)
 </script>
 
 <template>
   <div class="space-y-8 animate-in fade-in duration-700">
-    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-      <div>
-        <h1 class="text-2xl font-semibold tracking-tight text-foreground">{{ t('customers.title') }}</h1>
-        <p class="text-xs text-muted-foreground mt-1">Manage your customer database and loyalty</p>
-      </div>
-      <Button size="sm" @click="showForm = !showForm">
-        <Plus class="size-3.5 mr-2" /> {{ t('customers.new_customer') }}
-      </Button>
-    </div>
+    <PageHeader title="Customers" subtitle="Manage your customer database and loyalty" action-label="New Customer" @action="showForm = !showForm" />
 
     <Card v-if="showForm" class="border-border/60 bg-muted/5">
       <CardHeader class="flex flex-row items-center justify-between py-3 px-5 border-b">
@@ -120,14 +95,9 @@ onMounted(() => load(1))
       </CardContent>
     </Card>
 
-    <div v-if="loading" class="flex h-64 items-center justify-center text-muted-foreground">
-      <div class="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-    </div>
+    <LoadingSpinner v-if="loading" />
 
-    <div v-else-if="customers.length === 0" class="py-20 text-center border rounded-xl border-dashed">
-      <User class="size-10 mx-auto text-muted-foreground/20 mb-4" />
-      <p class="text-sm font-medium text-muted-foreground">{{ t('common.no_data') }}</p>
-    </div>
+    <EmptyState v-else-if="customers.length === 0" :icon="User" :title="t('common.no_data')" />
 
     <div v-else class="border rounded-lg overflow-hidden bg-card">
       <div class="overflow-x-auto">
@@ -174,9 +144,9 @@ onMounted(() => load(1))
         </table>
       </div>
     </div>
-    
+
     <div class="pt-8">
-      <Pagination :meta="meta" @page="load" />
+      <Pagination :meta="meta" @page="loadPage" />
     </div>
   </div>
 </template>

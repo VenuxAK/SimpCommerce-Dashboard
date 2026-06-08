@@ -61,7 +61,7 @@ const imageUrl = computed(() => {
   return img.startsWith('http') ? img : `${storageUrl}/storage/${img}`
 })
 
-function variantImageUrl(v: VariantForm): string | null {
+const variantImageUrl = (v: VariantForm): string | null => {
   if (v.image_preview) return v.image_preview
   if (!v.image) return null
   return v.image.startsWith('http') ? v.image : `${storageUrl}/storage/${v.image}`
@@ -103,7 +103,7 @@ onMounted(async () => {
   }
 })
 
-function onProductImage(e: Event) {
+const onProductImage = (e: Event) => {
   const target = e.target as HTMLInputElement
   if (!target.files?.length) return
   form.value.image_file = target.files[0]
@@ -112,7 +112,7 @@ function onProductImage(e: Event) {
   reader.readAsDataURL(target.files[0])
 }
 
-function onVariantImage(e: Event, idx: number) {
+const onVariantImage = (e: Event, idx: number) => {
   const target = e.target as HTMLInputElement
   if (!target.files?.length) return
   const v = form.value.variants[idx]
@@ -122,23 +122,23 @@ function onVariantImage(e: Event, idx: number) {
   reader.readAsDataURL(target.files[0])
 }
 
-function addVariant() {
+const addVariant = () => {
   form.value.variants.push({
     sku: '', size: '', color: '', price_adjustment: 0, purchase_price: null, stock_quantity: 0,
     image: null, image_file: null, image_preview: null,
   })
 }
 
-function removeVariant(idx: number) {
+const removeVariant = (idx: number) => {
   form.value.variants.splice(idx, 1)
 }
 
-function variantError(field: string, idx: number): string | null {
+const variantError = (field: string, idx: number): string | null => {
   const key = `variants.${idx}.${field}`
   return fieldErrors.value?.[key] ? firstError(fieldErrors.value, key) : null
 }
 
-async function save() {
+const save = async () => {
   saving.value = true
   fieldErrors.value = null
   try {

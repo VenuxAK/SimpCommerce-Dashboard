@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import api from '../lib/axios'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
@@ -10,9 +9,11 @@ import { Plus, Pencil, Trash2 } from 'lucide-vue-next'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
 import PageHeader from '../components/PageHeader.vue'
 import { useListing } from '../composables'
+import { useStoreApi } from '../composables/api'
 
 const { t } = useI18n()
 const { success, error } = useNotify()
+const storeApi = useStoreApi()
 const { items: stores, loading, loadPage } = useListing<any>('/stores')
 
 const showForm = ref(false)
@@ -20,25 +21,25 @@ const editing = ref<any | null>(null)
 const form = ref({ name: '', slug: '', description: '' })
 const saving = ref(false)
 
-function openCreate() {
+const openCreate = () => {
   editing.value = null
   form.value = { name: '', slug: '', description: '' }
   showForm.value = true
 }
 
-function openEdit(s: any) {
+const openEdit = (s: any) => {
   editing.value = s
   form.value = { name: s.name, slug: s.slug, description: s.description || '' }
   showForm.value = true
 }
 
-async function save() {
+const save = async () => {
   saving.value = true
   try {
     if (editing.value) {
-      await api.put(`/stores/${editing.value.id}`, form.value)
+      await storeApi.update(editing.value.id, form.value)
     } else {
-      await api.post('/stores', form.value)
+      await storeApi.create(form.value)
     }
     success('Store saved.')
     showForm.value = false
@@ -50,10 +51,10 @@ async function save() {
   }
 }
 
-async function remove(id: number) {
+const remove = async (id: number) => {
   if (!confirm('Delete this store?')) return
   try {
-    await api.delete(`/stores/${id}`)
+    await storeApi.remove(id)
     stores.value = stores.value.filter((s: any) => s.id !== id)
     success('Store deleted.')
   } catch {}

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import api from '../lib/axios'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
@@ -10,6 +9,7 @@ import type { DashboardSummary } from '../types'
 import { useRouter } from 'vue-router'
 import { useTheme } from '../lib/theme'
 import { useAuthStore } from '../stores/auth'
+import { useReportApi, useBackupApi } from '../composables/api'
 import {
   DollarSign,
   ShoppingBag,
@@ -28,6 +28,8 @@ const auth = useAuthStore()
 const { t } = useI18n()
 const router = useRouter()
 const { success, error } = useNotify()
+const reportApi = useReportApi()
+const backupApi = useBackupApi()
 const summary = ref<DashboardSummary | null>(null)
 const loading = ref(true)
 const chartData = ref<any>(null)
@@ -102,7 +104,7 @@ const statCards = computed(() => [
   },
 ])
 
-async function loadChart() {
+const loadChart = async () => {
   const now = new Date()
   let dateFrom: string
   if (chartRange.value === '7d') {
@@ -115,7 +117,7 @@ async function loadChart() {
   const dateTo = now.toISOString().split('T')[0]
 
   try {
-    const { data } = await api.get('/reports/sales', { params: { date_from: dateFrom, date_to: dateTo } })
+    const { data } = await reportApi.sales({ date_from: dateFrom, date_to: dateTo })
     if (data.daily_breakdown?.length) {
       const days = data.daily_breakdown
       chartData.value = {
@@ -137,10 +139,10 @@ async function loadChart() {
   } catch { chartData.value = null }
 }
 
-async function load() {
+const load = async () => {
   loading.value = true
   try {
-    const { data } = await api.get('/dashboard/summary')
+    const { data } = await reportApi.dashboard()
     summary.value = data
     await loadChart()
   } catch (e: any) {
@@ -152,15 +154,15 @@ async function load() {
   // Load backups (root only).
   if (auth.isRoot) {
     try {
-      const res = await api.get('/backups')
+      const res = await backupApi.list()
       backups.value = res.data.data || []
     } catch {}
   }
 }
 
-async function createBackup() {
+const createBackup = async () => {
   try {
-    const res = await api.post('/backups')
+    const res = await backupApi.create()
     backups.value.unshift({ filename: res.data.filename, created_at: new Date().toISOString() })
     success('Backup created')
   } catch (e: any) {
@@ -168,9 +170,9 @@ async function createBackup() {
   }
 }
 
-async function downloadBackup(filename: string) {
+const downloadBackup = async (filename: string) => {
   try {
-    const response = await api.get(`/backups/${filename}/download`, { responseType: 'blob' })
+    const response = await backupApi.download(filename)
     const url = URL.createObjectURL(new Blob([response.data]))
     const link = document.createElement('a')
     link.href = url; link.download = filename; link.click()
@@ -180,7 +182,7 @@ async function downloadBackup(filename: string) {
 
 onMounted(load)
 
-function statusBadge(status: string) {
+const statusBadge = (status: string) => {
   const map: Record<string, string> = {
     completed: 'success',
     pending: 'warning',

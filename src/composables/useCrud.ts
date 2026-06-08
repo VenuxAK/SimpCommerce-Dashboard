@@ -2,9 +2,9 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import api from '../lib/axios'
 import { useNotify } from '../lib/notify'
-import { useListing, type PaginationMeta } from './useListing'
+import { useListing } from './useListing'
 
-export function useCrud<T extends Record<string, any>>(endpoint: string, defaults: Record<string, any>) {
+export const useCrud = <T extends Record<string, any>>(endpoint: string, defaults: Record<string, any>) => {
   const { t } = useI18n()
   const { success, error } = useNotify()
   const { items, meta, loading, loadPage } = useListing<T>(endpoint)
@@ -14,28 +14,28 @@ export function useCrud<T extends Record<string, any>>(endpoint: string, default
   const form = ref<Record<string, any>>({ ...defaults })
   const saving = ref(false)
 
-  function resetForm(data?: Record<string, any>) {
+  const resetForm = (data?: Record<string, any>) => {
     form.value = { ...defaults, ...data }
   }
 
-  function openCreate() {
+  const openCreate = () => {
     editing.value = null
     resetForm()
     showForm.value = true
   }
 
-  function openEdit(item: T) {
+  const openEdit = (item: T) => {
     editing.value = item
     resetForm(item)
     showForm.value = true
   }
 
-  function closeForm() {
+  const closeForm = () => {
     showForm.value = false
     editing.value = null
   }
 
-  async function save(): Promise<boolean> {
+  const save = async (): Promise<boolean> => {
     saving.value = true
     try {
       if (editing.value) {
@@ -56,7 +56,7 @@ export function useCrud<T extends Record<string, any>>(endpoint: string, default
     }
   }
 
-  async function remove(id: number): Promise<boolean> {
+  const remove = async (id: number): Promise<boolean> => {
     try {
       await api.delete(`${endpoint}/${id}`)
       items.value = items.value.filter((item: any) => item.id !== id)

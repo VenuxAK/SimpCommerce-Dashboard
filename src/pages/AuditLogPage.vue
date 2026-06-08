@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import api from '../lib/axios'
 import { Card, CardContent } from '../components/ui/card'
 import Select from '../components/ui/Select.vue'
 import { Badge } from '../components/ui/badge'

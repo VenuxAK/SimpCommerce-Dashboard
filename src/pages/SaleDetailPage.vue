@@ -2,19 +2,20 @@
 import { ref, onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
-import api from '../lib/axios'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
 import Input from '../components/ui/Input.vue'
 import { RotateCcw, ChevronLeft, Wallet, CreditCard, Check, Package, Truck, XCircle, MapPin } from 'lucide-vue-next'
 import { useNotify } from '../lib/notify'
+import { useOrderApi } from '../composables/api'
 import type { Order } from '../types'
 
 const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const { success, error } = useNotify()
+const orderApi = useOrderApi()
 const order = ref<Order | null>(null)
 const loading = ref(true)
 const refunding = ref(false)
@@ -27,7 +28,7 @@ const statusUpdating = ref(false)
 
 onMounted(async () => {
   try {
-    const { data } = await api.get(`/orders/${route.params.id}`)
+    const { data } = await orderApi.get(Number(route.params.id))
     order.value = data.data
     initReturnItems()
   } catch (e: any) {
@@ -37,14 +38,14 @@ onMounted(async () => {
   }
 })
 
-function initReturnItems() {
+const initReturnItems = () => {
   returnItems.value = {}
   order.value?.items.forEach((item) => {
     returnItems.value[item.id] = { checked: false, quantity: item.quantity, reason: '' }
   })
 }
 
-function toggleReturnPanel() {
+const toggleReturnPanel = () => {
   showReturnPanel.value = !showReturnPanel.value
   if (showReturnPanel.value) initReturnItems()
 }
@@ -53,7 +54,7 @@ const hasSelectedReturns = computed(() =>
   Object.values(returnItems.value).some((r) => r.checked),
 )
 
-async function submitReturn() {
+const submitReturn = async () => {
   const items = Object.entries(returnItems.value)
     .filter(([, v]) => v.checked)
     .map(([id, v]) => ({
@@ -66,7 +67,7 @@ async function submitReturn() {
 
   refunding.value = true
   try {
-    const res = await api.post(`/orders/${route.params.id}/return`, { items })
+    const res = await orderApi.returnItems(Number(route.params.id), items)
     success(t('validation.refund_success'))
     order.value = res.data.order
     showReturnPanel.value = false
@@ -77,14 +78,14 @@ async function submitReturn() {
   }
 }
 
-async function updateOrderStatus(newStatus: string) {
+const updateOrderStatus = async (newStatus: string) => {
   statusUpdating.value = true
   try {
     const body: any = { status: newStatus }
     if (newStatus === 'shipped' && trackingNumber.value) {
       body.tracking_number = trackingNumber.value
     }
-    const res = await api.patch(`/orders/${route.params.id}/status`, body)
+    const res = await orderApi.updateStatus(Number(route.params.id), newStatus, trackingNumber.value || undefined)
     order.value = res.data.data
     showTrackingModal.value = false
     trackingNumber.value = ''
@@ -96,7 +97,7 @@ async function updateOrderStatus(newStatus: string) {
   }
 }
 
-function statusBadge(status: string) {
+const statusBadge = (status: string) => {
   const map: Record<string, string> = {
     completed: 'success',
     pending: 'warning',

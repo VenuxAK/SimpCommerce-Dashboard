@@ -18,7 +18,7 @@ const password = ref('')
 const error = ref('')
 const loading = ref(false)
 
-async function handleLogin() {
+const handleLogin = async () => {
   loading.value = true
   error.value = ''
   try {
@@ -48,7 +48,7 @@ async function handleLogin() {
   }
 }
 
-function toggleLang() {
+const toggleLang = () => {
   locale.value = locale.value === 'en' ? 'my' : 'en'
   localStorage.setItem('locale', locale.value)
 }

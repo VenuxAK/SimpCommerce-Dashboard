@@ -1,7 +1,7 @@
 import api from '../lib/axios'
 
-export function useBlobDownload() {
-  async function downloadBlob(url: string, filename: string): Promise<void> {
+export const useBlobDownload = () => {
+  const downloadBlob = async (url: string, filename: string): Promise<void> => {
     try {
       const response = await api.get(url, { responseType: 'blob' })
       const blobUrl = URL.createObjectURL(new Blob([response.data]))

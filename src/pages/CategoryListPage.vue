@@ -1,46 +1,32 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Plus, Pencil, Trash2, Package } from 'lucide-vue-next'
-import api from '../lib/axios'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import Input from '../components/ui/Input.vue'
 import Pagination from '../components/Pagination.vue'
+import LoadingSpinner from '../components/LoadingSpinner.vue'
+import EmptyState from '../components/EmptyState.vue'
+import PageHeader from '../components/PageHeader.vue'
 import { useNotify } from '../lib/notify'
-import { firstError, formatFieldErrors } from '../lib/i18n-errors'
+import { firstError } from '../lib/i18n-errors'
+import { useListing } from '../composables'
+import { useCategoryApi } from '../composables/api'
 
 const { t } = useI18n()
 const { success, error } = useNotify()
+const categoryApi = useCategoryApi()
+const { items: categories, meta, loading, loadPage } = useListing<any>('/categories')
 
-const categories = ref<any[]>([])
-const loading = ref(true)
-const saving = ref(false)
-const meta = ref<any>({})
-const page = ref(1)
-
-// Form
 const showForm = ref(false)
 const editing = ref<number | null>(null)
 const name = ref('')
 const description = ref('')
 const fieldErrors = ref<any>(null)
+const saving = ref(false)
 
-async function load(p = 1) {
-  loading.value = true
-  page.value = p
-  try {
-    const { data } = await api.get('/categories', { params: { page: p } })
-    categories.value = data.data
-    meta.value = data.meta
-  } catch {
-    error(t('dashboard.load_failed'))
-  } finally {
-    loading.value = false
-  }
-}
-
-function openCreate() {
+const openCreate = () => {
   editing.value = null
   name.value = ''
   description.value = ''
@@ -48,7 +34,7 @@ function openCreate() {
   showForm.value = true
 }
 
-function openEdit(cat: any) {
+const openEdit = (cat: any) => {
   editing.value = cat.id
   name.value = cat.name
   description.value = cat.description || ''
@@ -56,19 +42,19 @@ function openEdit(cat: any) {
   showForm.value = true
 }
 
-async function save() {
+const save = async () => {
   saving.value = true
   fieldErrors.value = null
   try {
     const payload = { name: name.value, description: description.value }
     if (editing.value) {
-      await api.put(`/categories/${editing.value}`, payload)
+      await categoryApi.update(editing.value, payload)
     } else {
-      await api.post('/categories', payload)
+      await categoryApi.create(payload)
     }
     success(t('common.save'))
     showForm.value = false
-    load(page.value)
+    loadPage(meta.value?.current_page || 1)
   } catch (e: any) {
     if (e.response?.status === 422) {
       fieldErrors.value = e.response.data.errors
@@ -80,31 +66,21 @@ async function save() {
   }
 }
 
-async function remove(id: number) {
+const remove = async (id: number) => {
   if (!confirm(t('common.delete') + '?')) return
   try {
-    await api.delete(`/categories/${id}`)
+    await categoryApi.remove(id)
     success(t('common.delete'))
-    load(page.value)
+    loadPage(meta.value?.current_page || 1)
   } catch (e: any) {
     error(e.response?.data?.message || t('common.error'))
   }
 }
-
-onMounted(() => load(1))
 </script>
 
 <template>
   <div class="space-y-8 animate-in fade-in duration-700">
-    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-      <div>
-        <h1 class="text-2xl font-semibold tracking-tight text-foreground">{{ t('categories.title') }}</h1>
-        <p class="text-xs text-muted-foreground mt-1">Organize your inventory into manageable groups</p>
-      </div>
-      <Button size="sm" @click="openCreate">
-        <Plus class="size-3.5 mr-2" /> {{ t('categories.new_category') }}
-      </Button>
-    </div>
+    <PageHeader title="Categories" subtitle="Organize your inventory into manageable groups" action-label="New Category" @action="openCreate" />
 
     <div v-if="showForm" class="animate-in slide-in-from-top-4 duration-300">
       <Card class="max-w-xl border-border/60 shadow-none bg-muted/5">
@@ -137,14 +113,9 @@ onMounted(() => load(1))
       </Card>
     </div>
 
-    <div v-if="loading" class="flex h-64 items-center justify-center text-muted-foreground">
-      <div class="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-    </div>
+    <LoadingSpinner v-if="loading" />
 
-    <div v-else-if="categories.length === 0" class="py-20 text-center border rounded-xl border-dashed">
-      <Package class="size-10 mx-auto text-muted-foreground/20 mb-4" />
-      <p class="text-sm font-medium text-muted-foreground">{{ t('common.no_data') }}</p>
-    </div>
+    <EmptyState v-else-if="categories.length === 0" :icon="Package" :title="t('common.no_data')" />
 
     <div v-else class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       <Card v-for="cat in categories" :key="cat.id" class="group hover:border-primary/40 transition-all shadow-none">
@@ -164,9 +135,9 @@ onMounted(() => load(1))
         </CardContent>
       </Card>
     </div>
-    
+
     <div class="pt-8">
-      <Pagination :meta="meta" @page="load" />
+      <Pagination :meta="meta" @page="loadPage" />
     </div>
   </div>
 </template>

@@ -2,16 +2,17 @@
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
-import api from '../lib/axios'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
 import Input from '../components/ui/Input.vue'
 import { useNotify } from '../lib/notify'
+import { useProfileApi } from '../composables/api'
 
 const { t } = useI18n()
 const auth = useAuthStore()
 const { success, error } = useNotify()
+const profileApi = useProfileApi()
 const form = ref({ name: '', email: '', password: '' })
 const saving = ref(false)
 
@@ -22,12 +23,12 @@ onMounted(() => {
   }
 })
 
-async function save() {
+const save = async () => {
   saving.value = true
   try {
     const payload: Record<string, any> = { name: form.value.name, email: form.value.email }
     if (form.value.password) payload.password = form.value.password
-    const { data } = await api.put('/profile', payload)
+    const { data } = await profileApi.update(payload)
     auth.setUser(data.data)
     success(t('common.save') + ' ✅')
     form.value.password = ''
@@ -45,13 +46,10 @@ async function save() {
 <template>
   <div class="mx-auto max-w-lg space-y-6">
     <h1 class="text-xl sm:text-2xl font-semibold text-foreground">{{ t('profile.title') }}</h1>
-
     <Card>
       <CardHeader class="flex flex-row items-center justify-between">
         <CardTitle>{{ t('profile.info') }}</CardTitle>
-        <Badge :variant="auth.user?.role === 'admin' ? 'default' : 'secondary'">
-          {{ auth.user?.role }}
-        </Badge>
+        <Badge :variant="auth.user?.role === 'admin' ? 'default' : 'secondary'">{{ auth.user?.role }}</Badge>
       </CardHeader>
       <CardContent class="space-y-4">
         <div class="space-y-2">

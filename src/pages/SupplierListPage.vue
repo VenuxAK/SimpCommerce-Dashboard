@@ -1,44 +1,33 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Plus, Pencil, Trash2 } from 'lucide-vue-next'
-import api from '../lib/axios'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import Input from '../components/ui/Input.vue'
 import { Badge } from '../components/ui/badge'
 import { useNotify } from '../lib/notify'
 import Pagination from '../components/Pagination.vue'
+import { useListing } from '../composables'
+import { useSupplierApi } from '../composables/api'
 import type { Supplier } from '../types'
 
 const { t } = useI18n()
 const { success, error } = useNotify()
-const suppliers = ref<Supplier[]>([])
-const meta = ref<any>(null)
+const supplierApi = useSupplierApi()
+const { items: suppliers, meta, loading, loadPage } = useListing<Supplier>('/suppliers')
+
 const showForm = ref(false)
 const editing = ref<Supplier | null>(null)
 const form = ref({ name: '', contact_person: '', phone: '', email: '', address: '', notes: '' })
-const loading = ref(true)
 
-async function loadPage(page = 1) {
-  loading.value = true
-  try {
-    const { data } = await api.get('/suppliers', { params: { page } })
-    suppliers.value = data.data
-    meta.value = { current_page: data.meta.current_page, last_page: data.meta.last_page, total: data.meta.total, per_page: data.meta.per_page }
-  } catch { }
-  finally { loading.value = false }
-}
-
-onMounted(() => loadPage())
-
-function openCreate() {
+const openCreate = () => {
   editing.value = null
   form.value = { name: '', contact_person: '', phone: '', email: '', address: '', notes: '' }
   showForm.value = true
 }
 
-function openEdit(s: Supplier) {
+const openEdit = (s: Supplier) => {
   editing.value = s
   form.value = {
     name: s.name, contact_person: s.contact_person || '',
@@ -48,13 +37,13 @@ function openEdit(s: Supplier) {
   showForm.value = true
 }
 
-async function save() {
+const save = async () => {
   try {
     if (editing.value) {
-      await api.put(`/suppliers/${editing.value.id}`, form.value)
+      await supplierApi.update(editing.value.id, form.value)
       success(t('common.save') + ' ✅')
     } else {
-      await api.post('/suppliers', form.value)
+      await supplierApi.create(form.value)
       success(t('common.create') + ' ✅')
     }
     showForm.value = false
@@ -64,10 +53,10 @@ async function save() {
   }
 }
 
-async function remove(id: number) {
+const remove = async (id: number) => {
   if (!confirm(t('common.confirm') + '?')) return
   try {
-    await api.delete(`/suppliers/${id}`)
+    await supplierApi.remove(id)
     suppliers.value = suppliers.value.filter((s: any) => s.id !== id)
     success(t('common.delete') + ' ✅')
   } catch { }

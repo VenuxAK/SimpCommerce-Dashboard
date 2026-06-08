@@ -8,15 +8,15 @@ export interface PaginationMeta {
   per_page: number
 }
 
-export function useListing<T>(endpoint: string, options?: {
+export const useListing = <T>(endpoint: string, options?: {
   defaultParams?: Record<string, any>
   immediate?: boolean
-}) {
+}) => {
   const items = ref<T[]>([])
   const meta = ref<PaginationMeta | null>(null)
   const loading = ref(true)
 
-  async function loadPage(page = 1): Promise<void> {
+  const loadPage = async (page = 1): Promise<void> => {
     loading.value = true
     try {
       const params: Record<string, any> = { page, ...options?.defaultParams }

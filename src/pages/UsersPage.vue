@@ -1,48 +1,37 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Plus, Pencil, Trash2, Search, ShieldCheck } from 'lucide-vue-next'
-import api from '../lib/axios'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
 import Input from '../components/ui/Input.vue'
 import Select from '../components/ui/Select.vue'
+import Pagination from '../components/Pagination.vue'
+import LoadingSpinner from '../components/LoadingSpinner.vue'
+import EmptyState from '../components/EmptyState.vue'
+import PageHeader from '../components/PageHeader.vue'
 import { useNotify } from '../lib/notify'
 import { useAuthStore } from '../stores/auth'
-import Pagination from '../components/Pagination.vue'
+import { useListing } from '../composables'
+import { useUserApi } from '../composables/api'
 import type { User } from '../types'
 
 const { t } = useI18n()
 const { success, error } = useNotify()
 const authStore = useAuthStore()
-const users = ref<User[]>([])
-const meta = ref<any>(null)
+const userApi = useUserApi()
+
+const { items: users, meta, loading, loadPage } = useListing<User>('/users')
 const showForm = ref(false)
 const editing = ref<User | null>(null)
 const form = ref({ name: '', email: '', password: '', role: 'staff' })
-const loading = ref(true)
 const search = ref('')
 
 const roleOptions = [
   { label: 'STAFF', value: 'staff' },
   { label: 'ADMIN', value: 'admin' },
 ]
-
-async function loadPage(page = 1) {
-  loading.value = true
-  try {
-    const { data } = await api.get('/users', { params: { page } })
-    users.value = data.data
-    meta.value = { current_page: data.meta.current_page, last_page: data.meta.last_page, total: data.meta.total, per_page: data.meta.per_page }
-  } catch (e: any) {
-    error(e?.response?.data?.message || t('dashboard.load_failed'))
-  } finally {
-    loading.value = false
-  }
-}
-
-onMounted(() => loadPage())
 
 const filtered = computed(() =>
   users.value.filter((u) => {
@@ -52,27 +41,27 @@ const filtered = computed(() =>
   }),
 )
 
-function openCreate() {
+const openCreate = () => {
   editing.value = null
   form.value = { name: '', email: '', password: '', role: 'staff' }
   showForm.value = true
 }
 
-function openEdit(user: User) {
+const openEdit = (user: User) => {
   editing.value = user
   form.value = { name: user.name, email: user.email, password: '', role: user.role }
   showForm.value = true
 }
 
-async function save() {
+const save = async () => {
   try {
     if (editing.value) {
       const payload: Record<string, any> = { name: form.value.name, email: form.value.email, role: form.value.role }
       if (form.value.password) payload.password = form.value.password
-      await api.put(`/users/${editing.value.id}`, payload)
+      await userApi.update(editing.value.id, payload)
       success(t('common.save'))
     } else {
-      await api.post('/users', form.value)
+      await userApi.create(form.value)
       success(t('common.create'))
     }
     showForm.value = false
@@ -85,14 +74,14 @@ async function save() {
   }
 }
 
-async function remove(id: number, name: string) {
+const remove = async (id: number, name: string) => {
   if (id === authStore.user?.id) {
     error(t('users.cannot_delete_self'))
     return
   }
   if (!confirm(`${t('common.confirm')} — ${name}?`)) return
   try {
-    await api.delete(`/users/${id}`)
+    await userApi.remove(id)
     users.value = users.value.filter((u) => u.id !== id)
     success(t('common.delete'))
   } catch (e: any) {
@@ -100,22 +89,14 @@ async function remove(id: number, name: string) {
   }
 }
 
-function roleBadge(role: string) {
+const roleBadge = (role: string) => {
   return role === 'admin' ? 'default' as const : 'secondary' as const
 }
 </script>
 
 <template>
   <div class="space-y-8 animate-in fade-in duration-700">
-    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-      <div>
-        <h1 class="text-2xl font-semibold tracking-tight text-foreground">{{ t('users.title') }}</h1>
-        <p class="text-xs text-muted-foreground mt-1">Manage platform access and assign security roles</p>
-      </div>
-      <Button size="sm" @click="openCreate">
-        <Plus class="size-3.5 mr-2" /> {{ t('users.new_user') }}
-      </Button>
-    </div>
+    <PageHeader title="Users" subtitle="Manage platform access and assign security roles" action-label="New User" @action="openCreate" />
 
     <div v-if="showForm" class="animate-in slide-in-from-top-4 duration-300">
       <Card class="max-w-xl border-border/60 shadow-none bg-muted/5">
@@ -160,14 +141,9 @@ function roleBadge(role: string) {
       </CardContent>
     </Card>
 
-    <div v-if="loading" class="flex h-64 items-center justify-center text-muted-foreground">
-      <div class="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-    </div>
+    <LoadingSpinner v-if="loading" />
 
-    <div v-else-if="users.length === 0" class="py-20 text-center border border-dashed rounded-xl">
-      <ShieldCheck class="size-10 mx-auto text-muted-foreground/20 mb-4" />
-      <p class="text-sm font-medium text-muted-foreground">{{ t('common.no_data') }}</p>
-    </div>
+    <EmptyState v-else-if="users.length === 0" :icon="ShieldCheck" :title="t('common.no_data')" />
 
     <div v-else class="border rounded-lg overflow-hidden bg-card">
       <div class="overflow-x-auto">
@@ -216,7 +192,7 @@ function roleBadge(role: string) {
         </table>
       </div>
     </div>
-    
+
     <div class="pt-8">
       <Pagination :meta="meta" @page="loadPage" />
     </div>

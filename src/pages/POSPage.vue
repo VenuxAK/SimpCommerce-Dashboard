@@ -2,17 +2,23 @@
 import { ref, onMounted, computed, onUnmounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Search, ShoppingCart, X, Plus, Minus, User, Barcode, Maximize2, Percent, Check, CreditCard, Wallet } from 'lucide-vue-next'
-import api from '../lib/axios'
 import { Button } from '../components/ui/button'
 import { Card, CardContent } from '../components/ui/card'
 import Input from '../components/ui/Input.vue'
 import Select from '../components/ui/Select.vue'
 import { Badge } from '../components/ui/badge'
 import { useNotify } from '../lib/notify'
+import { useProductApi, useCategoryApi, useDiscountApi, useCustomerApi, useOrderApi, useVariantApi } from '../composables/api'
 import type { Discount, Product, ProductVariant, Customer } from '../types'
 
 const { t } = useI18n()
 const { success, error } = useNotify()
+const productApi = useProductApi()
+const categoryApi = useCategoryApi()
+const discountApi = useDiscountApi()
+const customerApi = useCustomerApi()
+const orderApi = useOrderApi()
+const variantApi = useVariantApi()
 
 const products = ref<Product[]>([])
 const categories = ref<{ id: number; name: string }[]>([])
@@ -34,7 +40,7 @@ const dataLoading = ref(true)
 const showCart = ref(false)
 const isFullscreen = ref(false)
 
-function toggleFullscreen() {
+const toggleFullscreen = () => {
   isFullscreen.value = !isFullscreen.value
 }
 
@@ -112,19 +118,19 @@ const parsedAmount = computed(() => {
 
 const change = computed(() => Math.max(0, parsedAmount.value - totalAfterDiscount.value))
 
-function imgUrl(product: Product): string | null {
+const imgUrl = (product: Product): string | null => {
   return product.image_url || null
 }
 
 onMounted(async () => {
   try {
     const [prodRes, catRes] = await Promise.all([
-      api.get('/products', { params: { per_page: 500 } }),
-      api.get('/categories'),
+      productApi.list({ per_page: 500 }),
+      categoryApi.list(),
     ])
     products.value = prodRes.data.data
     categories.value = catRes.data.data
-    const discRes = await api.get('/discounts/active')
+    const discRes = await discountApi.getActive()
     discounts.value = discRes.data.data
   } catch (e: any) {
     error(e?.response?.data?.message || t('dashboard.load_failed'))
@@ -139,7 +145,7 @@ onUnmounted(() => {
   window.removeEventListener('keydown', handleBarcodeKey)
 })
 
-function handleBarcodeKey(e: KeyboardEvent) {
+const handleBarcodeKey = (e: KeyboardEvent) => {
   if (e.key === 'Enter' && barcodeBuffer.length >= 3) {
     e.preventDefault()
     barcodeActive.value = true
@@ -167,9 +173,9 @@ function handleBarcodeKey(e: KeyboardEvent) {
   }
 }
 
-async function lookupBarcode(sku: string) {
+const lookupBarcode = async (sku: string) => {
   try {
-    const { data } = await api.get(`/variants/by-sku/${encodeURIComponent(sku)}`)
+    const { data } = await variantApi.bySku(encodeURIComponent(sku))
     const variant = data.variant as ProductVariant
     const product = data.product as Product
 
@@ -204,12 +210,12 @@ const filteredProducts = computed(() => {
   })
 })
 
-function openVariantDialog(product: Product) {
+const openVariantDialog = (product: Product) => {
   selectedProduct.value = product
   showVariantDialog.value = true
 }
 
-function addToCart(variant: ProductVariant) {
+const addToCart = (variant: ProductVariant) => {
   const product = selectedProduct.value!
   const existing = cart.value.find((item) => item.variant.id === variant.id)
   if (existing) {
@@ -221,11 +227,11 @@ function addToCart(variant: ProductVariant) {
   success(t('pos.item_added'))
 }
 
-function removeFromCart(index: number) {
+const removeFromCart = (index: number) => {
   cart.value.splice(index, 1)
 }
 
-function updateQuantity(index: number, delta: number) {
+const updateQuantity = (index: number, delta: number) => {
   const item = cart.value[index]
   const newQty = item.quantity + delta
   if (newQty <= 0) {
@@ -237,19 +243,19 @@ function updateQuantity(index: number, delta: number) {
   }
 }
 
-function debouncedSearch(query: string) {
+const debouncedSearch = (query: string) => {
   customerSearch.value = query
   clearTimeout(searchTimer)
   if (query.length < 1) return
   searchTimer = setTimeout(async () => {
     try {
-      const { data } = await api.get('/customers', { params: { search: query } })
+      const { data } = await customerApi.list({ search: query })
       customers.value = data.data
     } catch {}
   }, 300)
 }
 
-async function completeSale() {
+const completeSale = async () => {
   if (cart.value.length === 0) return
 
   const requiredAmount = totalAfterDiscount.value
@@ -260,7 +266,7 @@ async function completeSale() {
 
   loading.value = true
   try {
-    await api.post('/orders', {
+    await orderApi.create({
       customer_id: selectedCustomer.value?.id || null,
       discount_id: selectedDiscount.value?.id || null,
       notes: null,

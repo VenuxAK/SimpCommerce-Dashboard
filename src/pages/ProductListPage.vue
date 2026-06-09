@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
-import { Plus, Pencil, LayoutGrid, List, Download, Search, Package } from 'lucide-vue-next'
+import { Plus, Pencil, LayoutGrid, List, Download, Search, Package, Upload } from 'lucide-vue-next'
 import { Button } from '../components/ui/button'
 import { Card, CardContent } from '../components/ui/card'
 import Input from '../components/ui/Input.vue'
@@ -18,9 +18,11 @@ import type { Product, Category } from '../types'
 
 const { t } = useI18n()
 const router = useRouter()
-const { error } = useNotify()
+const { success, error } = useNotify()
 const productApi = useProductApi()
 const categoryApi = useCategoryApi()
+
+const fileInput = ref<HTMLInputElement | null>(null)
 
 const { items: products, meta, loading, loadPage } = useListing<Product>('/products')
 
@@ -65,6 +67,22 @@ const exportCsv = async () => {
   }
 }
 
+const importFile = async (e: Event) => {
+  const target = e.target as HTMLInputElement
+  if (!target.files?.length) return
+  const file = target.files[0]
+  target.value = '' // reset input
+  
+  try {
+    const res = await productApi.importCsv(file)
+    success(res.data.message || 'Import started! Processing in background.')
+  } catch (err: any) {
+    error(err?.response?.data?.message || 'Import failed to start')
+  }
+}
+
+const triggerImport = () => fileInput.value?.click()
+
 const getStockBadge = (qty: number) => {
   if (qty === 0) return { variant: 'destructive' as const, label: 'OUT' }
   if (qty < 10) return { variant: 'warning' as const, label: 'LOW' }
@@ -80,6 +98,10 @@ const getStockBadge = (qty: number) => {
         <p class="text-xs text-muted-foreground mt-1">Manage your inventory and product variants</p>
       </div>
       <div class="flex items-center gap-2">
+        <input type="file" accept=".csv" class="hidden" ref="fileInput" @change="importFile" />
+        <Button variant="outline" size="sm" @click="triggerImport">
+          <Upload class="size-3.5 mr-2" /> Import
+        </Button>
         <Button variant="outline" size="sm" @click="exportCsv">
           <Download class="size-3.5 mr-2" /> Export
         </Button>

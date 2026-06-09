@@ -22,6 +22,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Building2,
+  Activity,
 } from 'lucide-vue-next'
 import { useAuthStore } from '../../stores/auth'
 import { useUIStore } from '../../stores/ui'
@@ -65,6 +66,7 @@ const navGroups = [
       { to: '/audit-logs', icon: History, label: 'nav.audit', root: true },
       { to: '/users', icon: Shield, label: 'nav.users', root: true },
       { to: '/stores', icon: Building2, label: 'nav.stores', root: true },
+      { to: 'https://nightwatch.laravel.com', icon: Activity, label: 'System Health', root: true, external: true },
       { to: '/profile', icon: UserCog, label: 'nav.profile' },
     ],
   },
@@ -82,7 +84,11 @@ async function handleLogout() {
 }
 
 function navigate(to: string) {
-  router.push(to)
+  if (to.startsWith('http')) {
+    window.open(to, '_blank')
+  } else {
+    router.push(to)
+  }
   emit('close')
 }
 </script>
@@ -149,11 +155,11 @@ function navigate(to: string) {
             :title="ui.sidebarCollapsed ? t(item.label) : ''"
           >
             <div
-              v-if="isActive(item.to) && !ui.sidebarCollapsed"
+              v-if="isActive(item.to) && !item.external && !ui.sidebarCollapsed"
               class="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full bg-primary"
             />
-            <component :is="item.icon" :class="['size-4 shrink-0', isActive(item.to) ? 'text-primary' : '']" />
-            <span v-if="!ui.sidebarCollapsed" class="truncate">{{ t(item.label) }}</span>
+            <component :is="item.icon" :class="['size-4 shrink-0', isActive(item.to) && !item.external ? 'text-primary' : '']" />
+            <span v-if="!ui.sidebarCollapsed" class="truncate">{{ item.external ? item.label : t(item.label) }}</span>
           </button>
         </div>
       </div>

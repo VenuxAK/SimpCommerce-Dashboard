@@ -163,8 +163,14 @@ const load = async () => {
 const createBackup = async () => {
   try {
     const res = await backupApi.create()
-    backups.value.unshift({ filename: res.data.filename, created_at: new Date().toISOString() })
-    success('Backup created')
+    success(res.data.message || 'Backup queued for processing')
+    // Wait a bit and refresh the list, although it might still be generating
+    setTimeout(async () => {
+      if (auth.isRoot) {
+        const listRes = await backupApi.list()
+        backups.value = listRes.data.data || []
+      }
+    }, 2000)
   } catch (e: any) {
     error(e?.response?.data?.message || t('common.error'))
   }

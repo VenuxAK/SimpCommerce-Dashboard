@@ -39,6 +39,7 @@ const loading = ref(false)
 const dataLoading = ref(true)
 const showCart = ref(false)
 const isFullscreen = ref(false)
+const idempotencyKey = ref(crypto.randomUUID())
 
 const toggleFullscreen = () => {
   isFullscreen.value = !isFullscreen.value
@@ -278,12 +279,14 @@ const completeSale = async () => {
         method: paymentMethod.value,
         amount: totalAfterDiscount.value,
       },
-    })
+    }, idempotencyKey.value)
+    
     success(t('pos.sale_completed'))
     cart.value = []
     selectedCustomer.value = null
     selectedDiscountId.value = ''
     amountReceived.value = ''
+    idempotencyKey.value = crypto.randomUUID()
   } catch (e: any) {
     const msg = e?.response?.data?.message || t('common.error')
     error(msg)

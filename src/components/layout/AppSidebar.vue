@@ -6,6 +6,7 @@ import {
   ShoppingCart,
   Package,
   Tags,
+  Star,
   Users,
   Receipt,
   FileText,
@@ -50,6 +51,7 @@ const navGroups = [
     items: [
       { to: '/products', icon: Package, label: 'nav.products' },
       { to: '/categories', icon: Tags, label: 'nav.categories' },
+      { to: '/brands', icon: Star, label: 'brands.title' },
       { to: '/customers', icon: Users, label: 'nav.customers' },
       { to: '/sales', icon: Receipt, label: 'nav.sales' },
       { to: '/invoices', icon: FileText, label: 'nav.invoices' },

@@ -120,6 +120,14 @@
     "description": "Description",
     "products_count": "Products"
   },
+  "brands": {
+    "title": "Brands",
+    "new_brand": "New Brand",
+    "edit_brand": "Edit Brand",
+    "name": "Brand Name",
+    "logo": "Logo",
+    "no_brands": "No brands yet."
+  },
   "customers": {
     "title": "Customers",
     "new_customer": "New Customer",

@@ -13,6 +13,17 @@ export interface Category {
   name: string
   slug: string
   description: string | null
+  parent_id: number | null
+  products_count?: number
+  created_at?: string
+  updated_at?: string
+}
+
+export interface Brand {
+  id: number
+  name: string
+  slug: string
+  logo_url: string | null
   products_count?: number
   created_at?: string
   updated_at?: string

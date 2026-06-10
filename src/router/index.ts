@@ -21,6 +21,7 @@ const router = createRouter({
         { path: 'products/new', name: 'product-create', component: () => import('../pages/ProductFormPage.vue') },
         { path: 'products/:id/edit', name: 'product-edit', component: () => import('../pages/ProductFormPage.vue') },
         { path: 'categories', name: 'categories', component: () => import('../pages/CategoryListPage.vue') },
+        { path: 'brands', name: 'brands', component: () => import('../pages/BrandListPage.vue') },
         { path: 'customers', name: 'customers', component: () => import('../pages/CustomerListPage.vue') },
         { path: 'customers/:id', name: 'customer-detail', component: () => import('../pages/CustomerDetailPage.vue') },
         { path: 'sales', name: 'sales', component: () => import('../pages/SalesListPage.vue') },

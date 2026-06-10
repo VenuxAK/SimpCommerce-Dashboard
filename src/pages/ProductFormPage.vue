@@ -21,6 +21,7 @@ const saving = ref(false)
 
 const categories = ref<Category[]>([])
 const suppliers = ref<any[]>([])
+const brands = ref<any[]>([])
 const fieldErrors = ref<Record<string, string[]> | null>(null)
 
 interface VariantForm {
@@ -33,6 +34,7 @@ interface VariantForm {
 const form = ref({
   category_id: null as number | null,
   supplier_id: null as number | null,
+  brand_id: null as number | null,
   name: '',
   description: '',
   base_price: 0,
@@ -42,14 +44,27 @@ const form = ref({
   variants: [] as VariantForm[],
 })
 
-const categoryOptions = computed(() => [
-  { label: 'SELECT CATEGORY', value: '' },
-  ...(categories.value || []).map(c => ({ label: c.name.toUpperCase(), value: c.id }))
-])
+const categoryOptions = computed(() => {
+  const options: Array<{label: string, value: string | number}> = [{ label: 'SELECT CATEGORY', value: '' }]
+  const parents = (categories.value || []).filter(c => !c.parent_id)
+  parents.forEach(p => {
+    options.push({ label: p.name.toUpperCase(), value: p.id })
+    const children = (categories.value || []).filter(c => c.parent_id === p.id)
+    children.forEach(c => {
+      options.push({ label: `  ↳ ${c.name.toUpperCase()}`, value: c.id })
+    })
+  })
+  return options
+})
 
 const supplierOptions = computed(() => [
   { label: 'SELECT SUPPLIER', value: '' },
   ...(suppliers.value || []).map(s => ({ label: s.name.toUpperCase(), value: s.id }))
+])
+
+const brandOptions = computed(() => [
+  { label: 'SELECT BRAND', value: '' },
+  ...(brands.value || []).map(b => ({ label: b.name.toUpperCase(), value: b.id }))
 ])
 
 const storageUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8000').replace(/\/api\/?$/, '')
@@ -69,13 +84,18 @@ const variantImageUrl = (v: VariantForm): string | null => {
 
 onMounted(async () => {
   try {
-    const { data: catRes } = await api.get('/categories')
+    const { data: catRes } = await api.get('/categories?per_page=100')
     categories.value = catRes.data
   } catch {}
 
   try {
     const { data: supRes } = await api.get('/suppliers')
     suppliers.value = supRes.data.data
+  } catch {}
+
+  try {
+    const { data: brandRes } = await api.get('/brands?per_page=100')
+    brands.value = brandRes.data
   } catch {}
 
   if (isEdit) {
@@ -85,6 +105,7 @@ onMounted(async () => {
       form.value = {
         category_id: p.category_id,
         supplier_id: p.supplier_id ?? null,
+        brand_id: (p as any).brand_id ?? null,
         name: p.name,
         description: p.description || '',
         base_price: p.base_price,
@@ -149,6 +170,7 @@ const save = async () => {
       description: form.value.description,
       base_price: form.value.base_price,
       supplier_id: form.value.supplier_id,
+      brand_id: form.value.brand_id,
       variants: form.value.variants.map((v) => ({
         sku: v.sku, size: v.size, color: v.color,
         price_adjustment: v.price_adjustment, purchase_price: v.purchase_price, stock_quantity: v.stock_quantity,
@@ -223,10 +245,14 @@ const save = async () => {
             <Input v-model="form.name" class="h-10" />
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <div class="space-y-1.5">
               <label class="text-[11px] font-medium text-foreground ml-0.5">{{ t('products.category') }}</label>
               <Select v-model="form.category_id" :options="categoryOptions" />
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-[11px] font-medium text-foreground ml-0.5">Brand</label>
+              <Select v-model="form.brand_id" :options="brandOptions" />
             </div>
             <div class="space-y-1.5">
               <label class="text-[11px] font-medium text-foreground ml-0.5">{{ t('nav.suppliers') }}</label>

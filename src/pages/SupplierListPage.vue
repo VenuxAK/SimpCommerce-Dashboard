@@ -8,6 +8,7 @@ import Input from '../components/ui/Input.vue'
 import { Badge } from '../components/ui/badge'
 import { useNotify } from '../lib/notify'
 import Pagination from '../components/Pagination.vue'
+import PageHeader from '../components/PageHeader.vue'
 import { useListing } from '../composables'
 import { useSupplierApi } from '../composables/api'
 import type { Supplier } from '../types'
@@ -64,11 +65,8 @@ const remove = async (id: number) => {
 </script>
 
 <template>
-  <div class="space-y-4">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-      <h1 class="text-xl sm:text-2xl font-semibold text-foreground">{{ t('nav.suppliers') }}</h1>
-      <Button @click="openCreate" class="w-full sm:w-auto"><Plus class="size-4" /> {{ t('common.create') }}</Button>
-    </div>
+  <div class="space-y-4 animate-in fade-in duration-700">
+    <PageHeader :title="t('nav.suppliers')" :subtitle="t('suppliers.manage')" :action-label="t('common.create')" @action="openCreate" />
 
     <div v-if="loading" class="text-sm text-muted-foreground">{{ t('common.loading') }}</div>
 
@@ -78,8 +76,8 @@ const remove = async (id: number) => {
         <Input v-model="form.name" :placeholder="t('validation.name')" />
         <Input v-model="form.contact_person" :placeholder="t('validation.contact_person')" />
         <div class="grid grid-cols-2 gap-3">
-          <Input v-model="form.phone" placeholder="Phone" />
-          <Input v-model="form.email" type="email" placeholder="Email" />
+          <Input v-model="form.phone" :placeholder="t('customers.phone')" />
+          <Input v-model="form.email" type="email" :placeholder="t('customers.email')" />
         </div>
         <Input v-model="form.address" :placeholder="t('customers.address')" />
         <Input v-model="form.notes" :placeholder="t('common.notes')" />

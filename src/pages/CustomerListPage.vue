@@ -49,7 +49,7 @@ loadPage(1)
 
 <template>
   <div class="space-y-8 animate-in fade-in duration-700">
-    <PageHeader title="Customers" subtitle="Manage your customer database and loyalty" action-label="New Customer" @action="showForm = !showForm" />
+    <PageHeader :title="t('customers.title')" :subtitle="t('customers.manage')" :action-label="t('customers.new_customer')" @action="showForm = !showForm" />
 
     <Card v-if="showForm" class="border-border/60 bg-muted/5">
       <CardHeader class="flex flex-row items-center justify-between py-3 px-5 border-b">
@@ -108,7 +108,7 @@ loadPage(1)
               <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider hidden sm:table-cell">{{ t('customers.phone') }}</th>
               <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{{ t('customers.email') }}</th>
               <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-right">{{ t('customers.loyalty_points') }}</th>
-              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-right w-20">Actions</th>
+              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-right w-20">{{ t('common.actions') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y">

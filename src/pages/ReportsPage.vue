@@ -42,7 +42,7 @@ const loadReport = async () => {
 
 <template>
   <div class="space-y-8 animate-in fade-in duration-500">
-    <PageHeader title="Reports" subtitle="Analyze your business performance and sales data" />
+    <PageHeader :title="t('reports.title')" :subtitle="t('reports.manage')" />
 
     <Card class="border-border shadow-sm rounded-2xl overflow-hidden bg-card">
       <CardContent class="p-5">
@@ -110,7 +110,7 @@ const loadReport = async () => {
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="border-b bg-muted/20">
-                <th class="px-6 py-4 text-[10px] font-semibold tracking-wider text-muted-foreground">RANK</th>
+                <th class="px-6 py-4 text-[10px] font-semibold tracking-wider text-muted-foreground">{{ t('validation.rank') }}</th>
                 <th class="px-6 py-4 text-[10px] font-semibold tracking-wider text-muted-foreground">{{ t('products.product_name') }}</th>
                 <th class="px-6 py-4 text-right text-[10px] font-semibold tracking-wider text-muted-foreground">{{ t('validation.sold_qty') }}</th>
                 <th class="px-6 py-4 text-right text-[10px] font-semibold tracking-wider text-muted-foreground">{{ t('validation.revenue') }}</th>
@@ -133,14 +133,14 @@ const loadReport = async () => {
     </div>
 
     <Card v-if="paymentMethods?.length && !loading" class="max-w-xl border-border shadow-sm rounded-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-500">
-      <CardHeader class="border-b bg-muted/30 py-4 px-6"><CardTitle class="text-[10px] font-semibold text-foreground tracking-wider">Payment Methods</CardTitle></CardHeader>
+      <CardHeader class="border-b bg-muted/30 py-4 px-6"><CardTitle class="text-[10px] font-semibold text-foreground tracking-wider">{{ t('pos.payment_method') }}</CardTitle></CardHeader>
       <CardContent class="p-0 overflow-x-auto">
         <table class="w-full text-left border-collapse">
           <thead>
             <tr class="border-b bg-muted/20">
-              <th class="px-6 py-4 text-[10px] font-semibold tracking-wider text-muted-foreground">METHOD</th>
-              <th class="px-6 py-4 text-right text-[10px] font-semibold tracking-wider text-muted-foreground">ORDERS</th>
-              <th class="px-6 py-4 text-right text-[10px] font-semibold tracking-wider text-muted-foreground">REVENUE</th>
+              <th class="px-6 py-4 text-[10px] font-semibold tracking-wider text-muted-foreground">{{ t('pos.payment') }}</th>
+              <th class="px-6 py-4 text-right text-[10px] font-semibold tracking-wider text-muted-foreground">{{ t('reports.order_count') }}</th>
+              <th class="px-6 py-4 text-right text-[10px] font-semibold tracking-wider text-muted-foreground">{{ t('validation.revenue') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-border/40">

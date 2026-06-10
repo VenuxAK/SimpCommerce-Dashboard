@@ -47,7 +47,7 @@ const navGroups = [
     ],
   },
   {
-    label: 'Management',
+    label: 'nav.management',
     items: [
       { to: '/products', icon: Package, label: 'nav.products' },
       { to: '/categories', icon: Tags, label: 'nav.categories' },
@@ -63,7 +63,7 @@ const navGroups = [
     ],
   },
   {
-    label: 'System',
+    label: 'nav.system',
     items: [
       { to: '/audit-logs', icon: History, label: 'nav.audit', root: true },
       { to: '/users', icon: Shield, label: 'nav.users', root: true },
@@ -138,7 +138,7 @@ function navigate(to: string) {
           v-if="group.label && !ui.sidebarCollapsed"
           class="px-3 mb-1.5 text-[10px] font-medium uppercase tracking-widest text-sidebar-muted/70"
         >
-          {{ group.label }}
+          {{ group.label ? t(group.label) : '' }}
         </p>
 
         <div class="space-y-0.5">

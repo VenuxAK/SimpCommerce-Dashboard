@@ -33,13 +33,13 @@ const categoryId = ref<number | ''>('')
 const stockStatus = ref<'all' | 'low' | 'out'>('all')
 
 const statusOptions = [
-  { label: 'ALL STOCK', value: 'all' },
-  { label: 'LOW STOCK', value: 'low' },
-  { label: 'OUT OF STOCK', value: 'out' },
+  { label: t('common.all'), value: 'all' },
+  { label: t('dashboard.low_stock'), value: 'low' },
+  { label: t('dashboard.out_of_stock'), value: 'out' },
 ]
 
 const categoryOptions = computed(() => [
-  { label: 'ALL CATEGORIES', value: '' },
+  { label: t('pos.all_categories'), value: '' },
   ...categories.value.map(c => ({ label: c.name.toUpperCase(), value: c.id })),
 ])
 
@@ -100,10 +100,10 @@ const getStockBadge = (qty: number) => {
       <div class="flex items-center gap-2">
         <input type="file" accept=".csv" class="hidden" ref="fileInput" @change="importFile" />
         <Button variant="outline" size="sm" @click="triggerImport">
-          <Upload class="size-3.5 mr-2" /> Import
+          <Upload class="size-3.5 mr-2" /> {{ t('common.import') }}
         </Button>
         <Button variant="outline" size="sm" @click="exportCsv">
-          <Download class="size-3.5 mr-2" /> Export
+          <Download class="size-3.5 mr-2" /> {{ t('common.export') }}
         </Button>
         <Button size="sm" @click="router.push('/products/new')">
           <Plus class="size-3.5 mr-2" /> {{ t('products.new_product') }}
@@ -116,7 +116,7 @@ const getStockBadge = (qty: number) => {
         <div class="flex flex-col md:flex-row gap-4">
           <div class="relative flex-1">
             <Search class="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-            <Input v-model="search" placeholder="Search products..." class="pl-9 h-9 text-xs border-border/40 shadow-none bg-background" />
+            <Input v-model="search" :placeholder="t('pos.search_product')" class="pl-9 h-9 text-xs border-border/40 shadow-none bg-background" />
           </div>
           <div class="flex flex-wrap gap-3">
             <Select v-model="categoryId" :options="categoryOptions" class="w-48 h-9 text-xs border-border/40 bg-background" />
@@ -136,7 +136,7 @@ const getStockBadge = (qty: number) => {
 
     <LoadingSpinner v-if="loading" />
 
-    <EmptyState v-else-if="products.length === 0" :icon="Package" title="No products found" />
+    <EmptyState v-else-if="products.length === 0" :icon="Package" :title="t('common.no_data')" />
 
     <div v-else>
       <div v-if="viewMode === 'list'" class="border rounded-lg overflow-hidden bg-card">
@@ -144,12 +144,12 @@ const getStockBadge = (qty: number) => {
           <table class="w-full text-left text-xs border-collapse">
             <thead>
               <tr class="border-b bg-muted/20">
-                <th class="px-4 py-3 font-semibold text-muted-foreground uppercase tracking-wider w-16">Image</th>
+                <th class="px-4 py-3 font-semibold text-muted-foreground uppercase tracking-wider w-16">{{ t('products.image') }}</th>
                 <th class="px-4 py-3 font-semibold text-muted-foreground uppercase tracking-wider">{{ t('products.product_name') }}</th>
                 <th class="px-4 py-3 font-semibold text-muted-foreground uppercase tracking-wider">{{ t('products.category') }}</th>
                 <th class="px-4 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-right">{{ t('products.base_price') }}</th>
-                <th class="px-4 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-center">Stock</th>
-                <th class="px-4 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-right w-20">Actions</th>
+                <th class="px-4 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-center">{{ t('products.stock') }}</th>
+                <th class="px-4 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-right w-20">{{ t('common.actions') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y">

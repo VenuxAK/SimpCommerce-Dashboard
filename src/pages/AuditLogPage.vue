@@ -18,10 +18,10 @@ const { items: logs, meta, loading, loadPage } = useListing<AuditLog>('/audit-lo
 const actionFilter = ref('')
 
 const actionOptions = [
-  { label: 'ALL ACTIONS', value: '' },
-  { label: 'CREATED', value: 'created' },
-  { label: 'UPDATED', value: 'updated' },
-  { label: 'DELETED', value: 'deleted' },
+  { label: t('common.all'), value: '' },
+  { label: t('common.create').toUpperCase(), value: 'created' },
+  { label: t('common.edit').toUpperCase(), value: 'updated' },
+  { label: t('common.delete').toUpperCase(), value: 'deleted' },
 ]
 
 useDebouncedWatch(actionFilter, () => loadPage(1))
@@ -31,7 +31,7 @@ loadPage(1)
 
 <template>
   <div class="space-y-8 animate-in fade-in duration-700">
-    <PageHeader title="Audit Log" subtitle="Review system activity and administrative changes" />
+    <PageHeader :title="t('nav.audit')" :subtitle="t('audit.manage')" />
 
     <Card class="shadow-none border-border/60 bg-muted/5">
       <CardContent class="p-4">
@@ -48,9 +48,9 @@ loadPage(1)
         <table class="w-full text-left text-xs border-collapse">
           <thead>
             <tr class="border-b bg-muted/20">
-              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider">Date</th>
-              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider">User</th>
-              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-center">Action</th>
+              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider">{{ t('common.date') }}</th>
+              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider">{{ t('nav.users') }}</th>
+              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-center">{{ t('common.actions') }}</th>
               <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider">Target</th>
               <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-right">ID</th>
             </tr>

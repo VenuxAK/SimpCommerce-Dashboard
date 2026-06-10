@@ -83,13 +83,13 @@ const remove = async (id: number) => {
 
 <template>
   <div class="space-y-8 animate-in fade-in duration-700">
-    <PageHeader title="Categories" subtitle="Organize your inventory into manageable groups" action-label="New Category" @action="openCreate" />
+    <PageHeader :title="t('categories.title')" :subtitle="t('categories.manage')" :action-label="t('categories.new_category')" @action="openCreate" />
 
     <div v-if="showForm" class="animate-in slide-in-from-top-4 duration-300">
       <Card class="max-w-xl border-border/60 shadow-none bg-muted/5">
         <CardHeader class="pb-3 border-b border-border/40">
           <CardTitle class="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-            {{ editing ? 'EDIT CATEGORY' : 'NEW CATEGORY' }}
+            {{ editing ? t('categories.edit_category').toUpperCase() : t('categories.new_category').toUpperCase() }}
           </CardTitle>
         </CardHeader>
         <CardContent class="p-6 space-y-4">
@@ -104,9 +104,9 @@ const remove = async (id: number) => {
               <Input v-model="description" class="h-9 text-xs" />
             </div>
             <div class="space-y-1.5 sm:col-span-2">
-              <label class="text-[10px] font-semibold text-muted-foreground uppercase ml-0.5">Parent Category</label>
+              <label class="text-[10px] font-semibold text-muted-foreground uppercase ml-0.5">{{ t('categories.parent_category') }}</label>
               <select v-model="parentId" class="w-full rounded-md border border-input bg-background px-3 h-9 text-xs shadow-sm">
-                <option :value="null">None (Top Level)</option>
+                <option :value="null">{{ t('categories.top_level') }}</option>
                 <option v-for="c in categories.filter((cat: any) => cat.id !== editing && !cat.parent_id)" :key="c.id" :value="c.id">
                   {{ c.name }}
                 </option>
@@ -115,7 +115,7 @@ const remove = async (id: number) => {
           </div>
           <div class="flex items-center gap-3 pt-2">
             <Button size="sm" :disabled="saving" @click="save" class="h-8 px-6 text-[10px] font-semibold">
-              {{ saving ? 'SAVING...' : t('common.save').toUpperCase() }}
+              {{ saving ? t('common.saving').toUpperCase() : t('common.save').toUpperCase() }}
             </Button>
             <Button variant="ghost" size="sm" @click="showForm = false" class="h-8 text-[10px] font-semibold">
               {{ t('common.cancel').toUpperCase() }}
@@ -136,7 +136,7 @@ const remove = async (id: number) => {
             <h3 class="font-semibold text-sm truncate group-hover:text-primary transition-colors">
               <span v-if="cat.parent_id" class="text-muted-foreground mr-1">↳</span>{{ cat.name }}
             </h3>
-            <p class="text-[10px] text-muted-foreground mt-1">{{ cat.products_count }} Products</p>
+            <p class="text-[10px] text-muted-foreground mt-1">{{ cat.products_count }} {{ t('categories.products_count') }}</p>
           </div>
           <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
             <Button variant="ghost" size="icon" class="size-7 rounded-full" @click="openEdit(cat)">

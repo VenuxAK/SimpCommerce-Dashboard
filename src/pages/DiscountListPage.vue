@@ -119,55 +119,55 @@ const remove = async (id: number) => {
 
 <template>
   <div class="space-y-8 animate-in fade-in duration-700">
-    <PageHeader title="Discounts" subtitle="Manage promotional offers and seasonal pricing" action-label="CREATE DISCOUNT" @action="openCreate" />
+    <PageHeader :title="t('nav.discounts')" :subtitle="t('discounts.manage')" action-label="CREATE DISCOUNT" @action="openCreate" />
 
     <div v-if="showForm" class="animate-in slide-in-from-top-4 duration-300">
       <Card class="max-w-2xl border-border/60 shadow-none bg-muted/5">
         <CardHeader class="pb-3 border-b border-border/40">
           <CardTitle class="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-            {{ editing ? 'EDIT DISCOUNT' : 'NEW DISCOUNT' }}
+            {{ editing ? t('common.edit').toUpperCase() : t('common.create').toUpperCase() }}
           </CardTitle>
         </CardHeader>
         <CardContent class="p-6 space-y-6">
           <div class="space-y-1.5">
-            <label class="text-[11px] font-medium text-foreground ml-0.5">Promotion Name</label>
-            <Input v-model="form.name" placeholder="e.g. Summer Sale 2026" class="h-10" />
+            <label class="text-[11px] font-medium text-foreground ml-0.5">{{ t('validation.name') }}</label>
+            <Input v-model="form.name" class="h-10" />
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div class="space-y-1.5">
-              <label class="text-[11px] font-medium text-foreground ml-0.5">Type</label>
+              <label class="text-[11px] font-medium text-foreground ml-0.5">{{ t('common.type') }}</label>
               <Select v-model="form.type" :options="typeOptions" />
             </div>
             <div class="space-y-1.5">
-              <label class="text-[11px] font-medium text-foreground ml-0.5">Value ({{ form.type === 'percentage' ? '%' : 'Ks' }})</label>
+              <label class="text-[11px] font-medium text-foreground ml-0.5">{{ t('common.value') }} ({{ form.type === 'percentage' ? '%' : 'Ks' }})</label>
               <Input v-model.number="form.value" type="number" min="0" class="h-10" />
             </div>
           </div>
 
           <div class="space-y-1.5">
-            <label class="text-[11px] font-medium text-foreground ml-0.5">Applies To</label>
+            <label class="text-[11px] font-medium text-foreground ml-0.5">{{ t('validation.applies_to') }}</label>
             <Select v-model="form.applies_to" :options="appliesToOptions" />
           </div>
 
           <div v-if="form.applies_to !== 'all'" class="grid gap-6 animate-in fade-in slide-in-from-top-1">
             <div v-if="form.applies_to === 'category'" class="space-y-1.5">
-              <label class="text-[11px] font-medium text-foreground ml-0.5">Category</label>
+              <label class="text-[11px] font-medium text-foreground ml-0.5">{{ t('products.category') }}</label>
               <Select v-model="form.category_id" :options="categoryOptions" />
             </div>
             <div v-if="form.applies_to === 'product'" class="space-y-1.5">
-              <label class="text-[11px] font-medium text-foreground ml-0.5">Product</label>
+              <label class="text-[11px] font-medium text-foreground ml-0.5">{{ t('products.title') }}</label>
               <Select v-model="form.product_id" :options="productOptions" />
             </div>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div class="space-y-1.5">
-              <label class="text-[11px] font-medium text-foreground ml-0.5">Start Date</label>
+              <label class="text-[11px] font-medium text-foreground ml-0.5">{{ t('common.start_date') }}</label>
               <Input v-model="form.starts_at" type="date" class="h-10" />
             </div>
             <div class="space-y-1.5">
-              <label class="text-[11px] font-medium text-foreground ml-0.5">End Date</label>
+              <label class="text-[11px] font-medium text-foreground ml-0.5">{{ t('common.end_date') }}</label>
               <Input v-model="form.ends_at" type="date" class="h-10" />
             </div>
           </div>
@@ -175,13 +175,13 @@ const remove = async (id: number) => {
           <div class="flex items-center gap-4 pt-2">
             <label class="flex items-center gap-2.5 cursor-pointer group">
               <input type="checkbox" v-model="form.is_active" class="size-4 rounded border-border text-primary focus:ring-primary/20 transition-all" />
-              <span class="text-xs font-medium text-foreground group-hover:text-primary transition-colors">Mark as Active</span>
+              <span class="text-xs font-medium text-foreground group-hover:text-primary transition-colors">{{ t('validation.is_active') }}</span>
             </label>
           </div>
 
           <div class="flex items-center gap-3 pt-4 border-t">
-            <Button size="sm" @click="save" class="h-9 px-8">SAVE DISCOUNT</Button>
-            <Button variant="ghost" size="sm" @click="showForm = false" class="h-9">CANCEL</Button>
+            <Button size="sm" @click="save" class="h-9 px-8">{{ t('common.save').toUpperCase() }}</Button>
+            <Button variant="ghost" size="sm" @click="showForm = false" class="h-9">{{ t('common.cancel').toUpperCase() }}</Button>
           </div>
         </CardContent>
       </Card>
@@ -189,7 +189,7 @@ const remove = async (id: number) => {
 
     <LoadingSpinner v-if="loading" />
 
-    <EmptyState v-else-if="discounts.length === 0" :icon="Tag" title="No active discounts found" />
+    <EmptyState v-else-if="discounts.length === 0" :icon="Tag" :title="t('common.no_data')" />
 
     <div v-else class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       <Card v-for="d in discounts" :key="d.id" class="group hover:border-primary/40 transition-all shadow-none flex flex-col h-full overflow-hidden">

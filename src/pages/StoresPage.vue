@@ -63,15 +63,15 @@ const remove = async (id: number) => {
 
 <template>
   <div class="space-y-8 animate-in fade-in duration-700">
-    <PageHeader title="Stores" action-label="Create Store" @action="openCreate" />
+    <PageHeader :title="t('stores.title')" :action-label="t('stores.create_store')" @action="openCreate" />
 
     <div v-if="showForm" class="rounded-lg border bg-muted/5 p-5 space-y-4 max-w-lg">
-      <input v-model="form.name" placeholder="Store name" class="w-full h-9 rounded-md border border-input bg-background px-3 text-xs" />
-      <input v-model="form.slug" placeholder="Slug" class="w-full h-9 rounded-md border border-input bg-background px-3 text-xs" />
-      <input v-model="form.description" placeholder="Description" class="w-full h-9 rounded-md border border-input bg-background px-3 text-xs" />
+      <input v-model="form.name" :placeholder="t('stores.store_name')" class="w-full h-9 rounded-md border border-input bg-background px-3 text-xs" />
+      <input v-model="form.slug" :placeholder="t('common.slug')" class="w-full h-9 rounded-md border border-input bg-background px-3 text-xs" />
+      <input v-model="form.description" :placeholder="t('common.description')" class="w-full h-9 rounded-md border border-input bg-background px-3 text-xs" />
       <div class="flex gap-2">
-        <Button size="sm" :disabled="saving" @click="save">{{ editing ? 'Update' : 'Create' }}</Button>
-        <Button variant="ghost" size="sm" @click="showForm = false">Cancel</Button>
+        <Button size="sm" :disabled="saving" @click="save">{{ editing ? t('common.edit') : t('common.create') }}</Button>
+        <Button variant="ghost" size="sm" @click="showForm = false">{{ t('common.cancel') }}</Button>
       </div>
     </div>
 

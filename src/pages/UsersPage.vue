@@ -96,7 +96,7 @@ const roleBadge = (role: string) => {
 
 <template>
   <div class="space-y-8 animate-in fade-in duration-700">
-    <PageHeader title="Users" subtitle="Manage platform access and assign security roles" action-label="New User" @action="openCreate" />
+    <PageHeader :title="t('nav.users')" :subtitle="t('users.manage')" action-label="New User" @action="openCreate" />
 
     <div v-if="showForm" class="animate-in slide-in-from-top-4 duration-300">
       <Card class="max-w-xl border-border/60 shadow-none bg-muted/5">
@@ -153,8 +153,8 @@ const roleBadge = (role: string) => {
               <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider">{{ t('users.name') }}</th>
               <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider hidden sm:table-cell">{{ t('auth.email') }}</th>
               <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider">{{ t('users.role') }}</th>
-              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider hidden md:table-cell">Created</th>
-              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-right w-20">Actions</th>
+              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{{ t('users.created') }}</th>
+              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-right w-20">{{ t('common.actions') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y">
@@ -166,7 +166,7 @@ const roleBadge = (role: string) => {
                   </div>
                   <div>
                     <span class="font-semibold text-foreground group-hover:text-primary transition-colors whitespace-nowrap">{{ u.name }}</span>
-                    <p v-if="u.id === authStore.user?.id" class="text-[9px] font-bold text-primary uppercase mt-0.5">Your Account</p>
+                    <p v-if="u.id === authStore.user?.id" class="text-[9px] font-bold text-primary uppercase mt-0.5">{{ t('users.your_account') }}</p>
                   </div>
                 </div>
               </td>

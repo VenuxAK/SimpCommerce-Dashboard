@@ -24,18 +24,18 @@ const status = ref('')
 const source = ref('')
 
 const statusOptions = [
-  { label: 'ALL STATUS', value: '' },
-  { label: 'PENDING', value: 'pending' },
-  { label: 'COMPLETED', value: 'completed' },
+  { label: t('common.all'), value: '' },
+  { label: t('sales.status_pending').toUpperCase(), value: 'pending' },
+  { label: t('sales.status_completed').toUpperCase(), value: 'completed' },
   { label: 'PROCESSING', value: 'processing' },
   { label: 'SHIPPED', value: 'shipped' },
   { label: 'DELIVERED', value: 'delivered' },
-  { label: 'CANCELLED', value: 'cancelled' },
-  { label: 'REFUNDED', value: 'refunded' },
+  { label: t('sales.status_cancelled').toUpperCase(), value: 'cancelled' },
+  { label: t('sales.status_refunded').toUpperCase(), value: 'refunded' },
 ]
 
 const sourceOptions = [
-  { label: 'ALL SOURCES', value: '' },
+  { label: t('common.all'), value: '' },
   { label: 'POS', value: 'pos' },
   { label: 'ONLINE', value: 'online' },
 ]
@@ -47,7 +47,7 @@ loadPage(1)
 
 <template>
   <div class="space-y-8 animate-in fade-in duration-700">
-    <PageHeader title="Orders" subtitle="Review and manage your store transactions" />
+    <PageHeader :title="t('sales.title')" :subtitle="t('sales.manage')" />
 
     <Card class="shadow-none border-border/60 bg-muted/5">
       <CardContent class="p-4">
@@ -79,7 +79,7 @@ loadPage(1)
               <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider">{{ t('common.date') }}</th>
               <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-center">{{ t('common.status') }}</th>
               <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-right">{{ t('sales.total') }}</th>
-              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-right w-20">Actions</th>
+              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-right w-20">{{ t('common.actions') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y">

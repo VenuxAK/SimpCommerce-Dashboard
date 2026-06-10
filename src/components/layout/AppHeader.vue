@@ -37,6 +37,7 @@ const breadcrumbLabels: Record<string, string> = {
   'product-create': 'products.new_product',
   'product-edit': 'products.edit_product',
   categories: 'nav.categories',
+  brands: 'brands.title',
   customers: 'nav.customers',
   'customer-detail': 'customers.title',
   sales: 'nav.sales',
@@ -65,7 +66,7 @@ const breadcrumbs = computed(() => {
 
 const currentStoreName = computed(() => {
   if (!auth.isRoot) return ''
-  return stores.value.find(s => s.slug === ui.activeStoreSlug)?.name || 'All Stores'
+  return stores.value.find(s => s.slug === ui.activeStoreSlug)?.name || t('common.all_stores')
 })
 
 async function fetchStores() {
@@ -125,7 +126,7 @@ onUnmounted(() => window.removeEventListener('click', handleClickOutside))
           class="flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-all border border-border/60"
         >
           <Building2 class="size-3.5" />
-          <span>{{ currentStoreName || 'All Stores' }}</span>
+          <span>{{ currentStoreName || t('common.all_stores') }}</span>
           <ChevronDown class="size-3" :class="storePickerOpen ? 'rotate-180' : ''" />
         </button>
         <div v-if="storePickerOpen"
@@ -136,7 +137,7 @@ onUnmounted(() => window.removeEventListener('click', handleClickOutside))
             class="flex w-full items-center rounded-sm px-2.5 py-2 text-xs hover:bg-accent transition-all"
             :class="!ui.activeStoreSlug ? 'font-medium text-foreground bg-accent' : 'text-muted-foreground'"
           >
-            All Stores
+            {{ t('common.all_stores') }}
           </button>
           <button
             v-for="s in stores"
@@ -168,7 +169,7 @@ onUnmounted(() => window.removeEventListener('click', handleClickOutside))
       <button
         @click="themeState.toggle()"
         class="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-all"
-        :title="themeState.isDark.value ? 'Light mode' : 'Dark mode'"
+        :title="themeState.isDark.value ? t('common.light_mode') : t('common.dark_mode')"
       >
         <Sun v-if="themeState.isDark.value" class="size-4" />
         <Moon v-else class="size-4" />

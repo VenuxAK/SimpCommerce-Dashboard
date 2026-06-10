@@ -80,7 +80,7 @@ const closeSession = async () => {
 
 <template>
   <div class="space-y-8 animate-in fade-in duration-700">
-    <PageHeader title="Cash Register" subtitle="Manage day-to-day cash operations and track register sessions" />
+    <PageHeader :title="t('nav.cash')" :subtitle="t('cash.manage')" />
 
     <LoadingSpinner v-if="loading" />
 
@@ -89,13 +89,13 @@ const closeSession = async () => {
         :class="activeSession ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20' : 'border-border'">
         <Wallet class="size-6" :class="activeSession ? 'text-green-600' : 'text-muted-foreground'" />
         <div class="flex-1">
-          <p class="font-medium text-foreground">{{ activeSession ? 'Register Open' : 'Register Closed' }}</p>
+          <p class="font-medium text-foreground">{{ activeSession ? t('cash.open') : t('cash.register_closed') }}</p>
           <p v-if="activeSession" class="text-sm text-muted-foreground">
-            Opened: {{ activeSession.opened_at }} · Balance: {{ (activeSession.opening_balance || 0).toLocaleString() }} Ks
+            {{ t('common.date') }}: {{ activeSession.opened_at }} · {{ t('reports.total_sales') }}: {{ (activeSession.opening_balance || 0).toLocaleString() }} Ks
           </p>
         </div>
-        <Button v-if="!activeSession" variant="default" @click="showOpenDialog = true">Open Register</Button>
-        <Button v-else variant="destructive" @click="showCloseDialog = true">Close Register</Button>
+        <Button v-if="!activeSession" variant="default" @click="showOpenDialog = true">{{ t('cash.open_register') }}</Button>
+        <Button v-else variant="destructive" @click="showCloseDialog = true">{{ t('cash.close') }}</Button>
       </div>
 
       <Card v-if="showOpenDialog" class="max-w-sm">
@@ -121,16 +121,16 @@ const closeSession = async () => {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Session History</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{{ t('cash.session_history') }}</CardTitle></CardHeader>
         <CardContent class="p-0 overflow-x-auto">
           <table class="w-full text-sm">
             <thead class="border-b bg-muted/30">
               <tr>
-                <th class="px-3 sm:px-4 py-3 text-left text-muted-foreground font-medium">Date</th>
-                <th class="px-3 sm:px-4 py-3 text-left text-muted-foreground font-medium hidden sm:table-cell">User</th>
-                <th class="px-3 sm:px-4 py-3 text-right text-muted-foreground font-medium">Open</th>
-                <th class="px-3 sm:px-4 py-3 text-right text-muted-foreground font-medium">Close</th>
-                <th class="px-3 sm:px-4 py-3 text-right text-muted-foreground font-medium">Diff</th>
+                <th class="px-3 sm:px-4 py-3 text-left text-muted-foreground font-medium">{{ t('common.date') }}</th>
+                <th class="px-3 sm:px-4 py-3 text-left text-muted-foreground font-medium hidden sm:table-cell">{{ t('nav.users') }}</th>
+                <th class="px-3 sm:px-4 py-3 text-right text-muted-foreground font-medium">{{ t('cash.open') }}</th>
+                <th class="px-3 sm:px-4 py-3 text-right text-muted-foreground font-medium">{{ t('cash.close') }}</th>
+                <th class="px-3 sm:px-4 py-3 text-right text-muted-foreground font-medium">{{ t('common.diff') }}</th>
               </tr>
             </thead>
             <tbody>

@@ -19,7 +19,9 @@
     "backups": "Backups",
     "no_backups": "No backups found.",
     "audit": "Audit Logs",
-    "stores": "Stores"
+    "stores": "Stores",
+    "management": "Management",
+    "system": "System"
   },
   "auth": {
     "login": "Login",
@@ -59,7 +61,22 @@
     "error_short": "Error",
     "select": "Select...",
     "left": "left",
-    "theme_color": "Theme Color"
+    "theme_color": "Theme Color",
+    "refund": "Refund",
+    "import": "Import",
+    "export": "Export",
+    "slug": "Slug",
+    "code": "Code",
+    "type": "Type",
+    "value": "Value",
+    "start_date": "Start Date",
+    "end_date": "End Date",
+    "amount": "Amount",
+    "diff": "Diff",
+    "saving": "Saving...",
+    "all_stores": "All Stores",
+    "light_mode": "Light mode",
+    "dark_mode": "Dark mode"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -118,7 +135,11 @@
     "new_category": "New Category",
     "name": "Category Name",
     "description": "Description",
-    "products_count": "Products"
+    "products_count": "Products",
+    "manage": "Organize products into hierarchical categories",
+    "edit_category": "Edit Category",
+    "parent_category": "Parent Category",
+    "top_level": "None (Top Level)"
   },
   "brands": {
     "title": "Brands",
@@ -126,7 +147,8 @@
     "edit_brand": "Edit Brand",
     "name": "Brand Name",
     "logo": "Logo",
-    "no_brands": "No brands yet."
+    "no_brands": "No brands yet.",
+    "manage": "Manage product brands and manufacturers"
   },
   "customers": {
     "title": "Customers",
@@ -137,7 +159,8 @@
     "address": "Address",
     "loyalty_points": "Loyalty Points",
     "order_history": "Order History",
-    "no_orders": "No orders yet."
+    "no_orders": "No orders yet.",
+    "manage": "Manage customer profiles and purchase history"
   },
   "sales": {
     "title": "Sales History",
@@ -149,7 +172,8 @@
     "status_completed": "Completed",
     "status_cancelled": "Cancelled",
     "status_refunded": "Refunded",
-    "status_pending": "Pending"
+    "status_pending": "Pending",
+    "manage": "View and manage completed sales transactions"
   },
   "invoices": {
     "title": "Invoices",
@@ -161,7 +185,8 @@
     "status_paid": "Paid",
     "status_cancelled": "Cancelled",
     "status_refunded": "Refunded",
-    "status_draft": "Draft"
+    "status_draft": "Draft",
+    "manage": "Manage billing and customer invoices"
   },
   "reports": {
     "title": "Reports",
@@ -173,7 +198,10 @@
     "order_count": "Orders",
     "avg_order": "Avg Order Value",
     "items_sold": "Items Sold",
-    "daily": "Daily Breakdown"
+    "daily": "Daily Breakdown",
+    "manage": "Business performance and analytics",
+    "inventory": "Inventory",
+    "customers": "Customers"
   },
   "language": {
     "en": "English",
@@ -188,7 +216,10 @@
     "password": "Password",
     "password_leave": "Leave blank to keep current",
     "role": "Role",
-    "cannot_delete_self": "You cannot delete your own account."
+    "cannot_delete_self": "You cannot delete your own account.",
+    "manage": "Manage platform access and assign security roles",
+    "created": "Created",
+    "your_account": "Your Account"
   },
   "profile": {
     "title": "Profile",
@@ -237,5 +268,30 @@
     "no_discount": "No discount",
     "contact_person": "Contact Person",
     "no_suppliers": "No suppliers yet."
+  },
+  "suppliers": {
+    "manage": "Manage product suppliers and contact details"
+  },
+  "discounts": {
+    "manage": "Manage promotional discounts and coupon codes"
+  },
+  "stock": {
+    "manage": "Audit log of all inventory changes and adjustments"
+  },
+  "cash": {
+    "manage": "Manage day-to-day cash operations and track register sessions",
+    "register_closed": "Register Closed",
+    "open_register": "Open Register",
+    "session_history": "Session History",
+    "open": "Open",
+    "close": "Close"
+  },
+  "audit": {
+    "manage": "Review system activity and administrative changes"
+  },
+  "stores": {
+    "title": "Stores",
+    "manage": "Manage store locations and settings",
+    "create_store": "Create Store"
   }
 }

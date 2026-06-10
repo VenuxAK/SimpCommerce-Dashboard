@@ -23,11 +23,11 @@ const search = ref('')
 const status = ref('')
 
 const statusOptions = [
-  { label: 'ALL STATUS', value: '' },
-  { label: 'PAID', value: 'paid' },
-  { label: 'ISSUED', value: 'issued' },
-  { label: 'CANCELLED', value: 'cancelled' },
-  { label: 'REFUNDED', value: 'refunded' },
+  { label: t('common.all'), value: '' },
+  { label: t('invoices.status_paid').toUpperCase(), value: 'paid' },
+  { label: t('invoices.status_issued').toUpperCase(), value: 'issued' },
+  { label: t('invoices.status_cancelled').toUpperCase(), value: 'cancelled' },
+  { label: t('invoices.status_refunded').toUpperCase(), value: 'refunded' },
 ]
 
 useDebouncedWatch([search, status], () => loadPage(1))
@@ -37,7 +37,7 @@ loadPage(1)
 
 <template>
   <div class="space-y-8 animate-in fade-in duration-700">
-    <PageHeader title="Invoices" subtitle="Manage and track your official billing documents" />
+    <PageHeader :title="t('invoices.title')" :subtitle="t('invoices.manage')" />
 
     <Card class="shadow-none border-border/60 bg-muted/5">
       <CardContent class="p-4">
@@ -65,9 +65,9 @@ loadPage(1)
               <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider">{{ t('invoices.invoice_number') }}</th>
               <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider">{{ t('invoices.issued_date') }}</th>
               <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider">{{ t('invoices.due_date') }}</th>
-              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-center">Status</th>
-              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-right">Amount</th>
-              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-right w-20">Actions</th>
+              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-center">{{ t('common.status') }}</th>
+              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-right">{{ t('common.amount') }}</th>
+              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-right w-20">{{ t('common.actions') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y">

@@ -22,11 +22,11 @@ const dateTo = ref('')
 const reasonFilter = ref('')
 
 const reasonOptions = [
-  { label: 'ALL REASONS', value: '' },
-  { label: 'SALE', value: 'sale' },
-  { label: 'ADJUSTMENT', value: 'adjustment' },
-  { label: 'CANCELLED', value: 'cancelled' },
-  { label: 'REFUNDED', value: 'refunded' },
+  { label: t('common.all'), value: '' },
+  { label: t('validation.sale').toUpperCase(), value: 'sale' },
+  { label: t('validation.adjustment').toUpperCase(), value: 'adjustment' },
+  { label: t('validation.cancel').toUpperCase(), value: 'cancelled' },
+  { label: t('validation.refund').toUpperCase(), value: 'refunded' },
 ]
 
 useDebouncedWatch([reasonFilter, dateFrom, dateTo], () => loadPage(1))
@@ -44,7 +44,7 @@ const reasonLabel = (r: string) => {
 
 <template>
   <div class="space-y-8 animate-in fade-in duration-700">
-    <PageHeader title="Stock Movements" subtitle="Audit log of all inventory changes and adjustments" />
+    <PageHeader :title="t('nav.stock')" :subtitle="t('stock.manage')" />
 
     <Card class="shadow-none border-border/60 bg-muted/5">
       <CardContent class="p-4">

@@ -2,14 +2,14 @@
 import { ref, onMounted, computed, onUnmounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Search, ShoppingCart, X, Plus, Minus, User, Barcode, Maximize2, Percent, Check, CreditCard, Wallet } from 'lucide-vue-next'
-import { Button } from '../components/ui/button'
-import { Card, CardContent } from '../components/ui/card'
-import Input from '../components/ui/Input.vue'
-import Select from '../components/ui/Select.vue'
-import { Badge } from '../components/ui/badge'
-import { useNotify } from '../lib/notify'
-import { useProductApi, useCategoryApi, useDiscountApi, useCustomerApi, useOrderApi, useVariantApi } from '../composables/api'
-import type { Discount, Product, ProductVariant, Customer } from '../types'
+import { Button } from '../../components/ui/button'
+import { Card, CardContent } from '../../components/ui/card'
+import Input from '../../components/ui/Input.vue'
+import Select from '../../components/ui/Select.vue'
+import { Badge } from '../../components/ui/badge'
+import { useNotify } from '../../lib/notify'
+import { useProductApi, useCategoryApi, useDiscountApi, useCustomerApi, useOrderApi, useVariantApi } from '../../composables/api'
+import type { Discount, Product, ProductVariant, Customer } from '../../types'
 
 const { t } = useI18n()
 const { success, error } = useNotify()

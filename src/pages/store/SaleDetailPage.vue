@@ -2,14 +2,14 @@
 import { ref, onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
-import { Button } from '../components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
-import { Badge } from '../components/ui/badge'
-import Input from '../components/ui/Input.vue'
+import { Button } from '../../components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
+import { Badge } from '../../components/ui/badge'
+import Input from '../../components/ui/Input.vue'
 import { RotateCcw, ChevronLeft, Wallet, CreditCard, Check, Package, Truck, XCircle, MapPin } from 'lucide-vue-next'
-import { useNotify } from '../lib/notify'
-import { useOrderApi } from '../composables/api'
-import type { Order } from '../types'
+import { useNotify } from '../../lib/notify'
+import { useOrderApi } from '../../composables/api'
+import type { Order } from '../../types'
 
 const { t } = useI18n()
 const route = useRoute()

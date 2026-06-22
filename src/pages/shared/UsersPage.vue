@@ -2,20 +2,20 @@
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Plus, Pencil, Trash2, Search, ShieldCheck } from 'lucide-vue-next'
-import { Button } from '../components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
-import { Badge } from '../components/ui/badge'
-import Input from '../components/ui/Input.vue'
-import Select from '../components/ui/Select.vue'
-import Pagination from '../components/Pagination.vue'
-import LoadingSpinner from '../components/LoadingSpinner.vue'
-import EmptyState from '../components/EmptyState.vue'
-import PageHeader from '../components/PageHeader.vue'
-import { useNotify } from '../lib/notify'
-import { useAuthStore } from '../stores/auth'
-import { useListing } from '../composables'
-import { useUserApi } from '../composables/api'
-import type { User } from '../types'
+import { Button } from '../../components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
+import { Badge } from '../../components/ui/badge'
+import Input from '../../components/ui/Input.vue'
+import Select from '../../components/ui/Select.vue'
+import Pagination from '../../components/Pagination.vue'
+import LoadingSpinner from '../../components/LoadingSpinner.vue'
+import EmptyState from '../../components/EmptyState.vue'
+import PageHeader from '../../components/PageHeader.vue'
+import { useNotify } from '../../lib/notify'
+import { useAuthStore } from '../../stores/auth'
+import { useListing } from '../../composables'
+import { useUserApi } from '../../composables/api'
+import type { User } from '../../types'
 
 const { t } = useI18n()
 const { success, error } = useNotify()
@@ -25,13 +25,24 @@ const userApi = useUserApi()
 const { items: users, meta, loading, loadPage } = useListing<User>('/users')
 const showForm = ref(false)
 const editing = ref<User | null>(null)
-const form = ref({ name: '', email: '', password: '', role: 'staff' })
+const form = ref({ name: '', email: '', password: '', role: 'sales_staff' })
 const search = ref('')
 
-const roleOptions = [
-  { label: 'STAFF', value: 'staff' },
-  { label: 'ADMIN', value: 'admin' },
-]
+const roleOptions = computed(() => {
+  if (authStore.isRoot) {
+    return [
+      { label: 'Store Owner', value: 'store_owner' },
+      { label: 'Store Manager', value: 'store_manager' },
+      { label: 'Inventory Staff', value: 'inventory_staff' },
+      { label: 'Sales Staff', value: 'sales_staff' },
+    ]
+  }
+  return [
+    { label: 'Store Manager', value: 'store_manager' },
+    { label: 'Inventory Staff', value: 'inventory_staff' },
+    { label: 'Sales Staff', value: 'sales_staff' },
+  ]
+})
 
 const filtered = computed(() =>
   users.value.filter((u) => {
@@ -43,7 +54,7 @@ const filtered = computed(() =>
 
 const openCreate = () => {
   editing.value = null
-  form.value = { name: '', email: '', password: '', role: 'staff' }
+  form.value = { name: '', email: '', password: '', role: 'sales_staff' }
   showForm.value = true
 }
 
@@ -55,13 +66,19 @@ const openEdit = (user: User) => {
 
 const save = async () => {
   try {
+    const payload: Record<string, any> = { name: form.value.name, email: form.value.email, role: form.value.role }
+
+    if (!authStore.isRoot && authStore.user?.store_id) {
+      payload.store_id = authStore.user.store_id
+    }
+
     if (editing.value) {
-      const payload: Record<string, any> = { name: form.value.name, email: form.value.email, role: form.value.role }
       if (form.value.password) payload.password = form.value.password
       await userApi.update(editing.value.id, payload)
       success(t('common.save'))
     } else {
-      await userApi.create(form.value)
+      payload.password = form.value.password
+      await userApi.create(payload)
       success(t('common.create'))
     }
     showForm.value = false
@@ -90,7 +107,10 @@ const remove = async (id: number, name: string) => {
 }
 
 const roleBadge = (role: string) => {
-  return role === 'admin' ? 'default' as const : 'secondary' as const
+  if (role === 'root') return 'default' as const
+  if (role === 'store_owner') return 'warning' as const
+  if (role === 'store_manager') return 'default' as const
+  return 'secondary' as const
 }
 </script>
 
@@ -173,7 +193,7 @@ const roleBadge = (role: string) => {
               <td class="px-6 py-4 text-muted-foreground font-medium hidden sm:table-cell truncate max-w-40">{{ u.email }}</td>
               <td class="px-6 py-4">
                 <Badge :variant="roleBadge(u.role)" class="h-5 px-2 text-[9px] font-medium uppercase tracking-wider">
-                  {{ u.role }}
+                  {{ u.role === 'store_owner' ? 'Owner' : u.role === 'store_manager' ? 'Manager' : u.role === 'inventory_staff' ? 'Inventory' : u.role === 'sales_staff' ? 'Sales' : u.role }}
                 </Badge>
               </td>
               <td class="px-6 py-4 text-muted-foreground font-medium hidden md:table-cell tabular-nums">{{ u.created_at?.split('T')[0] }}</td>

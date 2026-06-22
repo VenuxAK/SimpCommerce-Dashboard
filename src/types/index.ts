@@ -1,8 +1,10 @@
+export type UserRole = 'root' | 'store_owner' | 'store_manager' | 'inventory_staff' | 'sales_staff'
+
 export interface User {
   id: number
   name: string
   email: string
-  role: string
+  role: UserRole
   store_id: number | null
   created_at?: string
   updated_at?: string

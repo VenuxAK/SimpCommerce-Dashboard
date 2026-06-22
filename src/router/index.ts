@@ -1,5 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import { systemRoutes } from './system-routes'
+import { storeRoutes } from './store-routes'
+
+const appMode = import.meta.env.VITE_APP_MODE || 'store'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -14,30 +18,7 @@ const router = createRouter({
       path: '/',
       component: () => import('../components/layout/AppLayout.vue'),
       meta: { auth: true },
-      children: [
-        { path: '', name: 'dashboard', component: () => import('../pages/DashboardPage.vue') },
-        { path: 'pos', name: 'pos', component: () => import('../pages/POSPage.vue') },
-        { path: 'products', name: 'products', component: () => import('../pages/ProductListPage.vue') },
-        { path: 'products/new', name: 'product-create', component: () => import('../pages/ProductFormPage.vue') },
-        { path: 'products/:id/edit', name: 'product-edit', component: () => import('../pages/ProductFormPage.vue') },
-        { path: 'categories', name: 'categories', component: () => import('../pages/CategoryListPage.vue') },
-        { path: 'brands', name: 'brands', component: () => import('../pages/BrandListPage.vue') },
-        { path: 'customers', name: 'customers', component: () => import('../pages/CustomerListPage.vue') },
-        { path: 'customers/:id', name: 'customer-detail', component: () => import('../pages/CustomerDetailPage.vue') },
-        { path: 'sales', name: 'sales', component: () => import('../pages/SalesListPage.vue') },
-        { path: 'sales/:id', name: 'sale-detail', component: () => import('../pages/SaleDetailPage.vue') },
-        { path: 'invoices', name: 'invoices', component: () => import('../pages/InvoiceListPage.vue') },
-        { path: 'invoices/:id', name: 'invoice-detail', component: () => import('../pages/InvoiceDetailPage.vue') },
-        { path: 'reports', name: 'reports', component: () => import('../pages/ReportsPage.vue') },
-        { path: 'discounts', name: 'discounts', component: () => import('../pages/DiscountListPage.vue') },
-        { path: 'suppliers', name: 'suppliers', component: () => import('../pages/SupplierListPage.vue') },
-        { path: 'cash-sessions', name: 'cash-sessions', component: () => import('../pages/CashSessionsPage.vue') },
-        { path: 'stores', name: 'stores', component: () => import('../pages/StoresPage.vue'), meta: { root: true } },
-        { path: 'audit-logs', name: 'audit-logs', component: () => import('../pages/AuditLogPage.vue'), meta: { root: true } },
-        { path: 'stock', name: 'stock', component: () => import('../pages/StockHistoryPage.vue') },
-        { path: 'users', name: 'users', component: () => import('../pages/UsersPage.vue'), meta: { root: true } },
-        { path: 'profile', name: 'profile', component: () => import('../pages/ProfilePage.vue') },
-      ],
+      children: appMode === 'system' ? systemRoutes : storeRoutes,
     },
   ],
 })
@@ -54,10 +35,6 @@ router.beforeEach(async (to) => {
   }
 
   if (to.meta.guest && auth.isAuthenticated) {
-    return '/'
-  }
-
-  if (to.meta.root && !auth.isRoot) {
     return '/'
   }
 })

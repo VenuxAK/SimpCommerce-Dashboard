@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
+    "build:system": "VITE_APP_MODE=system vue-tsc -b && VITE_APP_MODE=system vite build --outDir dist/system",
+    "build:store": "VITE_APP_MODE=store vue-tsc -b && VITE_APP_MODE=store vite build --outDir dist/store",
     "preview": "vite preview"
   },
   "dependencies": {

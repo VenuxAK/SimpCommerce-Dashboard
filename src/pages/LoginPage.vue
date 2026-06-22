@@ -24,13 +24,6 @@ const handleLogin = async () => {
   try {
     await auth.login(email.value, password.value)
 
-    if (ui.isStoreFixed && auth.isRoot) {
-      error.value = 'Root users cannot sign in to a per-store dashboard. Please use the root dashboard.'
-      auth.logout()
-      loading.value = false
-      return
-    }
-
     router.push('/')
   } catch (err: any) {
     if (!err.response) {

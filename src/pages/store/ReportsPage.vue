@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Button } from '../components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
-import Input from '../components/ui/Input.vue'
-import LoadingSpinner from '../components/LoadingSpinner.vue'
-import PageHeader from '../components/PageHeader.vue'
-import { useNotify } from '../lib/notify'
-import { useReportApi } from '../composables/api'
-import type { SalesReport } from '../types'
+import { Button } from '../../components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
+import Input from '../../components/ui/Input.vue'
+import LoadingSpinner from '../../components/LoadingSpinner.vue'
+import PageHeader from '../../components/PageHeader.vue'
+import { useNotify } from '../../lib/notify'
+import { useReportApi } from '../../composables/api'
+import type { SalesReport } from '../../types'
 import { Wallet, CreditCard } from 'lucide-vue-next'
 
 const { t } = useI18n()

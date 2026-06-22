@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Button } from '../components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
-import { Badge } from '../components/ui/badge'
-import { useNotify } from '../lib/notify'
+import { Button } from '../../components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
+import { Badge } from '../../components/ui/badge'
+import { useNotify } from '../../lib/notify'
 import { Plus, Pencil, Trash2 } from 'lucide-vue-next'
-import LoadingSpinner from '../components/LoadingSpinner.vue'
-import PageHeader from '../components/PageHeader.vue'
-import { useListing } from '../composables'
-import { useStoreApi } from '../composables/api'
+import LoadingSpinner from '../../components/LoadingSpinner.vue'
+import PageHeader from '../../components/PageHeader.vue'
+import { useListing } from '../../composables'
+import { useStoreApi } from '../../composables/api'
 
 const { t } = useI18n()
 const { success, error } = useNotify()

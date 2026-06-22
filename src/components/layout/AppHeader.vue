@@ -65,8 +65,7 @@ const breadcrumbs = computed(() => {
 })
 
 const currentStoreName = computed(() => {
-  if (!auth.isRoot) return ''
-  return stores.value.find(s => s.slug === ui.activeStoreSlug)?.name || t('common.all_stores')
+  return stores.value.find(s => s.slug === ui.activeStoreSlug)?.name || ui.activeStoreSlug || t('common.all_stores')
 })
 
 async function fetchStores() {
@@ -111,7 +110,9 @@ function handleClickOutside(e: MouseEvent) {
 onMounted(() => {
   document.documentElement.setAttribute('lang', locale.value)
   window.addEventListener('click', handleClickOutside)
-  if (auth.isRoot) fetchStores()
+  if (auth.isRoot) {
+    fetchStores()
+  }
 })
 onUnmounted(() => window.removeEventListener('click', handleClickOutside))
 </script>
@@ -119,35 +120,41 @@ onUnmounted(() => window.removeEventListener('click', handleClickOutside))
 <template>
   <div class="flex items-center justify-between w-full">
     <div class="flex items-center gap-3">
-      <!-- Store Selector (root only, hidden in fixed-store deployments) -->
-      <div v-if="auth.isRoot && !ui.isStoreFixed" class="relative store-picker">
-        <button
-          @click="storePickerOpen = !storePickerOpen"
-          class="flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-all border border-border/60"
-        >
+      <!-- Store Selector (root in multi-store mode, or label for store users) -->
+      <div v-if="!ui.isStoreFixed" class="relative store-picker">
+        <template v-if="auth.isRoot">
+          <button
+            @click="storePickerOpen = !storePickerOpen"
+            class="flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-all border border-border/60"
+          >
+            <Building2 class="size-3.5" />
+            <span>{{ currentStoreName }}</span>
+            <ChevronDown class="size-3" :class="storePickerOpen ? 'rotate-180' : ''" />
+          </button>
+          <div v-if="storePickerOpen"
+            class="absolute left-0 top-full mt-1.5 w-48 rounded-md border bg-popover p-1 shadow-lg z-50 text-popover-foreground animate-in fade-in zoom-in-95"
+          >
+            <button
+              @click="selectStore('')"
+              class="flex w-full items-center rounded-sm px-2.5 py-2 text-xs hover:bg-accent transition-all"
+              :class="!ui.activeStoreSlug ? 'font-medium text-foreground bg-accent' : 'text-muted-foreground'"
+            >
+              {{ t('common.all_stores') }}
+            </button>
+            <button
+              v-for="s in stores"
+              :key="s.id"
+              @click="selectStore(s.slug)"
+              class="flex w-full items-center rounded-sm px-2.5 py-2 text-xs hover:bg-accent transition-all"
+              :class="ui.activeStoreSlug === s.slug ? 'font-medium text-foreground bg-accent' : 'text-muted-foreground'"
+            >
+              {{ s.name }}
+            </button>
+          </div>
+        </template>
+        <div v-else-if="currentStoreName" class="flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground border border-border/60">
           <Building2 class="size-3.5" />
-          <span>{{ currentStoreName || t('common.all_stores') }}</span>
-          <ChevronDown class="size-3" :class="storePickerOpen ? 'rotate-180' : ''" />
-        </button>
-        <div v-if="storePickerOpen"
-          class="absolute left-0 top-full mt-1.5 w-48 rounded-md border bg-popover p-1 shadow-lg z-50 text-popover-foreground animate-in fade-in zoom-in-95"
-        >
-          <button
-            @click="selectStore('')"
-            class="flex w-full items-center rounded-sm px-2.5 py-2 text-xs hover:bg-accent transition-all"
-            :class="!ui.activeStoreSlug ? 'font-medium text-foreground bg-accent' : 'text-muted-foreground'"
-          >
-            {{ t('common.all_stores') }}
-          </button>
-          <button
-            v-for="s in stores"
-            :key="s.id"
-            @click="selectStore(s.slug)"
-            class="flex w-full items-center rounded-sm px-2.5 py-2 text-xs hover:bg-accent transition-all"
-            :class="ui.activeStoreSlug === s.slug ? 'font-medium text-foreground bg-accent' : 'text-muted-foreground'"
-          >
-            {{ s.name }}
-          </button>
+          <span>{{ currentStoreName }}</span>
         </div>
       </div>
 

@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import api from '../lib/axios'
-import type { User } from '../types'
+import type { User, UserRole } from '../types'
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(localStorage.getItem('token'))
@@ -9,8 +9,35 @@ export const useAuthStore = defineStore('auth', () => {
   const initialized = ref(false)
 
   const isAuthenticated = computed(() => !!token.value)
-  const isAdmin = computed(() => user.value?.role === 'root' || user.value?.role === 'store_admin')
-  const isRoot = computed(() => user.value?.role === 'root')
+  const role = computed(() => user.value?.role ?? '')
+
+  const isRoot = computed(() => role.value === 'root')
+  const isStoreOwner = computed(() => role.value === 'store_owner')
+  const isStoreManager = computed(() => role.value === 'store_manager')
+  const isInventoryStaff = computed(() => role.value === 'inventory_staff')
+  const isSalesStaff = computed(() => role.value === 'sales_staff')
+
+  const isStoreUser = computed(() =>
+    isStoreOwner.value || isStoreManager.value || isInventoryStaff.value || isSalesStaff.value,
+  )
+
+  const canManageCatalog = computed(() =>
+    isRoot.value || isStoreOwner.value || isStoreManager.value || isInventoryStaff.value,
+  )
+
+  const canManageSales = computed(() =>
+    isRoot.value || isStoreOwner.value || isStoreManager.value,
+  )
+
+  const canManageStoreUsers = computed(() =>
+    isRoot.value || isStoreOwner.value,
+  )
+
+  const canManageSystem = computed(() => isRoot.value)
+
+  function hasRole(r: UserRole): boolean {
+    return role.value === r
+  }
 
   async function login(email: string, password: string) {
     const { data } = await api.post('/auth/login', { email, password })
@@ -45,5 +72,10 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('token')
   }
 
-  return { token, user, isAuthenticated, isAdmin, isRoot, initialized, login, fetchUser, setUser, logout }
+  return {
+    token, user, isAuthenticated, role, initialized,
+    isRoot, isStoreOwner, isStoreManager, isInventoryStaff, isSalesStaff,
+    isStoreUser, canManageCatalog, canManageSales, canManageStoreUsers, canManageSystem,
+    hasRole, login, fetchUser, setUser, logout,
+  }
 })

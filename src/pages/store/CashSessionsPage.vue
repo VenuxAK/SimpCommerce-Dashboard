@@ -2,14 +2,14 @@
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Wallet, X } from 'lucide-vue-next'
-import { Button } from '../components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
-import Input from '../components/ui/Input.vue'
-import LoadingSpinner from '../components/LoadingSpinner.vue'
-import PageHeader from '../components/PageHeader.vue'
-import { useNotify } from '../lib/notify'
-import { useCashSessionApi } from '../composables/api'
-import type { CashSession } from '../types'
+import { Button } from '../../components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
+import Input from '../../components/ui/Input.vue'
+import LoadingSpinner from '../../components/LoadingSpinner.vue'
+import PageHeader from '../../components/PageHeader.vue'
+import { useNotify } from '../../lib/notify'
+import { useCashSessionApi } from '../../composables/api'
+import type { CashSession } from '../../types'
 
 const { t } = useI18n()
 const { success, error } = useNotify()

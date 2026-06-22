@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useAuthStore } from '../stores/auth'
-import { Button } from '../components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
-import { Badge } from '../components/ui/badge'
-import Input from '../components/ui/Input.vue'
-import { useNotify } from '../lib/notify'
-import { useProfileApi } from '../composables/api'
+import { useAuthStore } from '../../stores/auth'
+import { Button } from '../../components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
+import { Badge } from '../../components/ui/badge'
+import Input from '../../components/ui/Input.vue'
+import { useNotify } from '../../lib/notify'
+import { useProfileApi } from '../../composables/api'
 
 const { t } = useI18n()
 const auth = useAuthStore()
@@ -49,7 +49,7 @@ const save = async () => {
     <Card>
       <CardHeader class="flex flex-row items-center justify-between">
         <CardTitle>{{ t('profile.info') }}</CardTitle>
-        <Badge :variant="auth.user?.role === 'admin' ? 'default' : 'secondary'">{{ auth.user?.role }}</Badge>
+        <Badge :variant="auth.user?.role === 'root' || auth.user?.role === 'store_owner' || auth.user?.role === 'store_manager' ? 'default' : 'secondary'">{{ auth.user?.role }}</Badge>
       </CardHeader>
       <CardContent class="space-y-4">
         <div class="space-y-2">

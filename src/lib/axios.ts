@@ -19,6 +19,9 @@ api.interceptors.request.use((config) => {
     config.headers['X-Store'] = ui.activeStoreSlug
   }
 
+  const locale = localStorage.getItem('locale') || 'en'
+  config.headers['Accept-Language'] = locale
+
   return config
 })
 

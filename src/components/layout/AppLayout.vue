@@ -1,17 +1,22 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { Menu } from 'lucide-vue-next'
-import AppSidebar from './AppSidebar.vue'
+import SystemSidebar from './SystemSidebar.vue'
+import StoreSidebar from './StoreSidebar.vue'
 import AppHeader from './AppHeader.vue'
 import { useUIStore } from '../../stores/ui'
 
+const appMode = import.meta.env.VITE_APP_MODE || 'store'
+
 const sidebarOpen = ref(false)
 const ui = useUIStore()
+
+const SidebarComponent = computed(() => appMode === 'system' ? SystemSidebar : StoreSidebar)
 </script>
 
 <template>
   <div class="flex min-h-screen bg-background text-foreground transition-colors selection:bg-primary/20">
-    <AppSidebar :open="sidebarOpen" @close="sidebarOpen = false" />
+    <component :is="SidebarComponent" :open="sidebarOpen" @close="sidebarOpen = false" />
     <div
       :class="[
         'flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out',

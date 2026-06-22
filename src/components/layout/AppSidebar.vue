@@ -38,41 +38,55 @@ const ui = useUIStore()
 const props = defineProps<{ open: boolean }>()
 const emit = defineEmits<{ close: [] }>()
 
-const navGroups = [
+type NavItem = {
+  to: string
+  icon: any
+  label: string
+  roles: string[] | null
+  external?: boolean
+}
+
+const navGroups: { label: string; items: NavItem[] }[] = [
   {
     label: '',
     items: [
-      { to: '/', icon: LayoutDashboard, label: 'nav.dashboard' },
-      { to: '/pos', icon: ShoppingCart, label: 'nav.pos' },
+      { to: '/', icon: LayoutDashboard, label: 'nav.dashboard', roles: ['root', 'store_owner', 'store_manager'] },
+      { to: '/pos', icon: ShoppingCart, label: 'nav.pos', roles: ['root', 'store_owner', 'store_manager', 'sales_staff'] },
     ],
   },
   {
     label: 'nav.management',
     items: [
-      { to: '/products', icon: Package, label: 'nav.products' },
-      { to: '/categories', icon: Tags, label: 'nav.categories' },
-      { to: '/brands', icon: Star, label: 'brands.title' },
-      { to: '/customers', icon: Users, label: 'nav.customers' },
-      { to: '/sales', icon: Receipt, label: 'nav.sales' },
-      { to: '/invoices', icon: FileText, label: 'nav.invoices' },
-      { to: '/reports', icon: BarChart3, label: 'nav.reports' },
-      { to: '/suppliers', icon: Truck, label: 'nav.suppliers' },
-      { to: '/discounts', icon: Percent, label: 'nav.discounts' },
-      { to: '/stock', icon: ClipboardList, label: 'nav.stock' },
-      { to: '/cash-sessions', icon: Wallet, label: 'nav.cash' },
+      { to: '/products', icon: Package, label: 'nav.products', roles: null },
+      { to: '/categories', icon: Tags, label: 'nav.categories', roles: ['root', 'store_owner', 'store_manager', 'inventory_staff'] },
+      { to: '/brands', icon: Star, label: 'brands.title', roles: ['root', 'store_owner', 'store_manager', 'inventory_staff'] },
+      { to: '/customers', icon: Users, label: 'nav.customers', roles: null },
+      { to: '/sales', icon: Receipt, label: 'nav.sales', roles: ['root', 'store_owner', 'store_manager'] },
+      { to: '/invoices', icon: FileText, label: 'nav.invoices', roles: ['root', 'store_owner', 'store_manager'] },
+      { to: '/reports', icon: BarChart3, label: 'nav.reports', roles: ['root', 'store_owner', 'store_manager'] },
+      { to: '/suppliers', icon: Truck, label: 'nav.suppliers', roles: ['root', 'store_owner', 'store_manager', 'inventory_staff'] },
+      { to: '/discounts', icon: Percent, label: 'nav.discounts', roles: ['root', 'store_owner', 'store_manager'] },
+      { to: '/stock', icon: ClipboardList, label: 'nav.stock', roles: ['root', 'store_owner', 'store_manager', 'inventory_staff'] },
+      { to: '/cash-sessions', icon: Wallet, label: 'nav.cash', roles: ['root', 'store_owner', 'store_manager', 'sales_staff'] },
     ],
   },
   {
     label: 'nav.system',
     items: [
-      { to: '/audit-logs', icon: History, label: 'nav.audit', root: true },
-      { to: '/users', icon: Shield, label: 'nav.users', root: true },
-      { to: '/stores', icon: Building2, label: 'nav.stores', root: true },
-      { to: 'https://nightwatch.laravel.com', icon: Activity, label: 'System Health', root: true, external: true },
-      { to: '/profile', icon: UserCog, label: 'nav.profile' },
+      { to: '/audit-logs', icon: History, label: 'nav.audit', roles: ['root'] },
+      { to: '/users', icon: Shield, label: 'nav.users', roles: ['root', 'store_owner'] },
+      { to: '/stores', icon: Building2, label: 'nav.stores', roles: ['root'] },
+      { to: 'https://nightwatch.laravel.com', icon: Activity, label: 'System Health', roles: ['root'], external: true },
+      { to: '/profile', icon: UserCog, label: 'nav.profile', roles: null },
     ],
   },
 ]
+
+function isItemVisible(item: NavItem): boolean {
+  if (!item.roles && item.external) return auth.isRoot
+  if (!item.roles) return true
+  return item.roles.some(r => auth.role === r)
+}
 
 function isActive(path: string) {
   if (path === '/') return route.path === '/'
@@ -145,7 +159,7 @@ function navigate(to: string) {
           <button
             v-for="item in group.items"
             :key="item.to"
-            v-show="!item.root || auth.isRoot"
+            v-show="isItemVisible(item)"
             @click="navigate(item.to)"
             :class="[
               'relative flex items-center rounded-md px-3 py-2 text-xs font-medium transition-all group w-full cursor-pointer',

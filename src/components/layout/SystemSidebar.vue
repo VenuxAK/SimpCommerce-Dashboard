@@ -2,7 +2,7 @@
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
-  LayoutDashboard, LogOut, X, Shield, UserCog, History, Building2,
+  LayoutDashboard, LogOut, X, Shield, UserCog, History, Building2, Activity,
   ChevronLeft, ChevronRight,
 } from 'lucide-vue-next'
 import { useAuthStore } from '../../stores/auth'
@@ -31,6 +31,7 @@ const navGroups = [
       { to: '/stores', icon: Building2, label: 'nav.stores' },
       { to: '/audit-logs', icon: History, label: 'nav.audit' },
       { to: '/users', icon: Shield, label: 'nav.users' },
+      { to: 'https://nightwatch.laravel.com', icon: Activity, label: 'System Health', external: true },
       { to: '/profile', icon: UserCog, label: 'nav.profile' },
     ],
   },
@@ -47,8 +48,12 @@ async function handleLogout() {
   router.push('/login')
 }
 
-function navigate(to: string) {
-  router.push(to)
+function navigate(item: { to: string; external?: boolean }) {
+  if (item.external) {
+    window.open(item.to, '_blank')
+  } else {
+    router.push(item.to)
+  }
   emit('close')
 }
 </script>
@@ -90,7 +95,7 @@ function navigate(to: string) {
         <div class="space-y-0.5">
           <button
             v-for="item in group.items" :key="item.to"
-            @click="navigate(item.to)"
+            @click="navigate(item)"
             :class="[
               'relative flex items-center rounded-md px-3 py-2 text-xs font-medium transition-all group w-full cursor-pointer',
               isActive(item.to) ? 'text-primary bg-primary/10' : 'text-sidebar-muted hover:text-sidebar-accent-foreground hover:bg-sidebar-accent',
@@ -98,8 +103,8 @@ function navigate(to: string) {
             ]"
             :title="ui.sidebarCollapsed ? t(item.label) : ''"
           >
-            <div v-if="isActive(item.to) && !ui.sidebarCollapsed" class="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full bg-primary" />
-            <component :is="item.icon" :class="['size-4 shrink-0', isActive(item.to) ? 'text-primary' : '']" />
+            <div v-if="isActive(item.to) && !item.external && !ui.sidebarCollapsed" class="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full bg-primary" />
+            <component :is="item.icon" :class="['size-4 shrink-0', isActive(item.to) && !item.external ? 'text-primary' : '']" />
             <span v-if="!ui.sidebarCollapsed" class="truncate">{{ t(item.label) }}</span>
           </button>
         </div>

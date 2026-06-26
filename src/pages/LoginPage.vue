@@ -24,6 +24,22 @@ const handleLogin = async () => {
   try {
     await auth.login(email.value, password.value)
 
+    const appMode = import.meta.env.VITE_APP_MODE || 'store'
+
+    if (appMode === 'store' && auth.isRoot) {
+      error.value = 'Root users should use the system admin panel.'
+      auth.logout()
+      loading.value = false
+      return
+    }
+
+    if (appMode === 'system' && !auth.isRoot) {
+      error.value = 'Only root users can access the system admin panel.'
+      auth.logout()
+      loading.value = false
+      return
+    }
+
     router.push('/')
   } catch (err: any) {
     if (!err.response) {

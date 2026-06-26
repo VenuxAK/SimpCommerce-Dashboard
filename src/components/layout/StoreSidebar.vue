@@ -19,38 +19,51 @@ const ui = useUIStore()
 defineProps<{ open: boolean }>()
 const emit = defineEmits<{ close: [] }>()
 
-const navGroups = [
+type NavItem = {
+  to: string
+  icon: any
+  label: string
+  roles?: string[]
+  external?: boolean
+}
+
+const navGroups: { label: string; items: NavItem[] }[] = [
   {
     label: '',
     items: [
-      { to: '/', icon: LayoutDashboard, label: 'nav.dashboard' },
-      { to: '/pos', icon: ShoppingCart, label: 'nav.pos' },
+      { to: '/', icon: LayoutDashboard, label: 'nav.dashboard', roles: ['store_owner', 'store_manager'] },
+      { to: '/pos', icon: ShoppingCart, label: 'nav.pos', roles: ['store_owner', 'store_manager', 'sales_staff'] },
     ],
   },
   {
     label: 'nav.management',
     items: [
-      { to: '/products', icon: Package, label: 'nav.products' },
-      { to: '/categories', icon: Tags, label: 'nav.categories' },
-      { to: '/brands', icon: Star, label: 'brands.title' },
-      { to: '/customers', icon: Users, label: 'nav.customers' },
-      { to: '/sales', icon: Receipt, label: 'nav.sales' },
-      { to: '/invoices', icon: FileText, label: 'nav.invoices' },
-      { to: '/reports', icon: BarChart3, label: 'nav.reports' },
-      { to: '/suppliers', icon: Truck, label: 'nav.suppliers' },
-      { to: '/discounts', icon: Percent, label: 'nav.discounts' },
-      { to: '/stock', icon: ClipboardList, label: 'nav.stock' },
-      { to: '/cash-sessions', icon: Wallet, label: 'nav.cash' },
+      { to: '/products', icon: Package, label: 'nav.products' },       // all store roles
+      { to: '/categories', icon: Tags, label: 'nav.categories', roles: ['store_owner', 'store_manager', 'inventory_staff'] },
+      { to: '/brands', icon: Star, label: 'brands.title', roles: ['store_owner', 'store_manager', 'inventory_staff'] },
+      { to: '/customers', icon: Users, label: 'nav.customers' },        // all store roles
+      { to: '/sales', icon: Receipt, label: 'nav.sales', roles: ['store_owner', 'store_manager'] },
+      { to: '/invoices', icon: FileText, label: 'nav.invoices', roles: ['store_owner', 'store_manager'] },
+      { to: '/reports', icon: BarChart3, label: 'nav.reports', roles: ['store_owner', 'store_manager'] },
+      { to: '/suppliers', icon: Truck, label: 'nav.suppliers', roles: ['store_owner', 'store_manager', 'inventory_staff'] },
+      { to: '/discounts', icon: Percent, label: 'nav.discounts', roles: ['store_owner', 'store_manager'] },
+      { to: '/stock', icon: ClipboardList, label: 'nav.stock', roles: ['store_owner', 'store_manager', 'inventory_staff'] },
+      { to: '/cash-sessions', icon: Wallet, label: 'nav.cash', roles: ['store_owner', 'store_manager', 'sales_staff'] },
     ],
   },
   {
     label: 'nav.system',
     items: [
-      { to: '/users', icon: Shield, label: 'nav.users' },
-      { to: '/profile', icon: UserCog, label: 'nav.profile' },
+      { to: '/users', icon: Shield, label: 'nav.users', roles: ['store_owner'] },
+      { to: '/profile', icon: UserCog, label: 'nav.profile' },          // all
     ],
   },
 ]
+
+function isItemVisible(item: NavItem): boolean {
+  if (!item.roles) return true
+  return item.roles.some(r => auth.role === r)
+}
 
 function isActive(path: string) {
   if (path === '/') return route.path === '/'
@@ -63,8 +76,12 @@ async function handleLogout() {
   router.push('/login')
 }
 
-function navigate(to: string) {
-  router.push(to)
+function navigate(item: NavItem) {
+  if (item.external) {
+    window.open(item.to, '_blank')
+  } else {
+    router.push(item.to)
+  }
   emit('close')
 }
 </script>
@@ -101,12 +118,13 @@ function navigate(to: string) {
     <nav class="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-5">
       <div v-for="group in navGroups" :key="group.label">
         <p v-if="group.label && !ui.sidebarCollapsed" class="px-3 mb-1.5 text-[10px] font-medium uppercase tracking-widest text-sidebar-muted/70">
-          {{ t(group.label) }}
+          {{ group.label ? t(group.label) : '' }}
         </p>
         <div class="space-y-0.5">
           <button
             v-for="item in group.items" :key="item.to"
-            @click="navigate(item.to)"
+            v-show="isItemVisible(item)"
+            @click="navigate(item)"
             :class="[
               'relative flex items-center rounded-md px-3 py-2 text-xs font-medium transition-all group w-full cursor-pointer',
               isActive(item.to) ? 'text-primary bg-primary/10' : 'text-sidebar-muted hover:text-sidebar-accent-foreground hover:bg-sidebar-accent',
@@ -114,9 +132,9 @@ function navigate(to: string) {
             ]"
             :title="ui.sidebarCollapsed ? t(item.label) : ''"
           >
-            <div v-if="isActive(item.to) && !ui.sidebarCollapsed" class="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full bg-primary" />
-            <component :is="item.icon" :class="['size-4 shrink-0', isActive(item.to) ? 'text-primary' : '']" />
-            <span v-if="!ui.sidebarCollapsed" class="truncate">{{ t(item.label) }}</span>
+            <div v-if="isActive(item.to) && !item.external && !ui.sidebarCollapsed" class="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full bg-primary" />
+            <component :is="item.icon" :class="['size-4 shrink-0', isActive(item.to) && !item.external ? 'text-primary' : '']" />
+            <span v-if="!ui.sidebarCollapsed" class="truncate">{{ item.external ? item.label : t(item.label) }}</span>
           </button>
         </div>
       </div>

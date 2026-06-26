@@ -2,8 +2,8 @@
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
-  LayoutDashboard, LogOut, X, Shield, UserCog, History, Building2, Activity,
-  ChevronLeft, ChevronRight,
+  LayoutDashboard, LogOut, X, Shield, UserCog, History, Building2,
+  HardDrive, Activity, ChevronLeft, ChevronRight,
 } from 'lucide-vue-next'
 import { useAuthStore } from '../../stores/auth'
 import { useUIStore } from '../../stores/ui'
@@ -29,6 +29,7 @@ const navGroups = [
     label: 'nav.system',
     items: [
       { to: '/stores', icon: Building2, label: 'nav.stores' },
+      { to: '/backups', icon: HardDrive, label: 'nav.backups' },
       { to: '/audit-logs', icon: History, label: 'nav.audit' },
       { to: '/users', icon: Shield, label: 'nav.users' },
       { to: 'https://nightwatch.laravel.com', icon: Activity, label: 'System Health', external: true },

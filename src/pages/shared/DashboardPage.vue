@@ -19,6 +19,7 @@ import {
   Download,
   TrendingUp,
   ArrowRight,
+  Users,
 } from 'lucide-vue-next'
 import { Bar } from 'vue-chartjs'
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip } from 'chart.js'
@@ -31,6 +32,7 @@ const { success, error } = useNotify()
 const reportApi = useReportApi()
 const backupApi = useBackupApi()
 const summary = ref<DashboardSummary | null>(null)
+const systemSummary = ref<any | null>(null)
 const loading = ref(true)
 const chartData = ref<any>(null)
 const chartRange = ref('7d')
@@ -104,6 +106,33 @@ const statCards = computed(() => [
   },
 ])
 
+const systemStatCards = computed(() => [
+  {
+    label: t('nav.stores'),
+    value: systemSummary.value ? String(systemSummary.value.total_stores) : '—',
+    icon: ShoppingBag,
+    iconClass: 'text-primary',
+    bgClass: 'bg-primary/10',
+    route: '/stores',
+  },
+  {
+    label: t('nav.users'),
+    value: systemSummary.value ? String(systemSummary.value.total_users) : '—',
+    icon: Users,
+    iconClass: 'text-primary',
+    bgClass: 'bg-primary/10',
+    route: '/users',
+  },
+  {
+    label: t('nav.backups'),
+    value: systemSummary.value ? String(systemSummary.value.total_backups) : '—',
+    icon: Save,
+    iconClass: 'text-primary',
+    bgClass: 'bg-primary/10',
+    route: '/backups',
+  },
+])
+
 const loadChart = async () => {
   const now = new Date()
   let dateFrom: string
@@ -142,21 +171,20 @@ const loadChart = async () => {
 const load = async () => {
   loading.value = true
   try {
-    const { data } = await reportApi.dashboard()
-    summary.value = data
-    await loadChart()
+    if (auth.isRoot) {
+      const { data } = await reportApi.systemDashboard()
+      systemSummary.value = data
+      const res = await backupApi.list()
+      backups.value = res.data.data || []
+    } else {
+      const { data } = await reportApi.dashboard()
+      summary.value = data
+      await loadChart()
+    }
   } catch (e: any) {
     error(e?.response?.data?.message || t('dashboard.load_failed'))
   } finally {
     loading.value = false
-  }
-
-  // Load backups (root only).
-  if (auth.isRoot) {
-    try {
-      const res = await backupApi.list()
-      backups.value = res.data.data || []
-    } catch {}
   }
 }
 
@@ -164,11 +192,12 @@ const createBackup = async () => {
   try {
     const res = await backupApi.create()
     success(res.data.message || 'Backup queued for processing')
-    // Wait a bit and refresh the list, although it might still be generating
     setTimeout(async () => {
       if (auth.isRoot) {
         const listRes = await backupApi.list()
         backups.value = listRes.data.data || []
+        const { data } = await reportApi.systemDashboard()
+        systemSummary.value = data
       }
     }, 2000)
   } catch (e: any) {
@@ -212,139 +241,218 @@ const statusBadge = (status: string) => {
       <div class="size-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
     </div>
 
-    <template v-else-if="summary">
-      <!-- Stat Cards -->
-      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div v-for="card in statCards" :key="card.label" class="rounded-lg border bg-card p-5 transition-shadow hover:shadow-sm">
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-xs font-medium text-muted-foreground">{{ card.label }}</span>
-            <div :class="['size-8 rounded-full flex items-center justify-center', card.bgClass]">
-              <component :is="card.icon" :class="['size-4', card.iconClass]" />
+    <!-- Loaded -->
+    <template v-else>
+      <!-- System Admin view -->
+      <template v-if="auth.isRoot && systemSummary">
+        <!-- Stat Cards -->
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div
+            v-for="card in systemStatCards"
+            :key="card.label"
+            class="rounded-lg border bg-card p-5 transition-shadow hover:shadow-sm cursor-pointer"
+            @click="router.push(card.route)"
+          >
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-medium text-muted-foreground">{{ card.label }}</span>
+              <div :class="['size-8 rounded-full flex items-center justify-center', card.bgClass]">
+                <component :is="card.icon" :class="['size-4', card.iconClass]" />
+              </div>
             </div>
+            <div class="text-xl font-semibold tracking-tight">{{ card.value }}</div>
           </div>
-          <div class="text-xl font-semibold tracking-tight">{{ card.value }}</div>
-          <p v-if="card.subtitle" class="text-xs text-muted-foreground mt-1">{{ card.subtitle }}</p>
         </div>
-      </div>
 
-      <!-- Chart + Backups -->
-      <div class="grid gap-6" :class="auth.isRoot ? 'lg:grid-cols-3' : 'lg:grid-cols-1'">
-        <Card :class="auth.isRoot ? 'lg:col-span-2' : ''">
-          <CardHeader class="flex flex-row items-center justify-between py-3 px-5 border-b">
-            <CardTitle class="text-sm font-medium">{{ t('reports.sales_revenue') }}</CardTitle>
-            <div class="flex items-center gap-1 bg-muted rounded-md p-0.5">
-              <button
-                v-for="r in ['7d', '30d', 'month']" :key="r"
-                @click="chartRange = r; loadChart()"
-                :class="[
-                  'px-2.5 py-1 text-xs rounded-sm transition-all',
-                  chartRange === r ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
-                ]"
+        <!-- Split: Audit Logs + Backups -->
+        <div class="grid gap-6 lg:grid-cols-3">
+          <!-- Recent Audit Logs -->
+          <Card class="lg:col-span-2 shadow-none">
+            <CardHeader class="flex flex-row items-center justify-between py-3 px-5 border-b">
+              <CardTitle class="text-sm font-medium">{{ t('nav.audit') }}</CardTitle>
+              <Button variant="ghost" size="sm" class="text-xs gap-1" @click="router.push('/audit-logs')">
+                {{ t('common.details') }} <ArrowRight class="size-3" />
+              </Button>
+            </CardHeader>
+            <CardContent class="p-0 divide-y overflow-hidden rounded-b-lg">
+              <div v-if="!systemSummary.recent_audit_logs?.length" class="p-8 text-center text-sm text-muted-foreground">
+                {{ t('common.no_data') }}
+              </div>
+              <div v-else class="overflow-x-auto">
+                <table class="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr class="border-b bg-muted/20">
+                      <th class="px-5 py-3 font-semibold text-muted-foreground uppercase tracking-wider">Date</th>
+                      <th class="px-5 py-3 font-semibold text-muted-foreground uppercase tracking-wider">User</th>
+                      <th class="px-5 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-center">Action</th>
+                      <th class="px-5 py-3 font-semibold text-muted-foreground uppercase tracking-wider">Target</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y">
+                    <tr v-for="log in systemSummary.recent_audit_logs" :key="log.id" class="hover:bg-muted/30 transition-colors">
+                      <td class="px-5 py-3 text-muted-foreground tabular-nums whitespace-nowrap">
+                        {{ log.created_at?.split('T')[0] }} {{ log.created_at?.split('T')[1]?.split('.')[0] }}
+                      </td>
+                      <td class="px-5 py-3">
+                        <div class="flex items-center gap-2">
+                          <div class="size-5 rounded-full bg-secondary flex items-center justify-center text-[9px] font-bold border shrink-0">
+                            {{ log.user?.name?.charAt(0) || 'S' }}
+                          </div>
+                          <span class="font-semibold text-foreground">{{ log.user?.name || 'System' }}</span>
+                        </div>
+                      </td>
+                      <td class="px-5 py-3 text-center">
+                        <Badge variant="secondary" class="h-5 px-1.5 text-[9px] font-medium uppercase">
+                          {{ log.action }}
+                        </Badge>
+                      </td>
+                      <td class="px-5 py-3 text-muted-foreground font-medium">
+                        {{ log.model_type?.split('\\').pop() }} <span class="text-[10px] text-muted-foreground/60">(#{{ log.model_id }})</span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+
+          <!-- Backups Section (System Admin) -->
+          <Card class="shadow-none">
+            <CardHeader class="flex flex-row items-center justify-between py-3 px-5 border-b">
+              <CardTitle class="text-sm font-medium">{{ t('nav.backups') }}</CardTitle>
+              <Button size="icon" variant="outline" class="size-7" @click="createBackup">
+                <Save class="size-3.5" />
+              </Button>
+            </CardHeader>
+            <CardContent class="p-0 divide-y">
+              <div v-for="b in backups.slice(0, 6)" :key="b.filename" class="flex items-center justify-between px-5 py-3 hover:bg-muted/30 transition-colors group">
+                <div class="min-w-0 flex-1">
+                  <p class="text-xs font-medium text-foreground truncate">{{ b.filename }}</p>
+                  <p class="text-[11px] text-muted-foreground mt-0.5">{{ b.created_at }}</p>
+                </div>
+                <button @click="downloadBackup(b.filename)" class="size-7 rounded-md hover:bg-accent flex items-center justify-center text-muted-foreground opacity-0 group-hover:opacity-100 transition-all shrink-0">
+                  <Download class="size-3.5" />
+                </button>
+              </div>
+              <div v-if="!backups.length" class="p-8 text-center text-sm text-muted-foreground">{{ t('nav.no_backups') }}</div>
+            </CardContent>
+          </Card>
+        </div>
+      </template>
+
+      <!-- Store Admin view -->
+      <template v-else-if="summary">
+        <!-- Stat Cards -->
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div v-for="card in statCards" :key="card.label" class="rounded-lg border bg-card p-5 transition-shadow hover:shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-medium text-muted-foreground">{{ card.label }}</span>
+              <div :class="['size-8 rounded-full flex items-center justify-center', card.bgClass]">
+                <component :is="card.icon" :class="['size-4', card.iconClass]" />
+              </div>
+            </div>
+            <div class="text-xl font-semibold tracking-tight">{{ card.value }}</div>
+            <p v-if="card.subtitle" class="text-xs text-muted-foreground mt-1">{{ card.subtitle }}</p>
+          </div>
+        </div>
+
+        <!-- Chart -->
+        <div class="grid gap-6 lg:grid-cols-1">
+          <Card class="shadow-none">
+            <CardHeader class="flex flex-row items-center justify-between py-3 px-5 border-b">
+              <CardTitle class="text-sm font-medium">{{ t('reports.sales_revenue') }}</CardTitle>
+              <div class="flex items-center gap-1 bg-muted rounded-md p-0.5">
+                <button
+                  v-for="r in ['7d', '30d', 'month']" :key="r"
+                  @click="chartRange = r; loadChart()"
+                  :class="[
+                    'span px-2.5 py-1 text-xs rounded-sm transition-all',
+                    chartRange === r ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                  ]"
+                >
+                  {{ r }}
+                </button>
+              </div>
+            </CardHeader>
+            <CardContent v-if="chartData" class="p-5 h-[300px]">
+              <Bar :data="chartData" :options="chartOptions" />
+            </CardContent>
+            <CardContent v-else class="flex h-[300px] items-center justify-center text-sm text-muted-foreground">
+              <div class="flex flex-col items-center gap-2">
+                <TrendingUp class="size-8 text-muted-foreground/40" />
+                <span>{{ t('common.no_data') }}</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <!-- Recent Orders + Low Stock -->
+        <div class="grid gap-6 lg:grid-cols-2">
+          <Card class="shadow-none">
+            <CardHeader class="flex flex-row items-center justify-between py-3 px-5 border-b">
+              <CardTitle class="text-sm font-medium">{{ t('dashboard.recent_orders') }}</CardTitle>
+              <Button variant="ghost" size="sm" class="text-xs gap-1" @click="router.push('/sales')">
+                {{ t('common.details') }} <ArrowRight class="size-3" />
+              </Button>
+            </CardHeader>
+            <CardContent class="p-0 divide-y">
+              <div
+                v-for="order in summary?.recent_orders" :key="order.id"
+                class="flex items-center justify-between px-5 py-3.5 cursor-pointer hover:bg-muted/30 transition-colors group"
+                @click="router.push('/sales/' + order.id)"
               >
-                {{ r }}
-              </button>
-            </div>
-          </CardHeader>
-          <CardContent v-if="chartData" class="p-5 h-[300px]">
-            <Bar :data="chartData" :options="chartOptions" />
-          </CardContent>
-          <CardContent v-else class="flex h-[300px] items-center justify-center text-sm text-muted-foreground">
-            <div class="flex flex-col items-center gap-2">
-              <TrendingUp class="size-8 text-muted-foreground/40" />
-              <span>{{ t('common.no_data') }}</span>
-            </div>
-          </CardContent>
-        </Card>
+                <div class="flex items-center gap-3 min-w-0 flex-1">
+                  <div class="size-8 rounded-md bg-muted flex items-center justify-center text-muted-foreground text-xs font-medium shrink-0">
+                    #
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">{{ order.order_number }}</p>
+                    <p class="text-xs text-muted-foreground mt-0.5">{{ order.created_at }}</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-4 shrink-0">
+                  <Badge :variant="statusBadge(order.status) as any" class="text-[10px] font-medium px-1.5 py-0.5">{{ order.status }}</Badge>
+                  <span class="text-sm font-medium tabular-nums text-foreground">{{ order.total_amount.toLocaleString() }} Ks</span>
+                </div>
+              </div>
+              <div v-if="!summary?.recent_orders?.length" class="p-8 text-center text-sm text-muted-foreground">{{ t('dashboard.no_orders') }}</div>
+            </CardContent>
+          </Card>
 
-        <Card v-if="auth.isRoot">
-          <CardHeader class="flex flex-row items-center justify-between py-3 px-5 border-b">
-            <CardTitle class="text-sm font-medium">{{ t('nav.backups') }}</CardTitle>
-            <Button size="icon" variant="outline" class="size-7" @click="createBackup">
-              <Save class="size-3.5" />
-            </Button>
-          </CardHeader>
-          <CardContent class="p-0 divide-y">
-            <div v-for="b in backups.slice(0, 6)" :key="b.filename" class="flex items-center justify-between px-5 py-3 hover:bg-muted/30 transition-colors group">
-              <div class="min-w-0 flex-1">
-                <p class="text-xs font-medium text-foreground truncate">{{ b.filename }}</p>
-                <p class="text-[11px] text-muted-foreground mt-0.5">{{ b.created_at }}</p>
-              </div>
-              <button @click="downloadBackup(b.filename)" class="size-7 rounded-md hover:bg-accent flex items-center justify-center text-muted-foreground opacity-0 group-hover:opacity-100 transition-all shrink-0">
-                <Download class="size-3.5" />
-              </button>
-            </div>
-            <div v-if="!backups.length" class="p-8 text-center text-sm text-muted-foreground">{{ t('nav.no_backups') }}</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <!-- Recent Orders + Low Stock -->
-      <div class="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader class="flex flex-row items-center justify-between py-3 px-5 border-b">
-            <CardTitle class="text-sm font-medium">{{ t('dashboard.recent_orders') }}</CardTitle>
-            <Button variant="ghost" size="sm" class="text-xs gap-1" @click="router.push('/sales')">
-              {{ t('common.details') }} <ArrowRight class="size-3" />
-            </Button>
-          </CardHeader>
-          <CardContent class="p-0 divide-y">
-            <div
-              v-for="order in summary?.recent_orders" :key="order.id"
-              class="flex items-center justify-between px-5 py-3.5 cursor-pointer hover:bg-muted/30 transition-colors group"
-              @click="router.push('/sales/' + order.id)"
-            >
-              <div class="flex items-center gap-3 min-w-0 flex-1">
-                <div class="size-8 rounded-md bg-muted flex items-center justify-center text-muted-foreground text-xs font-medium shrink-0">
-                  #
+          <Card class="shadow-none">
+            <CardHeader class="flex flex-row items-center justify-between py-3 px-5 border-b">
+              <CardTitle class="text-sm font-medium">{{ t('dashboard.low_stock') }}</CardTitle>
+              <Button variant="ghost" size="sm" class="text-xs gap-1" @click="router.push('/stock')">
+                {{ t('common.details') }} <ArrowRight class="size-3" />
+              </Button>
+            </CardHeader>
+            <CardContent class="p-0 divide-y">
+              <div
+                v-for="item in summary?.low_stock_variants" :key="item.id"
+                class="flex items-center justify-between px-5 py-3.5 hover:bg-muted/30 transition-colors"
+              >
+                <div class="flex items-center gap-3 min-w-0 flex-1">
+                  <div class="size-8 rounded-md bg-warning/10 flex items-center justify-center text-warning font-medium text-xs shrink-0">
+                    !
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-sm font-medium text-foreground truncate">{{ item.product }}</p>
+                    <p class="text-xs text-muted-foreground mt-0.5">{{ item.size }} / {{ item.color }}</p>
+                  </div>
                 </div>
-                <div class="min-w-0">
-                  <p class="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">{{ order.order_number }}</p>
-                  <p class="text-xs text-muted-foreground mt-0.5">{{ order.created_at }}</p>
-                </div>
-              </div>
-              <div class="flex items-center gap-4 shrink-0">
-                <Badge :variant="statusBadge(order.status) as any" class="text-[10px] font-medium px-1.5 py-0.5">{{ order.status }}</Badge>
-                <span class="text-sm font-medium tabular-nums text-foreground">{{ order.total_amount.toLocaleString() }} Ks</span>
-              </div>
-            </div>
-            <div v-if="!summary?.recent_orders?.length" class="p-8 text-center text-sm text-muted-foreground">{{ t('dashboard.no_orders') }}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader class="flex flex-row items-center justify-between py-3 px-5 border-b">
-            <CardTitle class="text-sm font-medium">{{ t('dashboard.low_stock') }}</CardTitle>
-            <Button variant="ghost" size="sm" class="text-xs gap-1" @click="router.push('/stock')">
-              {{ t('common.details') }} <ArrowRight class="size-3" />
-            </Button>
-          </CardHeader>
-          <CardContent class="p-0 divide-y">
-            <div
-              v-for="item in summary?.low_stock_variants" :key="item.id"
-              class="flex items-center justify-between px-5 py-3.5 hover:bg-muted/30 transition-colors"
-            >
-              <div class="flex items-center gap-3 min-w-0 flex-1">
-                <div class="size-8 rounded-md bg-warning/10 flex items-center justify-center text-warning font-medium text-xs shrink-0">
-                  !
-                </div>
-                <div class="min-w-0">
-                  <p class="text-sm font-medium text-foreground truncate">{{ item.product }}</p>
-                  <p class="text-xs text-muted-foreground mt-0.5">{{ item.size }} / {{ item.color }}</p>
-                </div>
-              </div>
-              <div class="flex items-center gap-3 shrink-0">
-                <div class="text-right">
-                  <p class="text-sm font-medium text-foreground tabular-nums">{{ item.stock }} left</p>
-                  <div class="w-16 h-1.5 bg-muted rounded-full mt-1 overflow-hidden">
-                    <div class="h-full bg-warning rounded-full transition-all" :style="{ width: Math.min((item.stock / 10) * 100, 100) + '%' }"></div>
+                <div class="flex items-center gap-3 shrink-0">
+                  <div class="text-right">
+                    <p class="text-sm font-medium text-foreground tabular-nums">{{ item.stock }} left</p>
+                    <div class="w-16 h-1.5 bg-muted rounded-full mt-1 overflow-hidden">
+                      <div class="h-full bg-warning rounded-full transition-all" :style="{ width: Math.min((item.stock / 10) * 100, 100) + '%' }"></div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-            <div v-if="!summary?.low_stock_variants?.length" class="p-8 text-center text-sm text-muted-foreground">All items in stock.</div>
-          </CardContent>
-        </Card>
-      </div>
+              <div v-if="!summary?.low_stock_variants?.length" class="p-8 text-center text-sm text-muted-foreground">All items in stock.</div>
+            </CardContent>
+          </Card>
+        </div>
+      </template>
     </template>
   </div>
 </template>

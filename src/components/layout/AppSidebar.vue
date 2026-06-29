@@ -76,7 +76,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
       { to: '/audit-logs', icon: History, label: 'nav.audit', roles: ['root'] },
       { to: '/users', icon: Shield, label: 'nav.users', roles: ['root', 'store_owner'] },
       { to: '/stores', icon: Building2, label: 'nav.stores', roles: ['root'] },
-      { to: 'https://nightwatch.laravel.com', icon: Activity, label: 'System Health', roles: ['root'], external: true },
+      { to: import.meta.env.VITE_NIGHTWATCH_URL || 'https://nightwatch.laravel.com', icon: Activity, label: 'nav.system_health', roles: ['root'], external: true },
       { to: '/profile', icon: UserCog, label: 'nav.profile', roles: null },
     ],
   },
@@ -175,7 +175,7 @@ function navigate(to: string) {
               class="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full bg-primary"
             />
             <component :is="item.icon" :class="['size-4 shrink-0', isActive(item.to) && !item.external ? 'text-primary' : '']" />
-            <span v-if="!ui.sidebarCollapsed" class="truncate">{{ item.external ? item.label : t(item.label) }}</span>
+            <span v-if="!ui.sidebarCollapsed" class="truncate">{{ t(item.label) }}</span>
           </button>
         </div>
       </div>

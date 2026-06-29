@@ -15,6 +15,7 @@ const ui = useUIStore()
 const themeState = useTheme()
 const router = useRouter()
 const route = useRoute()
+const appMode = import.meta.env.VITE_APP_MODE || 'store'
 
 const dropdownOpen = ref(false)
 const themePickerOpen = ref(false)
@@ -121,7 +122,7 @@ onUnmounted(() => window.removeEventListener('click', handleClickOutside))
   <div class="flex items-center justify-between w-full">
     <div class="flex items-center gap-3">
       <!-- Store Selector (root in multi-store mode, or label for store users) -->
-      <div v-if="!ui.isStoreFixed" class="relative store-picker">
+      <div v-if="!ui.isStoreFixed && appMode !== 'system'" class="relative store-picker">
         <template v-if="auth.isRoot">
           <button
             @click="storePickerOpen = !storePickerOpen"

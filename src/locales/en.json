@@ -21,7 +21,8 @@
     "audit": "Audit Logs",
     "stores": "Stores",
     "management": "Management",
-    "system": "System"
+    "system": "System",
+    "system_health": "System Health"
   },
   "auth": {
     "login": "Login",

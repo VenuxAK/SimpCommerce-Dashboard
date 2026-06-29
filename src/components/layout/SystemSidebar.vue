@@ -32,7 +32,7 @@ const navGroups = [
       { to: '/backups', icon: HardDrive, label: 'nav.backups' },
       { to: '/audit-logs', icon: History, label: 'nav.audit' },
       { to: '/users', icon: Shield, label: 'nav.users' },
-      { to: 'https://nightwatch.laravel.com', icon: Activity, label: 'System Health', external: true },
+      { to: import.meta.env.VITE_NIGHTWATCH_URL || 'https://nightwatch.laravel.com', icon: Activity, label: 'nav.system_health', external: true },
       { to: '/profile', icon: UserCog, label: 'nav.profile' },
     ],
   },

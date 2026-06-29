@@ -5,6 +5,7 @@ export const useReportApi = () => {
   const bestSellers = (params: Record<string, any>) => api.get('/reports/best-sellers', { params })
   const paymentMethods = (params: Record<string, string>) => api.get('/reports/payment-methods', { params })
   const dashboard = () => api.get('/dashboard/summary')
+  const systemDashboard = () => api.get('/system/dashboard/summary')
 
-  return { sales, bestSellers, paymentMethods, dashboard }
+  return { sales, bestSellers, paymentMethods, dashboard, systemDashboard }
 }

@@ -21,7 +21,8 @@
     "audit": "စနစ်လုပ်ဆောင်ချက်မှတ်တမ်း",
     "stores": "စတိုးဆိုင်များ",
     "management": "စီမံခန့်ခွဲမှု",
-    "system": "စနစ်"
+    "system": "စနစ်",
+    "system_health": "System Health"
   },
   "auth": {
     "login": "အကောင့်ဝင်ရန်",

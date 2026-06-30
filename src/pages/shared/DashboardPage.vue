@@ -39,6 +39,16 @@ const chartRange = ref('7d')
 const backups = ref<any[]>([])
 const { isDark } = useTheme()
 
+const quotes = [
+  "Quality is not an act, it is a habit.",
+  "Success is the sum of small efforts, repeated day-in and day-out.",
+  "The only way to do great work is to love what you do.",
+  "Don't count the days, make the days count.",
+  "Strive not to be a success, but rather to be of value.",
+  "Your attitude, not your aptitude, will determine your altitude."
+]
+const randomQuote = ref(quotes[Math.floor(Math.random() * quotes.length)])
+
 const barColor = computed(() => (isDark.value ? '#f4f4f5' : '#18181b'))
 const gridColor = computed(() => (isDark.value ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'))
 const tickColor = computed(() => (isDark.value ? '#71717a' : '#a1a1aa'))
@@ -169,6 +179,11 @@ const loadChart = async () => {
 }
 
 const load = async () => {
+  if (auth.user?.role === 'sales_staff' || auth.user?.role === 'inventory_staff') {
+    loading.value = false
+    return
+  }
+
   loading.value = true
   try {
     if (auth.isRoot) {
@@ -232,8 +247,8 @@ const statusBadge = (status: string) => {
   <div class="space-y-8">
     <!-- Page Header -->
     <div>
-      <h1 class="text-xl font-semibold tracking-tight text-foreground">{{ t('dashboard.title') }}</h1>
-      <p class="text-sm text-muted-foreground mt-1">{{ t('nav.dashboard_overview') }}</p>
+      <h1 class="text-xl font-semibold tracking-tight text-foreground">{{ auth.role === 'root' ? t('dashboard.title') : t('nav.home') }}</h1>
+      <p class="text-sm text-muted-foreground mt-1">{{ auth.role === 'root' ? t('nav.dashboard_overview') : '' }}</p>
     </div>
 
     <!-- Loading -->
@@ -243,8 +258,21 @@ const statusBadge = (status: string) => {
 
     <!-- Loaded -->
     <template v-else>
+      <!-- Staff Welcome Message -->
+      <template v-if="auth.user?.role === 'sales_staff' || auth.user?.role === 'inventory_staff'">
+        <div class="flex flex-col items-center justify-center py-20 text-center animate-in fade-in zoom-in-95 duration-500 border rounded-xl bg-card shadow-sm mt-4">
+          <div class="size-16 rounded-full bg-primary/10 flex items-center justify-center mb-5">
+            <ShoppingBag class="size-8 text-primary" />
+          </div>
+          <h2 class="text-2xl font-bold tracking-tight mb-2">Welcome back, {{ auth.user?.name }}!</h2>
+          <p class="text-muted-foreground max-w-[500px] text-sm mt-1 italic">
+            "{{ randomQuote }}"
+          </p>
+        </div>
+      </template>
+
       <!-- System Admin view -->
-      <template v-if="auth.isRoot && systemSummary">
+      <template v-else-if="auth.isRoot && systemSummary">
         <!-- Stat Cards -->
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div

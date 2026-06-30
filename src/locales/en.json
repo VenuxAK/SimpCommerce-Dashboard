@@ -2,6 +2,7 @@
   "app": "SimpCommerce",
   "nav": {
     "dashboard": "Dashboard",
+    "home": "Home",
     "dashboard_overview": "Overview",
     "pos": "POS",
     "products": "Products",
@@ -293,6 +294,7 @@
   "stores": {
     "title": "Stores",
     "manage": "Manage store locations and settings",
+    "store_name": "Store Name",
     "create_store": "Create Store"
   }
 }

@@ -51,6 +51,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     label: '',
     items: [
       { to: '/', icon: LayoutDashboard, label: 'nav.dashboard', roles: ['root', 'store_owner', 'store_manager'] },
+      { to: '/', icon: LayoutDashboard, label: 'nav.home', roles: ['sales_staff', 'inventory_staff'] },
       { to: '/pos', icon: ShoppingCart, label: 'nav.pos', roles: ['root', 'store_owner', 'store_manager', 'sales_staff'] },
     ],
   },
@@ -140,7 +141,7 @@ function navigate(to: string) {
       </button>
     </div>
 
-    <div v-if="ui.sidebarCollapsed" class="flex justify-center py-3 border-b border-border/50 lg:flex hidden">
+    <div v-if="ui.sidebarCollapsed" class="justify-center py-3 border-b border-border/50 lg:flex hidden">
       <button @click="ui.toggleSidebar" class="size-7 rounded-md hover:bg-sidebar-accent flex items-center justify-center text-sidebar-muted transition-colors">
         <ChevronRight class="size-3.5" />
       </button>

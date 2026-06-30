@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Plus, Pencil, Trash2, Search, ShieldCheck } from 'lucide-vue-next'
 import { Button } from '../../components/ui/button'
@@ -14,18 +14,34 @@ import PageHeader from '../../components/PageHeader.vue'
 import { useNotify } from '../../lib/notify'
 import { useAuthStore } from '../../stores/auth'
 import { useListing } from '../../composables'
-import { useUserApi } from '../../composables/api'
+import { useUserApi, useStoreApi } from '../../composables/api'
 import type { User } from '../../types'
 
 const { t } = useI18n()
 const { success, error } = useNotify()
 const authStore = useAuthStore()
 const userApi = useUserApi()
+const storeApi = useStoreApi()
+
+const stores = ref<any[]>([])
+
+onMounted(async () => {
+  if (authStore.isRoot) {
+    try {
+      const res = await storeApi.list()
+      stores.value = res.data?.data || res.data || []
+    } catch (e) {
+      console.error(e)
+    }
+  }
+})
+
+const storeOptions = computed(() => stores.value.map(s => ({ label: s.name, value: String(s.id) })))
 
 const { items: users, meta, loading, loadPage } = useListing<User>('/users')
 const showForm = ref(false)
 const editing = ref<User | null>(null)
-const form = ref({ name: '', email: '', password: '', role: 'sales_staff' })
+const form = ref({ name: '', email: '', password: '', role: 'sales_staff', store_id: '' as string | number })
 const search = ref('')
 
 const roleOptions = computed(() => {
@@ -54,13 +70,13 @@ const filtered = computed(() =>
 
 const openCreate = () => {
   editing.value = null
-  form.value = { name: '', email: '', password: '', role: 'sales_staff' }
+  form.value = { name: '', email: '', password: '', role: 'sales_staff', store_id: '' }
   showForm.value = true
 }
 
 const openEdit = (user: User) => {
   editing.value = user
-  form.value = { name: user.name, email: user.email, password: '', role: user.role }
+  form.value = { name: user.name, email: user.email, password: '', role: user.role, store_id: user.store_id || '' }
   showForm.value = true
 }
 
@@ -70,6 +86,8 @@ const save = async () => {
 
     if (!authStore.isRoot && authStore.user?.store_id) {
       payload.store_id = authStore.user.store_id
+    } else if (authStore.isRoot && form.value.store_id) {
+      payload.store_id = form.value.store_id
     }
 
     if (editing.value) {
@@ -135,6 +153,10 @@ const roleBadge = (role: string) => {
               <label class="text-[11px] font-medium text-foreground ml-0.5">{{ t('users.role') }}</label>
               <Select v-model="form.role" :options="roleOptions" />
             </div>
+          </div>
+          <div v-if="authStore.isRoot" class="space-y-1.5">
+            <label class="text-[11px] font-medium text-foreground ml-0.5">Assigned Store</label>
+            <Select v-model="form.store_id" :options="storeOptions" />
           </div>
           <div class="space-y-1.5">
             <label class="text-[11px] font-medium text-foreground ml-0.5">{{ t('auth.email') }}</label>

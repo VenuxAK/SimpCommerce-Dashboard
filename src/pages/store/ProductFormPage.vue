@@ -67,7 +67,7 @@ const brandOptions = computed(() => [
   ...(brands.value || []).map(b => ({ label: b.name.toUpperCase(), value: b.id }))
 ])
 
-const storageUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8000').replace(/\/api\/?$/, '')
+const storageUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8000').replace(/\/api\/v1\/?$|\/api\/?$/, '')
 
 const imageUrl = computed(() => {
   if (form.value.image_preview) return form.value.image_preview

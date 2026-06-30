@@ -28,7 +28,7 @@ bun run build
 Copy `.env.example` or set:
 
 ```env
-VITE_API_URL=http://localhost:8000/api
+VITE_API_URL=http://localhost:8000/api/v1
 ```
 
 The Vite dev server proxies `/api` and `/storage` to the Laravel backend automatically.
@@ -46,13 +46,13 @@ use the store selector dropdown, and access system-level pages (Users, Stores, A
 cd admin
 
 # Root dashboard — no store slug
-VITE_API_URL=https://api.example.com/api bun run build
+VITE_API_URL=https://api.example.com/api/v1 bun run build
 # → dist/  (deploy to root-dashboard.example.com)
 ```
 
 ```bash
 # Development
-VITE_API_URL=http://localhost:8000/api bun run dev --port 3000
+VITE_API_URL=http://localhost:8000/api/v1 bun run dev --port 3000
 ```
 
 ### Per-Store Dashboards (single-store)
@@ -64,11 +64,11 @@ root users are blocked from logging in, and only store_admin/staff users can sig
 cd admin
 
 # Clothing store dashboard
-VITE_API_URL=https://api.example.com/api VITE_STORE_SLUG=clothing bun run build
+VITE_API_URL=https://api.example.com/api/v1 VITE_STORE_SLUG=clothing bun run build
 # → dist/  (deploy to clothing.example.com)
 
 # Electronics store dashboard
-VITE_API_URL=https://api.example.com/api VITE_STORE_SLUG=electronics bun run build
+VITE_API_URL=https://api.example.com/api/v1 VITE_STORE_SLUG=electronics bun run build
 # → dist/  (deploy to electronics.example.com)
 ```
 

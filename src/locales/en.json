@@ -23,7 +23,8 @@
     "stores": "Stores",
     "management": "Management",
     "system": "System",
-    "system_health": "System Health"
+    "system_health": "System Health",
+    "notifications": "Notifications"
   },
   "auth": {
     "login": "Login",
@@ -42,6 +43,12 @@
     "search": "Search",
     "filter": "Filter",
     "no_data": "No data found.",
+    "unread": "Unread",
+    "read": "Read",
+    "new": "New",
+    "mark_all_read": "Mark all read",
+    "view_all": "View all",
+    "clear": "Clear",
     "loading": "Loading...",
     "confirm": "Confirm",
     "back": "Back",

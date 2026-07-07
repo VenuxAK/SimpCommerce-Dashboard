@@ -1,6 +1,11 @@
-# SimpCommerce Frontend
+# SimpCommerce Admin Dashboard
 
-Vue 3 + TypeScript + Vite SPA for SimpCommerce — a home-use Point of Sale system for clothing stores.
+Vue 3 + TypeScript + Vite SPA — e-commerce management dashboard for the SimpCommerce platform.
+Store admin use it to manage products, inventory, orders, customers, invoices, POS, and reports.
+
+This single codebase serves two deployment modes:
+- **`VITE_APP_MODE=system`** — root dashboard (one deployment, multi-store, for super admins)
+- **`VITE_APP_MODE=store`** — per-store dashboard (one deployment per storefront, fixed to that store)
 
 ## Requirements
 
@@ -35,58 +40,58 @@ The Vite dev server proxies `/api` and `/storage` to the Laravel backend automat
 
 ## Deployment
 
-This single codebase serves two deployment modes controlled by the `VITE_STORE_SLUG` environment variable.
+This single codebase serves two deployment modes controlled by `VITE_APP_MODE` (system|store).
+`VITE_STORE_SLUG` further scopes the per-store instances.
 
-### Root Dashboard (multi-store)
+### System Admin (`VITE_APP_MODE=system`, `VITE_STORE_SLUG` unset)
 
-Deploy with `VITE_STORE_SLUG` empty or unset. Root users can log in, see all stores,
-use the store selector dropdown, and access system-level pages (Users, Stores, Audit Logs).
+Deployed **once**. Root users log in, see all stores, and access system-level pages (Users, Stores, Audit Logs).
 
 ```bash
 cd admin
 
-# Root dashboard — no store slug
-VITE_API_URL=https://api.example.com/api/v1 bun run build
-# → dist/  (deploy to root-dashboard.example.com)
+VITE_API_URL=https://api.example.com/api/v1 VITE_APP_MODE=system bun run build
+# → dist/system/  (deploy to admin.example.com)
 ```
 
 ```bash
 # Development
-VITE_API_URL=http://localhost:8000/api/v1 bun run dev --port 3000
+VITE_APP_MODE=system bun run dev --port 3000
 ```
 
-### Per-Store Dashboards (single-store)
+### Per-Store Dashboard (`VITE_APP_MODE=store`, `VITE_STORE_SLUG=<slug>`)
 
-Deploy with `VITE_STORE_SLUG` set to the store's slug. The store selector is hidden,
-root users are blocked from logging in, and only store_admin/staff users can sign in.
+Deployed **once per storefront**, one admin per store. The store selector is hidden,
+root users are blocked, and only store_admin/staff users for that store can sign in.
+
+Each instance belongs to exactly one store — the same store served by its paired storefront.
 
 ```bash
 cd admin
 
-# Clothing store dashboard
-VITE_API_URL=https://api.example.com/api/v1 VITE_STORE_SLUG=clothing bun run build
-# → dist/  (deploy to clothing.example.com)
+# Clothing store admin (paired with clothing storefront)
+VITE_API_URL=https://api.example.com/api/v1 VITE_APP_MODE=store VITE_STORE_SLUG=clothing bun run build
+# → dist/store/clothing/  (deploy to clothing-admin.example.com)
 
-# Electronics store dashboard
-VITE_API_URL=https://api.example.com/api/v1 VITE_STORE_SLUG=electronics bun run build
-# → dist/  (deploy to electronics.example.com)
+# Electronics store admin (paired with electronics storefront)
+VITE_API_URL=https://api.example.com/api/v1 VITE_APP_MODE=store VITE_STORE_SLUG=electronics bun run build
+# → dist/store/electronics/  (deploy to electronics-admin.example.com)
 ```
 
 ```bash
-# Development — run multiple instances on different ports
-VITE_API_URL=http://localhost:8000/api VITE_STORE_SLUG=clothing bun run dev --port 3001
-VITE_API_URL=http://localhost:8000/api VITE_STORE_SLUG=electronics bun run dev --port 3002
+# Development — run multiple admin instances on different ports
+VITE_APP_MODE=store VITE_STORE_SLUG=clothing bun run dev --port 3001
+VITE_APP_MODE=store VITE_STORE_SLUG=electronics bun run dev --port 3002
 ```
 
-### What the env var controls
+### What the env vars control
 
-| Behavior | Root (`VITE_STORE_SLUG` empty) | Per-Store (`VITE_STORE_SLUG=clothing`) |
+| Behavior | System (`APP_MODE=system`) | Per-Store (`APP_MODE=store, SLUG=clothing`) |
 |---|---|---|
-| Store selector in header | ✅ Shown for root users | ❌ Hidden |
+| Deployments | Single (one admin for all stores) | One per storefront |
 | Login restriction | None | Blocks root users |
-| X-Store header sent to API | From store selector selection | Fixed to the deployment slug |
+| X-Store header sent to API | Scoped to store from user context | Fixed to the deployment slug |
 | System pages (Users, Stores, Audit) | ✅ Visible | ❌ Hidden |
-| Default store scope | "All Stores" (unless a store is selected) | Fixed to the deployment store |
 
 ## Project Structure
 
@@ -135,13 +140,28 @@ src/
 
 ## Key Features
 
+### E-Commerce Management
+- **Product catalog** — full CRUD with variants, images, categories, brands, suppliers, import/export CSV
+- **Inventory** — stock movement history, per-variant tracking
+- **Orders** — sales list with filters, order detail with item-level returns
+- **Invoicing** — invoices with search, filters, PDF generation, print, receipt
+- **Customers** — CRM with search and pagination
+- **Discounts** — percentage or fixed, applies to all/category/product
+- **Suppliers** — contact management
+- **Reports** — sales overview, best sellers, payment methods, Chart.js bar chart (7d/30d/month)
+- **Multi-store** — switch stores via dropdown (root), or deploy per-store with fixed scope
+- **User management** — staff roles (root, store_admin, staff) with admin-only pages
+
+### Point of Sale
+- **POS** — product grid, barcode scanning, cart, inline discounts, checkout
 - **Barcode scanning** — auto-detects scanner input, looks up SKU, adds to cart
+- **Cash sessions** — open/close register tracking
+
+### System & Platform
+- **RBAC** — role-based sidebar visibility and route guards
 - **Dark mode** — toggle persisted in localStorage, system preference detection
 - **i18n** — English + Burmese (မြန်မာ), validation errors translated
 - **Responsive** — collapsible sidebar, mobile-friendly grids and tables
 - **Toast notifications** — success/error/info with auto-dismiss
 - **Pagination** — server-side pagination on all list pages
-- **Product/variant images** — upload with live preview
-- **Discounts** — percentage or fixed, applies to all/category/product
-- **Sales chart** — Chart.js bar chart with 7d/30d/month toggle
 - **Keyboard shortcuts** — `Ctrl+K` / `/` to focus POS search

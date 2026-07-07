@@ -12,6 +12,7 @@ export const storeRoutes: RouteRecordRaw[] = [
   { path: 'customers/:id', name: 'customer-detail', component: () => import('../pages/store/CustomerDetailPage.vue') },
   { path: 'sales', name: 'sales', component: () => import('../pages/store/SalesListPage.vue') },
   { path: 'sales/:id', name: 'sale-detail', component: () => import('../pages/store/SaleDetailPage.vue') },
+  { path: 'notifications', name: 'notifications', component: () => import('../pages/store/NotificationsPage.vue') },
   { path: 'invoices', name: 'invoices', component: () => import('../pages/store/InvoiceListPage.vue') },
   { path: 'invoices/:id', name: 'invoice-detail', component: () => import('../pages/store/InvoiceDetailPage.vue') },
   { path: 'reports', name: 'reports', component: () => import('../pages/store/ReportsPage.vue') },

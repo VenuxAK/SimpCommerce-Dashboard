@@ -1,17 +1,60 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { Menu } from 'lucide-vue-next'
 import SystemSidebar from './SystemSidebar.vue'
 import StoreSidebar from './StoreSidebar.vue'
 import AppHeader from './AppHeader.vue'
 import { useUIStore } from '../../stores/ui'
+import { useAuthStore } from '../../stores/auth'
+import { createEcho } from '../../lib/echo'
+import { useNotify } from '../../lib/notify'
 
 const appMode = import.meta.env.VITE_APP_MODE || 'store'
 
 const sidebarOpen = ref(false)
 const ui = useUIStore()
+const auth = useAuthStore()
 
 const SidebarComponent = computed(() => appMode === 'system' ? SystemSidebar : StoreSidebar)
+
+const notifier = useNotify()
+let echoInstance: ReturnType<typeof createEcho> | null = null
+
+function connectEcho() {
+  if (!auth.token) return
+  disconnectEcho()
+
+  echoInstance = createEcho()
+  const channel = echoInstance.channel(`store.${ui.activeStoreSlug || 'main'}`)
+
+  channel.listen('.new-order', (data: any) => {
+    notifier.info(`New order: ${data.title}`)
+    window.dispatchEvent(new CustomEvent('notification-received'))
+  })
+
+  channel.listen('.payment-confirmed', (data: any) => {
+    notifier.success(`Payment confirmed: ${data.title}`)
+    window.dispatchEvent(new CustomEvent('notification-received'))
+  })
+}
+
+function disconnectEcho() {
+  if (echoInstance) {
+    echoInstance.disconnect()
+    echoInstance = null
+  }
+}
+
+onMounted(() => {
+  if (auth.token) connectEcho()
+})
+
+watch(() => auth.token, (token) => {
+  if (token) connectEcho()
+  else disconnectEcho()
+})
+
+onUnmounted(() => disconnectEcho())
 </script>
 
 <template>

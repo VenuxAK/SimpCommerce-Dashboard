@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { Languages, Moon, Sun, LogOut, UserCircle, Palette, ChevronRight, ChevronDown, Building2 } from 'lucide-vue-next'
+import { Languages, Moon, Sun, LogOut, UserCircle, Palette, ChevronRight, ChevronDown, Building2, Bell, BellDot } from 'lucide-vue-next'
 import { useAuthStore } from '../../stores/auth'
 import { useTheme } from '../../lib/theme'
 import { useUIStore, type ThemeColor } from '../../stores/ui'
-import { useRouter } from 'vue-router'
+import { useNotificationApi } from '../../composables/api/useNotificationApi'
+import NotificationDropdown from '../NotificationDropdown.vue'
 import api from '../../lib/axios'
 
 const { t } = useI18n()
@@ -54,6 +55,7 @@ const breadcrumbLabels: Record<string, string> = {
   users: 'nav.users',
   stores: 'nav.stores',
   profile: 'nav.profile',
+  notifications: 'nav.notifications',
 }
 
 const breadcrumbs = computed(() => {
@@ -91,6 +93,34 @@ function toggleLang() {
 
 const { locale } = useI18n()
 
+const notifApi = useNotificationApi()
+
+const unreadCount = ref(0)
+const notifDropdownOpen = ref(false)
+let notifPollId: ReturnType<typeof setInterval> | null = null
+
+async function fetchUnreadCount() {
+  try {
+    const res = await notifApi.unreadCount()
+    unreadCount.value = res.data?.count ?? 0
+  } catch { unreadCount.value = 0 }
+}
+
+function startNotifPolling() {
+  fetchUnreadCount()
+  stopNotifPolling()
+  notifPollId = setInterval(fetchUnreadCount, 30000)
+}
+
+function stopNotifPolling() {
+  if (notifPollId) { clearInterval(notifPollId); notifPollId = null }
+}
+
+function toggleNotifDropdown() {
+  notifDropdownOpen.value = !notifDropdownOpen.value
+  if (notifDropdownOpen.value) fetchUnreadCount()
+}
+
 async function handleLogout() {
   try { await api.post('/auth/logout') } catch {}
   auth.logout()
@@ -106,16 +136,25 @@ function handleClickOutside(e: MouseEvent) {
   if (storePickerOpen.value && !target.closest('.store-picker')) {
     storePickerOpen.value = false
   }
+  if (notifDropdownOpen.value && !target.closest('.notif-dropdown') && !target.closest('.notif-bell')) {
+    notifDropdownOpen.value = false
+  }
 }
 
 onMounted(() => {
   document.documentElement.setAttribute('lang', locale.value)
   window.addEventListener('click', handleClickOutside)
+  window.addEventListener('notification-received', fetchUnreadCount)
   if (auth.isRoot) {
     fetchStores()
   }
+  startNotifPolling()
 })
-onUnmounted(() => window.removeEventListener('click', handleClickOutside))
+onUnmounted(() => {
+  window.removeEventListener('click', handleClickOutside)
+  window.removeEventListener('notification-received', fetchUnreadCount)
+  stopNotifPolling()
+})
 </script>
 
 <template>
@@ -174,6 +213,24 @@ onUnmounted(() => window.removeEventListener('click', handleClickOutside))
 
     <!-- Actions -->
     <div class="flex items-center gap-1">
+      <!-- Notification Bell -->
+      <div class="relative">
+        <button
+          @click="toggleNotifDropdown"
+          class="notif-bell flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-all relative"
+          :title="t('nav.notifications')"
+        >
+          <Bell v-if="unreadCount === 0" class="size-4" />
+          <BellDot v-else class="size-4" />
+          <span v-if="unreadCount > 0"
+            class="absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-[16px] h-4 rounded-full bg-red-500 text-[10px] font-bold text-white px-1"
+          >
+            {{ unreadCount > 99 ? '99+' : unreadCount }}
+          </span>
+        </button>
+        <NotificationDropdown v-if="notifDropdownOpen" @close="notifDropdownOpen = false" />
+      </div>
+
       <button
         @click="themeState.toggle()"
         class="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-all"

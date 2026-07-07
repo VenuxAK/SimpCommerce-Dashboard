@@ -23,7 +23,8 @@
     "stores": "စတိုးဆိုင်များ",
     "management": "စီမံခန့်ခွဲမှု",
     "system": "စနစ်",
-    "system_health": "System Health"
+    "system_health": "System Health",
+    "notifications": "အကြောင်းကြားချက်များ"
   },
   "auth": {
     "login": "အကောင့်ဝင်ရန်",
@@ -42,6 +43,12 @@
     "search": "ရှာဖွေမည်",
     "filter": "စစ်ထုတ်မည်",
     "no_data": "ဒေတာမရှိပါ။",
+    "unread": "မဖတ်ရသေး",
+    "read": "ဖတ်ပြီး",
+    "new": "အသစ်",
+    "mark_all_read": "အားလုံးဖတ်ပြီးမှတ်ရန်",
+    "view_all": "အားလုံးကြည့်ရန်",
+    "clear": "ဖျက်ရန်",
     "loading": "ဖွင့်နေသည်...",
     "confirm": "အတည်ပြုမည်",
     "back": "နောက်သို့",

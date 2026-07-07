@@ -231,6 +231,18 @@ export interface CashSession {
   updated_at?: string
 }
 
+export interface OrderNotification {
+  id: number
+  type: 'new_order' | 'status_change' | 'shipment_update' | 'payment_confirmed'
+  title: string
+  body: string
+  order_id: number
+  order_number: string
+  read_at: string | null
+  created_at: string
+  diff_for_humans: string
+}
+
 export interface DashboardSummary {
   today_sales: number
   today_orders_count: number

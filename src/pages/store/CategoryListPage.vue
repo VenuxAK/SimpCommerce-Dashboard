@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Plus, Pencil, Trash2, Package } from 'lucide-vue-next'
+import { Plus, Pencil, Trash2, Package, Image as ImageIcon } from 'lucide-vue-next'
 import { Button } from '../../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
 import Input from '../../components/ui/Input.vue'
@@ -24,14 +24,34 @@ const editing = ref<number | null>(null)
 const name = ref('')
 const description = ref('')
 const parentId = ref<number | null>(null)
+const imageFile = ref<File | null>(null)
+const imagePreview = ref<string | null>(null)
 const fieldErrors = ref<any>(null)
 const saving = ref(false)
+const storageUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
+const getImageUrl = (imagePath: string | null) => {
+  if (!imagePath) return null
+  return imagePath.startsWith('http') ? imagePath : `${storageUrl}/storage/${imagePath}`
+}
+
+const onImageSelected = (e: Event) => {
+  const target = e.target as HTMLInputElement
+  if (target.files && target.files.length > 0) {
+    imageFile.value = target.files[0]
+    const reader = new FileReader()
+    reader.onload = () => { imagePreview.value = reader.result as string }
+    reader.readAsDataURL(imageFile.value)
+  }
+}
 
 const openCreate = () => {
   editing.value = null
   name.value = ''
   description.value = ''
   parentId.value = null
+  imageFile.value = null
+  imagePreview.value = null
   fieldErrors.value = null
   showForm.value = true
 }
@@ -41,6 +61,8 @@ const openEdit = (cat: any) => {
   name.value = cat.name
   description.value = cat.description || ''
   parentId.value = cat.parent_id || null
+  imageFile.value = null
+  imagePreview.value = getImageUrl(cat.image)
   fieldErrors.value = null
   showForm.value = true
 }
@@ -49,15 +71,24 @@ const save = async () => {
   saving.value = true
   fieldErrors.value = null
   try {
-    const payload = { name: name.value, description: description.value, parent_id: parentId.value }
-    if (editing.value) {
-      await categoryApi.update(editing.value, payload)
-    } else {
-      await categoryApi.create(payload)
-    }
-    success(t('common.save'))
-    showForm.value = false
-    loadPage(meta.value?.current_page || 1)
+      const payload = { name: name.value, description: description.value, parent_id: parentId.value }
+      let categoryId = editing.value
+      if (editing.value) {
+        await categoryApi.update(editing.value, payload)
+      } else {
+        const res = await categoryApi.create(payload)
+        categoryId = res.data.data.id
+      }
+      
+      if (imageFile.value && categoryId) {
+        const fd = new FormData()
+        fd.append('image', imageFile.value)
+        await categoryApi.uploadImage(categoryId, fd)
+      }
+      
+      success(t('common.save'))
+      showForm.value = false
+      loadPage(meta.value?.current_page || 1)
   } catch (e: any) {
     if (e.response?.status === 422) {
       fieldErrors.value = e.response.data.errors
@@ -112,6 +143,27 @@ const remove = async (id: number) => {
                 </option>
               </select>
             </div>
+            
+            <div class="space-y-1.5 sm:col-span-2">
+              <label class="text-[10px] font-semibold text-muted-foreground uppercase ml-0.5">Image</label>
+              <div class="flex items-center gap-4">
+                <div v-if="imagePreview" class="relative group shrink-0">
+                  <img :src="imagePreview" class="size-16 rounded-md border object-cover" />
+                  <button @click="imagePreview = null; imageFile = null" class="absolute -top-2 -right-2 rounded-full bg-destructive text-destructive-foreground p-1 shadow-md opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Trash2 class="size-3" />
+                  </button>
+                </div>
+                <div v-else class="size-16 rounded-md border border-dashed flex items-center justify-center shrink-0 bg-muted/30">
+                  <ImageIcon class="size-6 text-muted-foreground/50" />
+                </div>
+                <label class="cursor-pointer">
+                  <span class="text-xs font-medium bg-secondary text-secondary-foreground hover:bg-secondary/80 px-3 py-1.5 rounded-md transition-colors">
+                    {{ imagePreview ? 'Change Image' : 'Select Image' }}
+                  </span>
+                  <input type="file" accept="image/*" class="hidden" @change="onImageSelected" />
+                </label>
+              </div>
+            </div>
           </div>
           <div class="flex items-center gap-3 pt-2">
             <Button size="sm" :disabled="saving" @click="save" class="h-8 px-6 text-[10px] font-semibold">
@@ -131,12 +183,18 @@ const remove = async (id: number) => {
 
     <div v-else class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       <Card v-for="cat in categories" :key="cat.id" class="group hover:border-primary/40 transition-all shadow-none">
-        <CardContent class="p-5 flex items-center justify-between">
-          <div class="min-w-0">
-            <h3 class="font-semibold text-sm truncate group-hover:text-primary transition-colors">
-              <span v-if="cat.parent_id" class="text-muted-foreground mr-1">↳</span>{{ cat.name }}
-            </h3>
-            <p class="text-[10px] text-muted-foreground mt-1">{{ cat.products_count }} {{ t('categories.products_count') }}</p>
+        <CardContent class="p-5 flex items-center justify-between gap-4">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="size-10 shrink-0 rounded border bg-muted flex items-center justify-center overflow-hidden">
+              <img v-if="cat.image" :src="getImageUrl(cat.image)!" class="size-full object-cover" />
+              <ImageIcon v-else class="size-4 text-muted-foreground/50" />
+            </div>
+            <div class="min-w-0">
+              <h3 class="font-semibold text-sm truncate group-hover:text-primary transition-colors">
+                <span v-if="cat.parent_id" class="text-muted-foreground mr-1">↳</span>{{ cat.name }}
+              </h3>
+              <p class="text-[10px] text-muted-foreground mt-1">{{ cat.products_count }} {{ t('categories.products_count') }}</p>
+            </div>
           </div>
           <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
             <Button variant="ghost" size="icon" class="size-7 rounded-full" @click="openEdit(cat)">

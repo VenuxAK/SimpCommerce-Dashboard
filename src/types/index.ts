@@ -16,6 +16,8 @@ export interface Category {
   slug: string
   description: string | null
   parent_id: number | null
+  image: string | null
+  image_url: string | null
   products_count?: number
   created_at?: string
   updated_at?: string

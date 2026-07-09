@@ -28,12 +28,6 @@ const imageFile = ref<File | null>(null)
 const imagePreview = ref<string | null>(null)
 const fieldErrors = ref<any>(null)
 const saving = ref(false)
-const storageUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-
-const getImageUrl = (imagePath: string | null) => {
-  if (!imagePath) return null
-  return imagePath.startsWith('http') ? imagePath : `${storageUrl}/storage/${imagePath}`
-}
 
 const onImageSelected = (e: Event) => {
   const target = e.target as HTMLInputElement
@@ -62,7 +56,7 @@ const openEdit = (cat: any) => {
   description.value = cat.description || ''
   parentId.value = cat.parent_id || null
   imageFile.value = null
-  imagePreview.value = getImageUrl(cat.image)
+  imagePreview.value = cat.image_url
   fieldErrors.value = null
   showForm.value = true
 }
@@ -186,7 +180,7 @@ const remove = async (id: number) => {
         <CardContent class="p-5 flex items-center justify-between gap-4">
           <div class="flex items-center gap-3 min-w-0">
             <div class="size-10 shrink-0 rounded border bg-muted flex items-center justify-center overflow-hidden">
-              <img v-if="cat.image" :src="getImageUrl(cat.image)!" class="size-full object-cover" />
+              <img v-if="cat.image_url" :src="cat.image_url" class="size-full object-cover" />
               <ImageIcon v-else class="size-4 text-muted-foreground/50" />
             </div>
             <div class="min-w-0">

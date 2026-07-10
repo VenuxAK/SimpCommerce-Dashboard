@@ -3,7 +3,7 @@ import { useAuthStore } from '../stores/auth'
 import { useUIStore } from '../stores/ui'
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1',
+  baseURL: import.meta.env.VITE_API_URL || '/api/v1',
   headers: { 'Content-Type': 'application/json' },
   timeout: 15000, // 15 seconds
 })
@@ -15,8 +15,17 @@ api.interceptors.request.use((config) => {
   }
 
   const ui = useUIStore()
-  if (ui.activeStoreSlug) {
-    config.headers['X-Store'] = ui.activeStoreSlug
+  let storeSlug = ui.activeStoreSlug
+
+  if (!storeSlug && typeof window !== 'undefined') {
+    const match = window.location.pathname.match(/^\/store\/([^/]+)/)
+    if (match) {
+      storeSlug = match[1]
+    }
+  }
+
+  if (storeSlug) {
+    config.headers['X-Store'] = storeSlug
   }
 
   const locale = localStorage.getItem('locale') || 'en'

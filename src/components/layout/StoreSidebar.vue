@@ -66,8 +66,17 @@ function isItemVisible(item: NavItem): boolean {
   return item.roles.some(r => auth.role === r)
 }
 
-function isActive(path: string) {
-  if (path === '/') return route.path === '/'
+function getItemPath(item: NavItem): string {
+  if (item.external) return item.to
+  return `/store/${ui.activeStoreSlug}${item.to === '/' ? '' : item.to}`
+}
+
+function isActive(item: NavItem) {
+  if (item.external) return false
+  const path = getItemPath(item)
+  if (item.to === '/') {
+    return route.path === path || route.path === `${path}/`
+  }
   return route.path.startsWith(path)
 }
 
@@ -81,7 +90,7 @@ function navigate(item: NavItem) {
   if (item.external) {
     window.open(item.to, '_blank')
   } else {
-    router.push(item.to)
+    router.push(getItemPath(item))
   }
   emit('close')
 }
@@ -128,13 +137,13 @@ function navigate(item: NavItem) {
             @click="navigate(item)"
             :class="[
               'relative flex items-center rounded-md px-3 py-2 text-xs font-medium transition-all group w-full cursor-pointer',
-              isActive(item.to) ? 'text-primary bg-primary/10' : 'text-sidebar-muted hover:text-sidebar-accent-foreground hover:bg-sidebar-accent',
+              isActive(item) ? 'text-primary bg-primary/10' : 'text-sidebar-muted hover:text-sidebar-accent-foreground hover:bg-sidebar-accent',
               ui.sidebarCollapsed ? 'justify-center' : 'gap-3',
             ]"
             :title="ui.sidebarCollapsed ? t(item.label) : ''"
           >
-            <div v-if="isActive(item.to) && !item.external && !ui.sidebarCollapsed" class="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full bg-primary" />
-            <component :is="item.icon" :class="['size-4 shrink-0', isActive(item.to) && !item.external ? 'text-primary' : '']" />
+            <div v-if="isActive(item) && !item.external && !ui.sidebarCollapsed" class="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full bg-primary" />
+            <component :is="item.icon" :class="['size-4 shrink-0', isActive(item) && !item.external ? 'text-primary' : '']" />
             <span v-if="!ui.sidebarCollapsed" class="truncate">{{ item.external ? item.label : t(item.label) }}</span>
           </button>
         </div>

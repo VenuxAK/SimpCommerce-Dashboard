@@ -16,12 +16,8 @@ const ui = useUIStore()
 const themeState = useTheme()
 const router = useRouter()
 const route = useRoute()
-const appMode = import.meta.env.VITE_APP_MODE || 'store'
-
 const dropdownOpen = ref(false)
 const themePickerOpen = ref(false)
-const storePickerOpen = ref(false)
-const stores = ref<{ id: number; name: string; slug: string }[]>([])
 
 const themes: { name: ThemeColor; color: string }[] = [
   { name: 'zinc', color: 'bg-zinc-500' },
@@ -54,7 +50,7 @@ const breadcrumbLabels: Record<string, string> = {
   'audit-logs': 'nav.audit',
   users: 'nav.users',
   stores: 'nav.stores',
-  profile: 'nav.profile',
+  profile: 'profile.title',
   notifications: 'nav.notifications',
 }
 
@@ -68,21 +64,8 @@ const breadcrumbs = computed(() => {
 })
 
 const currentStoreName = computed(() => {
-  return stores.value.find(s => s.slug === ui.activeStoreSlug)?.name || ui.activeStoreSlug || t('common.all_stores')
+  return auth.user?.store?.name || ui.activeStoreSlug || ''
 })
-
-async function fetchStores() {
-  try {
-    const res = await api.get('/stores')
-    stores.value = res.data.data || []
-  } catch {}
-}
-
-function selectStore(slug: string) {
-  ui.setStore(slug)
-  storePickerOpen.value = false
-  router.push('/') // refresh dashboard with new store context
-}
 
 function toggleLang() {
   const next = locale.value === 'en' ? 'my' : 'en'
@@ -133,9 +116,6 @@ function handleClickOutside(e: MouseEvent) {
     dropdownOpen.value = false
     themePickerOpen.value = false
   }
-  if (storePickerOpen.value && !target.closest('.store-picker')) {
-    storePickerOpen.value = false
-  }
   if (notifDropdownOpen.value && !target.closest('.notif-dropdown') && !target.closest('.notif-bell')) {
     notifDropdownOpen.value = false
   }
@@ -145,9 +125,6 @@ onMounted(() => {
   document.documentElement.setAttribute('lang', locale.value)
   window.addEventListener('click', handleClickOutside)
   window.addEventListener('notification-received', fetchUnreadCount)
-  if (auth.isRoot) {
-    fetchStores()
-  }
   startNotifPolling()
 })
 onUnmounted(() => {
@@ -160,42 +137,10 @@ onUnmounted(() => {
 <template>
   <div class="flex items-center justify-between w-full">
     <div class="flex items-center gap-3">
-      <!-- Store Selector (root in multi-store mode, or label for store users) -->
-      <div v-if="!ui.isStoreFixed && appMode !== 'system'" class="relative store-picker">
-        <template v-if="auth.isRoot">
-          <button
-            @click="storePickerOpen = !storePickerOpen"
-            class="flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-all border border-border/60"
-          >
-            <Building2 class="size-3.5" />
-            <span>{{ currentStoreName }}</span>
-            <ChevronDown class="size-3" :class="storePickerOpen ? 'rotate-180' : ''" />
-          </button>
-          <div v-if="storePickerOpen"
-            class="absolute left-0 top-full mt-1.5 w-48 rounded-md border bg-popover p-1 shadow-lg z-50 text-popover-foreground animate-in fade-in zoom-in-95"
-          >
-            <button
-              @click="selectStore('')"
-              class="flex w-full items-center rounded-sm px-2.5 py-2 text-xs hover:bg-accent transition-all"
-              :class="!ui.activeStoreSlug ? 'font-medium text-foreground bg-accent' : 'text-muted-foreground'"
-            >
-              {{ t('common.all_stores') }}
-            </button>
-            <button
-              v-for="s in stores"
-              :key="s.id"
-              @click="selectStore(s.slug)"
-              class="flex w-full items-center rounded-sm px-2.5 py-2 text-xs hover:bg-accent transition-all"
-              :class="ui.activeStoreSlug === s.slug ? 'font-medium text-foreground bg-accent' : 'text-muted-foreground'"
-            >
-              {{ s.name }}
-            </button>
-          </div>
-        </template>
-        <div v-else-if="currentStoreName" class="flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground border border-border/60">
-          <Building2 class="size-3.5" />
-          <span>{{ currentStoreName }}</span>
-        </div>
+      <!-- Store Indicator -->
+      <div v-if="currentStoreName" class="flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground border border-border/60">
+        <Building2 class="size-3.5" />
+        <span>{{ currentStoreName }}</span>
       </div>
 
       <!-- Breadcrumbs -->

@@ -10,14 +10,15 @@ declare global {
 window.Pusher = Pusher
 
 export function createEcho() {
+  const port = import.meta.env.VITE_REVERB_PORT
   return new Echo({
     broadcaster: 'reverb',
     key: import.meta.env.VITE_REVERB_APP_KEY ?? '',
     wsHost: import.meta.env.VITE_REVERB_HOST ?? 'localhost',
-    wsPort: import.meta.env.VITE_REVERB_PORT ? Number(import.meta.env.VITE_REVERB_PORT) : 8080,
-    wssPort: import.meta.env.VITE_REVERB_PORT ? Number(import.meta.env.VITE_REVERB_PORT) : 8080,
-    forceTLS: false,
-    enabledTransports: ['ws'],
+    ...(port && { wsPort: Number(port) }),
+    ...(port && { wssPort: Number(port) }),
+    forceTLS: !port,
+    enabledTransports: port ? ['ws'] : ['wss'],
     authorizer: (_channel: any, _options: any) => ({
       authorize: (socketId: string, callback: any) => {
         callback(null, { auth: '' })

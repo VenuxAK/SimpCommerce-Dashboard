@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { Menu } from 'lucide-vue-next'
-import SystemSidebar from './SystemSidebar.vue'
 import StoreSidebar from './StoreSidebar.vue'
 import AppHeader from './AppHeader.vue'
 import { useUIStore } from '../../stores/ui'
@@ -9,13 +8,11 @@ import { useAuthStore } from '../../stores/auth'
 import { createEcho } from '../../lib/echo'
 import { useNotify } from '../../lib/notify'
 
-const appMode = import.meta.env.VITE_APP_MODE || 'store'
-
 const sidebarOpen = ref(false)
 const ui = useUIStore()
 const auth = useAuthStore()
 
-const SidebarComponent = computed(() => appMode === 'system' ? SystemSidebar : StoreSidebar)
+const SidebarComponent = StoreSidebar
 
 const notifier = useNotify()
 let echoInstance: ReturnType<typeof createEcho> | null = null

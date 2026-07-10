@@ -24,23 +24,21 @@ const handleLogin = async () => {
   try {
     await auth.login(email.value, password.value)
 
-    const appMode = import.meta.env.VITE_APP_MODE || 'store'
-
-    if (appMode === 'store' && auth.isRoot) {
-      error.value = 'Root users should use the system admin panel.'
+    if (auth.isRoot) {
+      error.value = 'Root users must use the System Admin Portal.'
       auth.logout()
       loading.value = false
       return
     }
 
-    if (appMode === 'system' && !auth.isRoot) {
-      error.value = 'Only root users can access the system admin panel.'
+    if (auth.user?.store?.slug) {
+      router.push(`/store/${auth.user.store.slug}`)
+    } else {
+      error.value = 'No store assigned to this account.'
       auth.logout()
       loading.value = false
       return
     }
-
-    router.push('/')
   } catch (err: any) {
     if (!err.response) {
       error.value = t('common.error') + ': ' + (t('dashboard.load_failed'))

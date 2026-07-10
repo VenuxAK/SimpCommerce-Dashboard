@@ -6,6 +6,11 @@ export interface User {
   email: string
   role: UserRole
   store_id: number | null
+  store?: {
+    id: number
+    slug: string
+    name: string
+  } | null
   created_at?: string
   updated_at?: string
 }
@@ -16,6 +21,8 @@ export interface Category {
   slug: string
   description: string | null
   parent_id: number | null
+  image: string | null
+  image_url: string | null
   products_count?: number
   created_at?: string
   updated_at?: string

@@ -6,6 +6,11 @@ export interface User {
   email: string
   role: UserRole
   store_id: number | null
+  store?: {
+    id: number
+    slug: string
+    name: string
+  } | null
   created_at?: string
   updated_at?: string
 }

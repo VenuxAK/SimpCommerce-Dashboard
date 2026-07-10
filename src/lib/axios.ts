@@ -15,8 +15,17 @@ api.interceptors.request.use((config) => {
   }
 
   const ui = useUIStore()
-  if (ui.activeStoreSlug) {
-    config.headers['X-Store'] = ui.activeStoreSlug
+  let storeSlug = ui.activeStoreSlug
+
+  if (!storeSlug && typeof window !== 'undefined') {
+    const match = window.location.pathname.match(/^\/store\/([^/]+)/)
+    if (match) {
+      storeSlug = match[1]
+    }
+  }
+
+  if (storeSlug) {
+    config.headers['X-Store'] = storeSlug
   }
 
   const locale = localStorage.getItem('locale') || 'en'

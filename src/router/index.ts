@@ -2,6 +2,9 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useUIStore } from '../stores/ui'
 import { storeRoutes } from './store-routes'
+import { useProgress } from '../composables'
+
+const progress = useProgress()
 
 const router = createRouter({
   history: createWebHistory(),
@@ -39,6 +42,7 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to) => {
+  progress.start()
   const auth = useAuthStore()
   const ui = useUIStore()
 
@@ -97,6 +101,14 @@ router.beforeEach(async (to) => {
     auth.logout()
     return '/login'
   }
+})
+
+router.afterEach(() => {
+  progress.done()
+})
+
+router.onError(() => {
+  progress.done()
 })
 
 export default router

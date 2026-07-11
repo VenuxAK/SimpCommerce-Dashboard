@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { Plus, Pencil, LayoutGrid, List, Download, Search, Package, Upload } from 'lucide-vue-next'
 import { Button } from '../../components/ui/button'
 import { Card, CardContent } from '../../components/ui/card'
@@ -18,6 +18,7 @@ import type { Product, Category } from '../../types'
 
 const { t } = useI18n()
 const router = useRouter()
+const route = useRoute()
 const { success, error } = useNotify()
 const productApi = useProductApi()
 const categoryApi = useCategoryApi()
@@ -105,7 +106,7 @@ const getStockBadge = (qty: number) => {
         <Button variant="outline" size="sm" @click="exportCsv">
           <Download class="size-3.5 mr-2" /> {{ t('common.export') }}
         </Button>
-        <Button size="sm" @click="router.push('/products/new')">
+        <Button size="sm" @click="router.push(`/store/${route.params.storeSlug}/products/new`)">
           <Plus class="size-3.5 mr-2" /> {{ t('products.new_product') }}
         </Button>
       </div>
@@ -177,7 +178,7 @@ const getStockBadge = (qty: number) => {
                   </div>
                 </td>
                 <td class="px-4 py-2 text-right">
-                  <Button variant="ghost" size="icon" class="size-7" @click="router.push(`/products/${product.id}/edit`)">
+                  <Button variant="ghost" size="icon" class="size-7" @click="router.push(`/store/${route.params.storeSlug}/products/${product.id}/edit`)">
                     <Pencil class="size-3.5 text-muted-foreground hover:text-foreground" />
                   </Button>
                 </td>
@@ -203,7 +204,7 @@ const getStockBadge = (qty: number) => {
             <h3 class="font-semibold text-sm mt-1 truncate">{{ product.name }}</h3>
             <div class="flex items-center justify-between mt-4">
               <p class="font-bold text-sm text-primary tabular-nums">{{ product.base_price.toLocaleString() }} Ks</p>
-              <Button variant="outline" size="icon" class="size-7 rounded-full" @click="router.push(`/products/${product.id}/edit`)">
+              <Button variant="outline" size="icon" class="size-7 rounded-full" @click="router.push(`/store/${route.params.storeSlug}/products/${product.id}/edit`)">
                 <Pencil class="size-3" />
               </Button>
             </div>

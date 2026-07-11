@@ -202,7 +202,7 @@ const save = async () => {
     }
 
     success(t('common.save') + ' ✅')
-    router.push('/products')
+    router.push(`/store/${route.params.storeSlug}/products`)
   } catch (e: any) {
     if (e?.response?.data?.errors) {
       fieldErrors.value = e.response.data.errors

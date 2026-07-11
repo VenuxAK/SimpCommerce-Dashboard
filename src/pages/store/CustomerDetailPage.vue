@@ -66,7 +66,7 @@ onMounted(async () => {
         <CardContent class="p-0 overflow-x-auto">
           <div v-for="order in orders" :key="order.id"
             class="flex items-center justify-between border-b border-border/60 px-4 sm:px-6 py-3 last:border-0 cursor-pointer hover:bg-muted/30 transition-colors"
-            @click="router.push('/sales/' + order.id)">
+            @click="router.push(`/store/${route.params.storeSlug}/sales/${order.id}`)">
             <div class="min-w-0">
               <p class="text-sm font-medium text-foreground truncate">{{ order.order_number }}</p>
               <p class="text-xs text-muted-foreground">{{ order.created_at }}</p>

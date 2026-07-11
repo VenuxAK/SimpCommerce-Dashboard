@@ -18,6 +18,7 @@ const router = useRouter()
 const route = useRoute()
 const dropdownOpen = ref(false)
 const themePickerOpen = ref(false)
+const pathPrefix = computed(() => ui.activeStoreSlug ? `/store/${ui.activeStoreSlug}` : '')
 
 const themes: { name: ThemeColor; color: string }[] = [
   { name: 'zinc', color: 'bg-zinc-500' },
@@ -240,7 +241,7 @@ onUnmounted(() => {
           </div>
 
           <button
-            @click="router.push('/profile'); dropdownOpen = false"
+            @click="router.push(pathPrefix + '/profile'); dropdownOpen = false"
             class="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-xs hover:bg-accent transition-all"
           >
             <UserCircle class="size-4 text-muted-foreground" />

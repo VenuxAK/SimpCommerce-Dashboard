@@ -6,7 +6,7 @@ import { Badge } from '../../components/ui/badge'
 import { Button } from '../../components/ui/button'
 import { useNotify } from '../../lib/notify'
 import type { DashboardSummary } from '../../types'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useTheme } from '../../lib/theme'
 import { useAuthStore } from '../../stores/auth'
 import { useReportApi, useBackupApi } from '../../composables/api'
@@ -28,6 +28,8 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip)
 const auth = useAuthStore()
 const { t } = useI18n()
 const router = useRouter()
+const route = useRoute()
+const pathPrefix = computed(() => route.params.storeSlug ? `/store/${route.params.storeSlug}` : '')
 const { success, error } = useNotify()
 const reportApi = useReportApi()
 const backupApi = useBackupApi()
@@ -297,7 +299,7 @@ const statusBadge = (status: string) => {
           <Card class="lg:col-span-2 shadow-none">
             <CardHeader class="flex flex-row items-center justify-between py-3 px-5 border-b">
               <CardTitle class="text-sm font-medium">{{ t('nav.audit') }}</CardTitle>
-              <Button variant="ghost" size="sm" class="text-xs gap-1" @click="router.push('/audit-logs')">
+              <Button variant="ghost" size="sm" class="text-xs gap-1" @click="router.push(pathPrefix + '/audit-logs')">
                 {{ t('common.details') }} <ArrowRight class="size-3" />
               </Button>
             </CardHeader>
@@ -418,7 +420,7 @@ const statusBadge = (status: string) => {
           <Card class="shadow-none">
             <CardHeader class="flex flex-row items-center justify-between py-3 px-5 border-b">
               <CardTitle class="text-sm font-medium">{{ t('dashboard.recent_orders') }}</CardTitle>
-              <Button variant="ghost" size="sm" class="text-xs gap-1" @click="router.push('/sales')">
+              <Button variant="ghost" size="sm" class="text-xs gap-1" @click="router.push(pathPrefix + '/sales')">
                 {{ t('common.details') }} <ArrowRight class="size-3" />
               </Button>
             </CardHeader>
@@ -426,7 +428,7 @@ const statusBadge = (status: string) => {
               <div
                 v-for="order in summary?.recent_orders" :key="order.id"
                 class="flex items-center justify-between px-5 py-3.5 cursor-pointer hover:bg-muted/30 transition-colors group"
-                @click="router.push('/sales/' + order.id)"
+                @click="router.push(pathPrefix + '/sales/' + order.id)"
               >
                 <div class="flex items-center gap-3 min-w-0 flex-1">
                   <div class="size-8 rounded-md bg-muted flex items-center justify-center text-muted-foreground text-xs font-medium shrink-0">
@@ -449,7 +451,7 @@ const statusBadge = (status: string) => {
           <Card class="shadow-none">
             <CardHeader class="flex flex-row items-center justify-between py-3 px-5 border-b">
               <CardTitle class="text-sm font-medium">{{ t('dashboard.low_stock') }}</CardTitle>
-              <Button variant="ghost" size="sm" class="text-xs gap-1" @click="router.push('/stock')">
+              <Button variant="ghost" size="sm" class="text-xs gap-1" @click="router.push(pathPrefix + '/stock')">
                 {{ t('common.details') }} <ArrowRight class="size-3" />
               </Button>
             </CardHeader>

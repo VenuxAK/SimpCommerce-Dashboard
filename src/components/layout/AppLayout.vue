@@ -83,9 +83,13 @@ onUnmounted(() => disconnectEcho())
 </template>
 
 <style scoped>
-.page-enter-active,
+.page-enter-active {
+  transition: opacity 0.12s cubic-bezier(0.4, 0, 0.2, 1), transform 0.12s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: opacity, transform;
+}
 .page-leave-active {
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  transition: opacity 0.07s cubic-bezier(0.4, 0, 1, 1), transform 0.07s cubic-bezier(0.4, 0, 1, 1);
+  will-change: opacity, transform;
 }
 .page-enter-from {
   opacity: 0;

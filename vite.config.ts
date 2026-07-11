@@ -27,5 +27,24 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
+    build: {
+      cssCodeSplit: true,
+      chunkSizeWarningLimit: 1000,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('vue') || id.includes('pinia') || id.includes('vue-router') || id.includes('vue-i18n')) {
+                return 'vendor-core'
+              }
+              if (id.includes('lucide') || id.includes('reverb')) {
+                return 'vendor-ui'
+              }
+              return 'vendor'
+            }
+          }
+        }
+      }
+    }
   }
 })

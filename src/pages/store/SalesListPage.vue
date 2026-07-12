@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
-import { Search, Eye, FileText } from 'lucide-vue-next'
-import { Button } from '../../components/ui/button'
+import { useRoute, useRouter } from 'vue-router'
+import { Search, FileText } from 'lucide-vue-next'
 import { Card, CardContent } from '../../components/ui/card'
 import Input from '../../components/ui/Input.vue'
 import Select from '../../components/ui/Select.vue'
@@ -15,6 +14,7 @@ import PageHeader from '../../components/PageHeader.vue'
 import { useListing, useDebouncedWatch, statusBadge } from '../../composables'
 
 const { t } = useI18n()
+const route = useRoute()
 const router = useRouter()
 
 const { items: orders, meta, loading, loadPage } = useListing<any>('/orders', { immediate: false })
@@ -79,11 +79,12 @@ loadPage(1)
               <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider">{{ t('common.date') }}</th>
               <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-center">{{ t('common.status') }}</th>
               <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-right">{{ t('sales.total') }}</th>
-              <th class="px-6 py-3 font-semibold text-muted-foreground uppercase tracking-wider text-right w-20">{{ t('common.actions') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y">
-            <tr v-for="order in orders" :key="order.id" class="hover:bg-muted/30 transition-colors group">
+            <tr v-for="order in orders" :key="order.id"
+              class="hover:bg-muted/30 cursor-pointer transition-colors group"
+              @click="router.push(`/store/${route.params.storeSlug}/sales/${order.id}`)">
               <td class="px-6 py-4 font-semibold text-foreground">
                 {{ order.order_number }}
               </td>
@@ -109,11 +110,6 @@ loadPage(1)
               </td>
               <td class="px-6 py-4 text-right font-bold tabular-nums">
                 {{ order.total_amount.toLocaleString() }} Ks
-              </td>
-              <td class="px-6 py-4 text-right">
-                <Button variant="ghost" size="icon" class="size-7" @click="router.push(`/sales/${order.id}`)">
-                  <Eye class="size-3.5 text-muted-foreground hover:text-foreground" />
-                </Button>
               </td>
             </tr>
           </tbody>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { cn } from '../../lib/utils'
 import { ChevronDown, Check } from 'lucide-vue-next'
 
@@ -35,7 +35,7 @@ function selectOption(option: Option) {
 
 function updateLabel() {
   const selected = props.options.find(o => o.value === props.modelValue)
-  selectedLabel.value = selected ? selected.label : (props.placeholder || 'Select...')
+  selectedLabel.value = selected ? selected.label : (props.placeholder || 'Select…')
 }
 
 function handleClickOutside(e: MouseEvent) {
@@ -48,6 +48,9 @@ onMounted(() => {
   updateLabel()
   window.addEventListener('click', handleClickOutside)
 })
+
+watch(() => props.modelValue, updateLabel)
+watch(() => props.options, updateLabel)
 
 onUnmounted(() => {
   window.removeEventListener('click', handleClickOutside)

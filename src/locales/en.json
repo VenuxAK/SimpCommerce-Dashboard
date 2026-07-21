@@ -69,6 +69,8 @@
     "error": "Something went wrong",
     "error_short": "Error",
     "select": "Select...",
+    "select_category": "Select Category",
+    "select_brand": "Select Brand",
     "left": "left",
     "theme_color": "Theme Color",
     "refund": "Refund",
@@ -98,7 +100,11 @@
     "recent_orders": "Recent Orders",
     "no_orders": "No orders today.",
     "load_failed": "Failed to load data.",
-    "retry": "Retry"
+    "retry": "Retry",
+    "welcome_back": "Welcome back, {name}!",
+    "payment_methods": "Payment Methods",
+    "backup_queued": "Backup queued",
+    "download_failed": "Download failed"
   },
   "pos": {
     "title": "Point of Sale",
@@ -127,6 +133,7 @@
     "edit_product": "Edit Product",
     "product_name": "Product Name",
     "category": "Category",
+    "brand": "Brand",
     "base_price": "Base Price",
     "image": "Image",
     "variants": "Variants",
@@ -136,8 +143,16 @@
     "size": "Size",
     "color": "Color",
     "price_adj": "Price Adj.",
+    "cost": "Cost",
     "stock": "Stock",
-    "no_variants": "No variants yet."
+    "no_variants": "No variants defined. Add at least one variant.",
+    "variant_number": "Variant #{n}",
+    "variant_image": "Variant Image",
+    "change_image": "Change Image",
+    "select_image": "Select Image",
+    "featured_image": "Featured Image",
+    "image_hint": "JPEG, PNG or WebP. Max 2MB.",
+    "form_subtitle": "Provide detailed information for your inventory item"
   },
   "categories": {
     "title": "Categories",
@@ -279,13 +294,24 @@
     "no_suppliers": "No suppliers yet."
   },
   "suppliers": {
-    "manage": "Manage product suppliers and contact details"
+    "title": "Suppliers",
+    "manage": "Manage product suppliers and contact details",
+    "select_supplier": "Select Supplier"
   },
   "discounts": {
     "manage": "Manage promotional discounts and coupon codes"
   },
   "stock": {
-    "manage": "Audit log of all inventory changes and adjustments"
+    "manage": "Track inventory levels and stock movements",
+    "stock_levels": "Stock Levels",
+    "movements": "Movements",
+    "threshold": "Threshold",
+    "all_stock": "All Stock",
+    "low_stock_filter": "Low Stock",
+    "out_of_stock_filter": "Out of Stock",
+    "status_out": "Out",
+    "status_low": "Low",
+    "status_ok": "OK"
   },
   "cash": {
     "manage": "Manage day-to-day cash operations and track register sessions",

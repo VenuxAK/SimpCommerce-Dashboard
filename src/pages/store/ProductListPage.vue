@@ -12,7 +12,7 @@ import Pagination from '../../components/Pagination.vue'
 import LoadingSpinner from '../../components/LoadingSpinner.vue'
 import EmptyState from '../../components/EmptyState.vue'
 import { useNotify } from '../../lib/notify'
-import { useListing, useDebouncedWatch } from '../../composables'
+import { useListing } from '../../composables'
 import { useProductApi, useCategoryApi } from '../../composables/api'
 import type { Product, Category } from '../../types'
 
@@ -25,13 +25,16 @@ const categoryApi = useCategoryApi()
 
 const fileInput = ref<HTMLInputElement | null>(null)
 
-const { items: products, meta, loading, loadPage } = useListing<Product>('/products')
-
-const categories = ref<Category[]>([])
-const viewMode = ref<'list' | 'grid'>('list')
 const search = ref('')
 const categoryId = ref<number | ''>('')
 const stockStatus = ref<'all' | 'low' | 'out'>('all')
+
+const { items: products, meta, loading, loadPage } = useListing<Product>('/products', {
+  filterRefs: { search, category_id: categoryId, stock_status: stockStatus },
+})
+
+const categories = ref<Category[]>([])
+const viewMode = ref<'list' | 'grid'>('list')
 
 const statusOptions = [
   { label: t('common.all'), value: 'all' },
@@ -43,8 +46,6 @@ const categoryOptions = computed(() => [
   { label: t('pos.all_categories'), value: '' },
   ...categories.value.map(c => ({ label: c.name.toUpperCase(), value: c.id })),
 ])
-
-useDebouncedWatch([search, categoryId, stockStatus], () => loadPage(1))
 
 onMounted(async () => {
   try {

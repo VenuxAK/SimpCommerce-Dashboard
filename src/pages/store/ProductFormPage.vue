@@ -45,7 +45,7 @@ const form = ref({
 })
 
 const categoryOptions = computed(() => {
-  const options: Array<{label: string, value: string | number}> = [{ label: 'SELECT CATEGORY', value: '' }]
+  const options: Array<{label: string, value: string | number}> = [{ label: t('common.select_category').toUpperCase(), value: '' }]
   const parents = (categories.value || []).filter(c => !c.parent_id)
   parents.forEach(p => {
     options.push({ label: p.name.toUpperCase(), value: p.id })
@@ -58,12 +58,12 @@ const categoryOptions = computed(() => {
 })
 
 const supplierOptions = computed(() => [
-  { label: 'SELECT SUPPLIER', value: '' },
+  { label: t('suppliers.select_supplier').toUpperCase(), value: '' },
   ...(suppliers.value || []).map(s => ({ label: s.name.toUpperCase(), value: s.id }))
 ])
 
 const brandOptions = computed(() => [
-  { label: 'SELECT BRAND', value: '' },
+  { label: t('common.select_brand').toUpperCase(), value: '' },
   ...(brands.value || []).map(b => ({ label: b.name.toUpperCase(), value: b.id }))
 ])
 
@@ -90,7 +90,7 @@ onMounted(async () => {
 
   try {
     const { data: supRes } = await api.get('/suppliers')
-    suppliers.value = supRes.data.data
+    suppliers.value = supRes.data
   } catch {}
 
   try {
@@ -223,7 +223,7 @@ const save = async () => {
       </Button>
       <div>
         <h1 class="text-2xl font-semibold tracking-tight text-foreground">{{ isEdit ? t('products.edit_product') : t('products.new_product') }}</h1>
-        <p class="text-xs text-muted-foreground mt-1">Provide detailed information for your inventory item</p>
+        <p class="text-xs text-muted-foreground mt-1">{{ t('products.form_subtitle') }}</p>
       </div>
     </div>
 
@@ -251,7 +251,7 @@ const save = async () => {
               <Select v-model="form.category_id" :options="categoryOptions" />
             </div>
             <div class="space-y-1.5">
-              <label class="text-[11px] font-medium text-foreground ml-0.5">Brand</label>
+              <label class="text-[11px] font-medium text-foreground ml-0.5">{{ t('products.brand') }}</label>
               <Select v-model="form.brand_id" :options="brandOptions" />
             </div>
             <div class="space-y-1.5">
@@ -278,10 +278,10 @@ const save = async () => {
                 <Upload class="size-6" />
               </div>
               <div class="flex-1">
-                <p class="text-xs font-medium text-foreground">Featured Image</p>
-                <p class="text-[10px] text-muted-foreground mt-0.5">JPEG, PNG or WebP. Max 2MB.</p>
+                <p class="text-xs font-medium text-foreground">{{ t('products.featured_image') }}</p>
+                <p class="text-[10px] text-muted-foreground mt-0.5">{{ t('products.image_hint') }}</p>
                 <label class="mt-3 inline-flex items-center px-3 py-1.5 rounded border bg-background hover:bg-accent text-[10px] font-medium cursor-pointer transition-all">
-                  {{ imageUrl ? 'Change Image' : 'Select Image' }}
+                  {{ imageUrl ? t('products.change_image') : t('products.select_image') }}
                   <input type="file" accept="image/*" class="hidden" @change="onProductImage" />
                 </label>
               </div>
@@ -299,42 +299,42 @@ const save = async () => {
       <Card class="shadow-none">
         <CardHeader class="flex flex-row items-center justify-between border-b bg-muted/10 py-3 px-6">
           <CardTitle class="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">{{ t('products.variants') }}</CardTitle>
-          <Button variant="outline" size="sm" @click="addVariant" class="h-7 text-[10px]"><Plus class="size-3 mr-1" /> ADD VARIANT</Button>
+          <Button variant="outline" size="sm" @click="addVariant" class="h-7 text-[10px]"><Plus class="size-3 mr-1" /> {{ t('products.add_variant').toUpperCase() }}</Button>
         </CardHeader>
         <CardContent class="p-0">
           <div v-if="form.variants.length === 0" class="py-12 text-center text-xs text-muted-foreground italic">
-            No variants defined. Add at least one variant.
+            {{ t("products.no_variants") }}
           </div>
           <div v-else class="divide-y">
             <div v-for="(v, idx) in form.variants" :key="idx" class="p-6 space-y-4 hover:bg-muted/5 transition-colors relative group">
               <div class="flex items-center justify-between mb-2">
-                <span class="text-[10px] font-bold text-primary tracking-widest uppercase">Variant #{{ idx + 1 }}</span>
+                <span class="text-[10px] font-bold text-primary tracking-widest uppercase">{{ t('products.variant_number', { n: idx + 1 }) }}</span>
                 <button @click="removeVariant(idx)" class="text-muted-foreground hover:text-destructive transition-colors"><X class="size-4" /></button>
               </div>
 
               <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 <div class="space-y-1 sm:col-span-2 lg:col-span-1">
-                  <label class="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">SKU</label>
+                  <label class="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{{ t('products.sku') }}</label>
                   <Input v-model="v.sku" class="h-8 text-xs" />
                 </div>
                 <div class="space-y-1">
-                  <label class="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Size</label>
+                  <label class="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{{ t('products.size') }}</label>
                   <Input v-model="v.size" class="h-8 text-xs" />
                 </div>
                 <div class="space-y-1">
-                  <label class="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Color</label>
+                  <label class="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{{ t('products.color') }}</label>
                   <Input v-model="v.color" class="h-8 text-xs" />
                 </div>
                 <div class="space-y-1">
-                  <label class="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Adj.</label>
+                  <label class="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{{ t('products.price_adj') }}</label>
                   <Input v-model.number="v.price_adjustment" type="number" class="h-8 text-xs" />
                 </div>
                 <div class="space-y-1">
-                  <label class="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Cost</label>
+                  <label class="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{{ t('products.cost') }}</label>
                   <Input :model-value="v.purchase_price ?? ''" @update:model-value="v.purchase_price = $event === '' ? null : Number($event)" type="number" min="0" class="h-8 text-xs" />
                 </div>
                 <div class="space-y-1">
-                  <label class="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Stock</label>
+                  <label class="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{{ t('products.stock') }}</label>
                   <Input v-model.number="v.stock_quantity" type="number" min="0" class="h-8 text-xs" />
                 </div>
               </div>
@@ -344,7 +344,7 @@ const save = async () => {
                   <img :src="variantImageUrl(v)!" class="size-full object-cover" />
                 </div>
                 <label class="inline-flex items-center px-2 py-1 rounded border bg-background hover:bg-accent text-[9px] font-medium cursor-pointer transition-all">
-                  <Upload class="size-3 mr-1.5" /> {{ v.image_preview ? 'Change' : 'Variant Image' }}
+                  <Upload class="size-3 mr-1.5" /> {{ v.image_preview ? t('products.change_image') : t('products.variant_image') }}
                   <input type="file" accept="image/*" class="hidden" @change="onVariantImage($event, idx)" />
                 </label>
               </div>

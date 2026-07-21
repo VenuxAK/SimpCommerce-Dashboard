@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n'
 import {
   LayoutDashboard, ShoppingCart, Package, Tags, Star, Users, Receipt,
   FileText, BarChart3, LogOut, X, Shield, UserCog, Percent,
-  ClipboardList, Truck, Wallet, ChevronLeft, ChevronRight,
+  ClipboardList, Truck, Wallet, ScrollText, ChevronLeft, ChevronRight,
 } from 'lucide-vue-next'
 import { useAuthStore } from '../../stores/auth'
 import { useUIStore } from '../../stores/ui'
@@ -39,10 +39,10 @@ const navGroups: { label: string; items: NavItem[] }[] = [
   {
     label: 'nav.management',
     items: [
-      { to: '/products', icon: Package, label: 'nav.products' },       // all store roles
+      { to: '/products', icon: Package, label: 'nav.products' },
       { to: '/categories', icon: Tags, label: 'nav.categories', roles: ['store_owner', 'store_manager', 'inventory_staff'] },
       { to: '/brands', icon: Star, label: 'brands.title', roles: ['store_owner', 'store_manager', 'inventory_staff'] },
-      { to: '/customers', icon: Users, label: 'nav.customers' },        // all store roles
+      { to: '/customers', icon: Users, label: 'nav.customers' },
       { to: '/sales', icon: Receipt, label: 'nav.sales', roles: ['store_owner', 'store_manager'] },
       { to: '/invoices', icon: FileText, label: 'nav.invoices', roles: ['store_owner', 'store_manager'] },
       { to: '/reports', icon: BarChart3, label: 'nav.reports', roles: ['store_owner', 'store_manager'] },
@@ -50,13 +50,14 @@ const navGroups: { label: string; items: NavItem[] }[] = [
       { to: '/discounts', icon: Percent, label: 'nav.discounts', roles: ['store_owner', 'store_manager'] },
       { to: '/stock', icon: ClipboardList, label: 'nav.stock', roles: ['store_owner', 'store_manager', 'inventory_staff'] },
       { to: '/cash-sessions', icon: Wallet, label: 'nav.cash', roles: ['store_owner', 'store_manager', 'sales_staff'] },
+      { to: '/audit-logs', icon: ScrollText, label: 'nav.audit', roles: ['store_owner', 'store_manager'] },
     ],
   },
   {
     label: 'nav.system',
     items: [
       { to: '/users', icon: Shield, label: 'nav.users', roles: ['store_owner'] },
-      { to: '/profile', icon: UserCog, label: 'nav.profile' },          // all
+      { to: '/profile', icon: UserCog, label: 'nav.profile' },
     ],
   },
 ]

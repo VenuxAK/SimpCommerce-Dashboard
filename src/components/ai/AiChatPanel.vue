@@ -68,7 +68,7 @@ function handlePromptSelect(text: string) {
 </script>
 
 <template>
-  <div class="flex flex-col h-full">
+  <div class="flex flex-col min-h-0 flex-1">
     <!-- ================================================================ -->
     <!-- NO ACTIVE CONVERSATION -->
     <!-- ================================================================ -->
@@ -96,7 +96,7 @@ function handlePromptSelect(text: string) {
       </div>
 
       <!-- History List (when toggled) -->
-      <div v-else class="flex-1 flex flex-col">
+      <div v-else class="flex-1 flex flex-col min-h-0">
         <div class="flex items-center justify-between px-4 py-2 border-b">
           <p class="text-xs font-medium text-muted-foreground">{{ t('assistant.recent') }}</p>
           <div class="flex items-center gap-1">
@@ -167,7 +167,7 @@ function handlePromptSelect(text: string) {
       <!-- Messages -->
       <div
         ref="messagesContainer"
-        class="flex-1 overflow-y-auto p-3 space-y-2"
+        class="flex-1 min-h-0 overflow-y-auto p-3 space-y-2"
       >
         <AiChatMessage
           v-for="msg in chat.messages"
@@ -194,7 +194,7 @@ function handlePromptSelect(text: string) {
           :disabled="chat.isStreaming"
           :placeholder="t('assistant.placeholder')"
           rows="1"
-          class="flex-1 min-h-[36px] max-h-[120px] resize-none rounded-md border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
+          class="flex-1 min-h-[40px] max-h-[120px] resize-none rounded-md border bg-background px-3 py-2 text-sm leading-relaxed placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
         />
         <button
           v-if="chat.isStreaming"

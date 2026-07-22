@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import { watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { MessageCircle, X, Minus, Maximize2, Minimize2 } from 'lucide-vue-next'
+import { MessageCircle, X, Minus, Maximize2, Minimize2, ExternalLink } from 'lucide-vue-next'
 import AiChatPanel from './AiChatPanel.vue'
 import { useChatStore } from '../../stores/chat'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { useUIStore } from '../../stores/ui'
 
 const { t } = useI18n()
 const chat = useChatStore()
 const route = useRoute()
+const router = useRouter()
+const ui = useUIStore()
 
 watch(
   () => route.meta?.helpContext,
@@ -20,6 +23,10 @@ watch(
 
 function handleToggle() {
   chat.togglePanel()
+}
+
+function handleOpenFull() {
+  router.push(`/store/${ui.activeStoreSlug}/assistant`)
 }
 </script>
 
@@ -72,6 +79,14 @@ function handleToggle() {
             <span class="text-sm font-semibold truncate">{{ t('assistant.title') }}</span>
           </div>
           <div class="flex items-center gap-0.5 flex-shrink-0">
+            <!-- Open in Full View -->
+            <button
+              @click="handleOpenFull"
+              class="p-1.5 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+              :title="t('assistant.open_full')"
+            >
+              <ExternalLink class="size-4" />
+            </button>
             <!-- Fullscreen Toggle -->
             <button
               @click="chat.toggleFullScreen()"

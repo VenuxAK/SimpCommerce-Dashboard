@@ -20,6 +20,7 @@ export const useChatStore = defineStore('chat', () => {
   const error = ref<string | null>(null)
   const streamAbortController = ref<AbortController | null>(null)
   const currentPageContext = ref<string | null>(null)
+  const showHistory = ref(false)
 
   const messages = computed<ChatMessage[]>(() => {
     return activeConversation.value?.messages ?? []
@@ -192,6 +193,10 @@ export const useChatStore = defineStore('chat', () => {
     isStreaming.value = false
   }
 
+  function toggleHistory() {
+    showHistory.value = !showHistory.value
+  }
+
   async function deleteConversation(id: number) {
     try {
       await api.deleteConversation(id)
@@ -215,6 +220,7 @@ export const useChatStore = defineStore('chat', () => {
     error,
     messages,
     currentPageContext,
+    showHistory,
     togglePanel,
     openPanel,
     closePanel,
@@ -228,5 +234,6 @@ export const useChatStore = defineStore('chat', () => {
     streamAiResponse,
     cancelStream,
     deleteConversation,
+    toggleHistory,
   }
 })

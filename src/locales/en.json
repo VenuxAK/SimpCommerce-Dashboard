@@ -359,6 +359,19 @@
     "error_create": "Failed to create conversation.",
     "error_delete": "Failed to delete conversation.",
     "error_stream": "Sorry, something went wrong. Please try again.",
-    "error_generic": "Something went wrong"
+    "error_generic": "Something went wrong",
+    "welcome": "How can I help you?",
+    "welcome_subtext": "Ask a question or choose a topic below.",
+    "open_full": "Open in full view",
+    "recent_chats": "Recent chats",
+    "hide_history": "Hide history",
+    "prompt_products": "How do I create a new product?",
+    "prompt_pos": "How do I process a POS sale?",
+    "prompt_inventory": "How do I manage inventory and stock?",
+    "prompt_discounts": "How do I create a discount or promotion?",
+    "prompt_reports": "How do I view sales reports?",
+    "prompt_customers": "How do I manage customers?",
+    "prompt_cash": "How do I open and close the cash register?",
+    "prompt_users": "How do I add a new staff user?"
   }
 }

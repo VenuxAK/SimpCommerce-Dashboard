@@ -133,4 +133,10 @@ export const storeRoutes: RouteRecordRaw[] = [
     component: () => import("../pages/shared/ProfilePage.vue"),
     meta: { helpContext: "settings" },
   },
+  {
+    path: "assistant",
+    name: "assistant",
+    component: () => import("../pages/shared/AssistantPage.vue"),
+    meta: { helpContext: "assistant" },
+  },
 ];

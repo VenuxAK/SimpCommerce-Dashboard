@@ -105,7 +105,7 @@ html[lang='my'] .text-base { font-size: 1.15rem; }
 
 body {
   margin: 0;
-  font-family: 'Geist', 'Inter', 'Padauk', 'Myanmar Sans Pro', 'Pyidaungsu', system-ui, -apple-system, sans-serif;
+  font-family: 'Geist', 'Noto Sans Myanmar', 'Inter', 'Padauk', 'Myanmar Sans Pro', 'Pyidaungsu', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--color-background);

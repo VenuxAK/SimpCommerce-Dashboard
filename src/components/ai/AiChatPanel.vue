@@ -74,25 +74,27 @@ function handlePromptSelect(text: string) {
     <!-- ================================================================ -->
     <template v-if="!chat.activeConversation">
       <!-- Welcome Screen (default) -->
-      <div v-if="!chat.showHistory" class="flex-1 flex flex-col items-center justify-center p-5 text-center">
-        <div class="mb-4 flex size-12 items-center justify-center rounded-full bg-primary/10">
-          <Sparkles class="size-6 text-primary" />
+      <div v-if="!chat.showHistory" class="flex-1 flex flex-col p-5 text-center min-h-0 overflow-y-auto">
+        <div class="m-auto flex flex-col items-center w-full max-w-[320px]">
+          <div class="mb-4 flex size-12 items-center justify-center rounded-full bg-primary/10 flex-shrink-0">
+            <Sparkles class="size-6 text-primary" />
+          </div>
+          <h3 class="text-sm font-semibold text-foreground mb-1">{{ t('assistant.welcome') }}</h3>
+          <p class="text-xs text-muted-foreground mb-5">{{ t('assistant.welcome_subtext') }}</p>
+  
+          <div class="w-full mb-4">
+            <AiPromptCards @select="handlePromptSelect" />
+          </div>
+  
+          <button
+            v-if="chat.conversations.length > 0"
+            @click="chat.toggleHistory()"
+            class="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ChevronUp class="size-3.5" />
+            {{ t('assistant.recent_chats') }}
+          </button>
         </div>
-        <h3 class="text-sm font-semibold text-foreground mb-1">{{ t('assistant.welcome') }}</h3>
-        <p class="text-xs text-muted-foreground mb-5">{{ t('assistant.welcome_subtext') }}</p>
-
-        <div class="w-full max-w-[320px] mb-4">
-          <AiPromptCards @select="handlePromptSelect" />
-        </div>
-
-        <button
-          v-if="chat.conversations.length > 0"
-          @click="chat.toggleHistory()"
-          class="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ChevronUp class="size-3.5" />
-          {{ t('assistant.recent_chats') }}
-        </button>
       </div>
 
       <!-- History List (when toggled) -->
@@ -194,7 +196,7 @@ function handlePromptSelect(text: string) {
           :disabled="chat.isStreaming"
           :placeholder="t('assistant.placeholder')"
           rows="1"
-          class="flex-1 min-h-[40px] max-h-[120px] resize-none rounded-md border bg-background px-3 py-2 text-sm leading-relaxed placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
+          class="flex-1 min-h-[36px] max-h-[120px] resize-none rounded-md border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
         />
         <button
           v-if="chat.isStreaming"

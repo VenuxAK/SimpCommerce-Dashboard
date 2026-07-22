@@ -194,7 +194,7 @@ function handlePromptSelect(text: string) {
           :disabled="chat.isStreaming"
           :placeholder="t('assistant.placeholder')"
           rows="1"
-          class="flex-1 min-h-[40px] max-h-[120px] resize-none rounded-md border bg-background px-3 py-2 text-sm leading-relaxed placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
+          class="flex-1 min-h-[36px] max-h-[120px] resize-none rounded-md border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
         />
         <button
           v-if="chat.isStreaming"

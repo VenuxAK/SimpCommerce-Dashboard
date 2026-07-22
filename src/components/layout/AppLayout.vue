@@ -3,6 +3,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { Menu } from 'lucide-vue-next'
 import StoreSidebar from './StoreSidebar.vue'
 import AppHeader from './AppHeader.vue'
+import AiChatWidget from '../ai/AiChatWidget.vue'
 import { useUIStore } from '../../stores/ui'
 import { useAuthStore } from '../../stores/auth'
 import { createEcho } from '../../lib/echo'
@@ -79,6 +80,9 @@ onUnmounted(() => disconnectEcho())
         </div>
       </main>
     </div>
+
+    <!-- AI Learning Assistant -->
+    <AiChatWidget />
   </div>
 </template>
 

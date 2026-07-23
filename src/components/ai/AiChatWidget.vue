@@ -40,8 +40,8 @@ function handleOpenFull() {
         @click="chat.maximizePanel()"
         :title="t('assistant.maximize')"
       >
-        <MessageCircle class="size-4 text-primary flex-shrink-0" />
-        <span class="text-sm font-medium truncate max-w-[200px]">
+        <MessageCircle class="size-4 text-primary shrink-0" />
+        <span class="text-sm font-medium truncate max-w-50">
           {{ chat.activeConversation?.title || t('assistant.title_short') }}
         </span>
         <span
@@ -53,7 +53,7 @@ function handleOpenFull() {
         </span>
         <button
           @click.stop="chat.closePanel()"
-          class="p-1 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+          class="p-1 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors shrink-0"
           :title="t('assistant.close')"
         >
           <X class="size-3.5" />
@@ -69,16 +69,16 @@ function handleOpenFull() {
           'mb-3 bg-background border rounded-xl shadow-2xl overflow-hidden flex flex-col transition-all duration-300',
           chat.isFullScreen
             ? 'fixed inset-2 sm:inset-4 rounded-2xl'
-            : 'w-[400px] max-w-[calc(100vw-2rem)] h-[580px] max-h-[calc(100vh-8rem)]'
+            : 'w-100 max-w-[calc(100vw-2rem)] h-145 max-h-[calc(100vh-8rem)]'
         ]"
       >
         <!-- Header -->
-        <div class="flex items-center justify-between px-4 py-2.5 border-b bg-muted/20 flex-shrink-0">
+        <div class="flex items-center justify-between px-4 py-2.5 border-b bg-muted/20 shrink-0">
           <div class="flex items-center gap-2 min-w-0">
-            <MessageCircle class="size-4 text-primary flex-shrink-0" />
+            <MessageCircle class="size-4 text-primary shrink-0" />
             <span class="text-sm font-semibold truncate">{{ t('assistant.title') }}</span>
           </div>
-          <div class="flex items-center gap-0.5 flex-shrink-0">
+          <div class="flex items-center gap-0.5 shrink-0">
             <!-- Open in Full View -->
             <button
               @click="handleOpenFull"

@@ -76,7 +76,7 @@ function handlePromptSelect(text: string) {
       <!-- Welcome Screen (default) -->
       <div v-if="!chat.showHistory" class="flex-1 flex flex-col p-5 text-center min-h-0 overflow-y-auto">
         <div class="m-auto flex flex-col items-center w-full max-w-[320px]">
-          <div class="mb-4 flex size-12 items-center justify-center rounded-full bg-primary/10 flex-shrink-0">
+          <div class="mb-4 flex size-12 items-center justify-center rounded-full bg-primary/10 shrink-0">
             <Sparkles class="size-6 text-primary" />
           </div>
           <h3 class="text-sm font-semibold text-foreground mb-1">{{ t('assistant.welcome') }}</h3>
@@ -196,12 +196,12 @@ function handlePromptSelect(text: string) {
           :disabled="chat.isStreaming"
           :placeholder="t('assistant.placeholder')"
           rows="1"
-          class="flex-1 min-h-[36px] max-h-[120px] resize-none rounded-md border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
+          class="flex-1 min-h-9 max-h-30 resize-none rounded-md border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
         />
         <button
           v-if="chat.isStreaming"
           @click="chat.cancelStream()"
-          class="flex-shrink-0 p-2 rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
+          class="shrink-0 p-2 rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
           :title="t('assistant.stop')"
         >
           <Square class="size-4" />
@@ -210,7 +210,7 @@ function handlePromptSelect(text: string) {
           v-else
           @click="handleSend"
           :disabled="!input.trim()"
-          class="flex-shrink-0 p-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+          class="shrink-0 p-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
           :title="t('assistant.send')"
         >
           <Send class="size-4" />

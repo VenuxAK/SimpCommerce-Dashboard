@@ -54,7 +54,7 @@ const accent = computed(() => isDark.value ? '#60a5fa' : '#2563eb')
 const barOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
-  interaction: { intersect: false, mode: 'index' },
+  interaction: { intersect: false, mode: 'index' as const },
   plugins: {
     legend: { display: false },
     tooltip: {
@@ -64,7 +64,7 @@ const barOptions = computed(() => ({
       padding: 12,
       cornerRadius: 8,
       displayColors: false,
-      titleFont: { size: 12, weight: '600' },
+      titleFont: { size: 12, weight: 'bold' as const },
       bodyFont: { size: 11 },
     },
   },
@@ -86,7 +86,7 @@ const barOptions = computed(() => ({
 const lineOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
-  interaction: { intersect: false, mode: 'index' },
+  interaction: { intersect: false, mode: 'index' as const },
   plugins: {
     legend: { display: false },
     tooltip: {
@@ -96,7 +96,7 @@ const lineOptions = computed(() => ({
       padding: 12,
       cornerRadius: 8,
       displayColors: false,
-      titleFont: { size: 12, weight: '600' },
+      titleFont: { size: 12, weight: 'bold' as const },
       bodyFont: { size: 11 },
     },
   },
@@ -142,7 +142,7 @@ const donutOptions = computed(() => ({
   cutout: '65%',
   plugins: {
     legend: {
-      position: 'bottom',
+      position: 'bottom' as const,
       labels: {
         color: muted.value,
         padding: 16,
@@ -157,7 +157,7 @@ const donutOptions = computed(() => ({
       bodyColor: tooltipText.value,
       padding: 12,
       cornerRadius: 8,
-      titleFont: { size: 12, weight: '600' },
+      titleFont: { size: 12, weight: 'bold' as const },
       bodyFont: { size: 11 },
     },
   },
@@ -448,7 +448,7 @@ const statusBadge = (status: string) => {
                 </div>
                 <div class="flex items-center gap-2">
                   <div class="flex items-center gap-1 bg-muted rounded-md p-0.5">
-                    <button v-for="r in [{k:'today',l:'Today'},{k:'7d',l:'7d'},{k:'month',l:'Month'}]" :key="r.k"
+                    <button v-for="r in ([{k:'today',l:'Today'},{k:'7d',l:'7d'},{k:'month',l:'Month'}] as const)" :key="r.k"
                       @click="chartRange = r.k; showCal = false; loadCharts()"
                       :class="['px-2.5 py-1 text-xs rounded-sm transition-all', chartRange === r.k ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground']">
                       {{ r.l }}

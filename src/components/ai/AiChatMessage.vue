@@ -29,7 +29,7 @@ const renderedContent = computed(() => {
   >
     <div
       :class="[
-        'flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center',
+        'shrink-0 w-7 h-7 rounded-full flex items-center justify-center',
         isUser ? 'bg-primary/10 text-primary' : 'bg-accent text-accent-foreground'
       ]"
     >
@@ -50,7 +50,7 @@ const renderedContent = computed(() => {
       </div>
       <div
         v-else-if="isUser"
-        class="text-sm leading-relaxed whitespace-pre-wrap break-words"
+        class="text-sm leading-relaxed whitespace-pre-wrap wrap-break-word"
         v-text="message.content"
       />
       <div

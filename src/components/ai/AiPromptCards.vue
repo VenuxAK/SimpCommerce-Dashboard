@@ -35,7 +35,7 @@ function handleClick(text: string) {
       @click="handleClick(prompt.text)"
       class="flex items-start gap-2 text-left p-2.5 rounded-lg border border-border/60 bg-background hover:border-primary/40 hover:bg-accent/50 transition-colors group"
     >
-      <Sparkles class="size-3.5 text-primary/60 group-hover:text-primary mt-0.5 flex-shrink-0" />
+      <Sparkles class="size-3.5 text-primary/60 group-hover:text-primary mt-0.5 shrink-0" />
       <span class="text-xs leading-snug text-muted-foreground group-hover:text-foreground line-clamp-2">
         {{ prompt.text }}
       </span>

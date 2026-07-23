@@ -292,3 +292,48 @@ export interface PaginatedResponse<T> {
     total: number
   }
 }
+
+// ── AI Learning Assistant ────────────────────────────────────
+
+export interface KbArticle {
+  id: number
+  store_id: number | null
+  title: string
+  slug: string
+  content: string
+  excerpt: string | null
+  category: string
+  source_type: 'manual' | 'ai-generated'
+  source_ref: string | null
+  metadata: Record<string, unknown> | null
+  is_published: boolean
+  has_embedding: boolean
+  created_at?: string
+  updated_at?: string
+}
+
+export interface ChatMessage {
+  id: number
+  chat_conversation_id: number
+  role: 'user' | 'assistant' | 'system'
+  content: string
+  metadata: Record<string, unknown> | null
+  created_at?: string
+}
+
+export interface ChatConversation {
+  id: number
+  user_id: number
+  store_id: number
+  title: string
+  page_context: string | null
+  messages: ChatMessage[]
+  message_count?: number
+  last_message_at?: string
+  created_at?: string
+  updated_at?: string
+}
+
+export interface ChatStreamEvent {
+  delta: string
+}

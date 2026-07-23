@@ -22,7 +22,7 @@ const activeTab = ref<'levels' | 'movements'>('levels')
 const levelFilter = ref<'all' | 'low' | 'out'>('all')
 const levelProducts = ref<Product[]>([])
 const levelLoading = ref(false)
-const levelMeta = ref<{ current_page: number; last_page: number; total: number } | null>(null)
+const levelMeta = ref<{ current_page: number; last_page: number; total: number; per_page: number } | null>(null)
 const levelPage = ref(1)
 
 const levelOptions = [

@@ -5,6 +5,7 @@ import {
   LayoutDashboard, ShoppingCart, Package, Tags, Star, Users, Receipt,
   FileText, BarChart3, LogOut, X, Shield, UserCog, Percent,
   ClipboardList, Truck, Wallet, ScrollText, ChevronLeft, ChevronRight,
+  MessageCircle,
 } from 'lucide-vue-next'
 import { useAuthStore } from '../../stores/auth'
 import { useUIStore } from '../../stores/ui'
@@ -58,6 +59,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     items: [
       { to: '/users', icon: Shield, label: 'nav.users', roles: ['store_owner'] },
       { to: '/profile', icon: UserCog, label: 'nav.profile' },
+      { to: '/assistant', icon: MessageCircle, label: 'assistant.title_short' },
     ],
   },
 ]
